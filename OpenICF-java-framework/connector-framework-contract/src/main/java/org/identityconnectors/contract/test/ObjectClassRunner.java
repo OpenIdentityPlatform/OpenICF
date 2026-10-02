@@ -227,6 +227,10 @@ public abstract class ObjectClassRunner extends ContractTestBase {
                 oinfos = tmp;
             }
         }
+        if (oinfos == null) {
+            // no operation required: every object class of the schema qualifies
+            oinfos = getSchema().getObjectClassInfo();
+        }
 
         // Find the objectclass in set of supported objectclasses (oinfos),
         // that is currently tested. If it is present set the indicator _ocSupported accordingly.

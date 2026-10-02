@@ -80,6 +80,7 @@ import org.forgerock.services.context.Context;
 import org.forgerock.json.resource.CreateRequest;
 import org.forgerock.json.resource.DeleteRequest;
 import org.forgerock.json.resource.InternalServerErrorException;
+import org.forgerock.json.resource.NotSupportedException;
 import org.forgerock.json.resource.PatchOperation;
 import org.forgerock.json.resource.PatchRequest;
 import org.forgerock.json.resource.QueryRequest;
@@ -492,6 +493,8 @@ public abstract class AbstractRemoteConnection implements Connection {
                 rq = new HttpGet(builder.build());
                 break;
             }
+            default:
+                throw new NotSupportedException("Unsupported request type: " + request.getRequestType());
             }
         } catch (URISyntaxException e) {
             throw new InternalServerErrorException(e);
@@ -708,7 +711,7 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
 
         @Override
-        public ResourceException getCause() {
+        public synchronized ResourceException getCause() {
             return cause;
         }
     }

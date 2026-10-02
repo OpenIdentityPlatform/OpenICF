@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -56,7 +57,7 @@ public class ConnectorUtils {
             int length = Array.getLength(property.getValue());
             StringBuilder sb = new StringBuilder("[");
             for (int i = 0; i < length; i++) {
-                if (i > 0 && i < length) {
+                if (i > 0) {
                     sb.append(",\n");
                 }
                 Object item = Array.get(property.getValue(), i);

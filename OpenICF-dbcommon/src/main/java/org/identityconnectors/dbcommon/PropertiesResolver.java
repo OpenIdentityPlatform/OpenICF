@@ -130,7 +130,7 @@ public final class PropertiesResolver {
         int index = 0;
         int length = value.length();
         StringBuffer result = new StringBuffer();
-        while (index >= 0 && index < length) {
+        while (index < length) {
             int varStart = value.indexOf("${", index);
             if (varStart >= 0) {
                 int varEnd = value.indexOf('}', varStart);

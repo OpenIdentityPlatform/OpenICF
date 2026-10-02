@@ -85,14 +85,16 @@ public class OperationalContext implements AbstractConfiguration.ConfigurationCh
         if (null == configuration) {
             synchronized (this) {
                 if (null == configuration) {
-                    this.configuration =
+                    // fully set up before it is published to other threads
+                    final Configuration bean =
                             JavaClassProperties.createBean(apiConfiguration
                                     .getConfigurationProperties(), connectorInfo
                                     .getConnectorConfigurationClass());
                     if (null != apiConfiguration.getChangeListener()
-                            && configuration instanceof AbstractConfiguration) {
-                        ((AbstractConfiguration) configuration).addChangeCallback(this);
+                            && bean instanceof AbstractConfiguration) {
+                        ((AbstractConfiguration) bean).addChangeCallback(this);
                     }
+                    this.configuration = bean;
                 }
             }
         }

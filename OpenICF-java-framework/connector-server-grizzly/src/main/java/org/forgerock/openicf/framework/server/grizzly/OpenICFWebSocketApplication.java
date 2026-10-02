@@ -167,7 +167,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
 
     public static class OpenICFWebSocket extends DefaultWebSocket {
 
-        protected final Queue<OperationMessageListener> listeners =
+        protected final Queue<OperationMessageListener> messageListeners =
                 new ConcurrentLinkedQueue<OperationMessageListener>();
 
         private final ConnectionPrincipal<?> connectionPrincipal;
@@ -246,11 +246,11 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
         }
 
         public final boolean add(final OperationMessageListener listener) {
-            return listeners.add(listener);
+            return messageListeners.add(listener);
         }
 
         public final boolean remove(final OperationMessageListener listener) {
-            return listeners.remove(listener);
+            return messageListeners.remove(listener);
         }
 
         public void onClose(DataFrame frame) {
@@ -259,7 +259,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
 
             OperationMessageListener listener;
             try {
-                while ((listener = listeners.poll()) != null) {
+                while ((listener = messageListeners.poll()) != null) {
                     listener.onClose(adapter, closing.getCode(), closing.getReason());
                 }
             } finally {
@@ -271,35 +271,35 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
 
         public void onConnect() {
             super.onConnect();
-            for (OperationMessageListener listener : listeners) {
+            for (OperationMessageListener listener : messageListeners) {
                 listener.onConnect(adapter);
             }
         }
 
         public void onMessage(byte[] data) {
             super.onMessage(data);
-            for (OperationMessageListener listener : listeners) {
+            for (OperationMessageListener listener : messageListeners) {
                 listener.onMessage(adapter, data);
             }
         }
 
         public void onMessage(String text) {
             super.onMessage(text);
-            for (OperationMessageListener listener : listeners) {
+            for (OperationMessageListener listener : messageListeners) {
                 listener.onMessage(adapter, text);
             }
         }
 
         public void onPing(DataFrame frame) {
             super.onPing(frame);
-            for (OperationMessageListener listener : listeners) {
+            for (OperationMessageListener listener : messageListeners) {
                 listener.onPing(adapter, frame.getBytes());
             }
         }
 
         public void onPong(DataFrame frame) {
             super.onPong(frame);
-            for (OperationMessageListener listener : listeners) {
+            for (OperationMessageListener listener : messageListeners) {
                 listener.onPong(adapter, frame.getBytes());
             }
         }

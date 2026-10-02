@@ -57,7 +57,7 @@ public class DatabaseTableFilterTranslator extends DatabaseFilterTranslator {
     protected SQLParam getSQLParam(Attribute attribute, ObjectClass oclass, OperationOptions options) {
         final Object value = AttributeUtil.getSingleValue(attribute);
         final String columnName = connector.getColumnName(attribute.getName());
-        final Integer columnType = connector.getColumnType(columnName);
+        final int columnType = connector.getColumnType(columnName);
         return new SQLParam(columnName, value,columnType);
     }
 

@@ -20,12 +20,18 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
 package org.forgerock.openicf.connectors.xml;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import org.identityconnectors.common.IOUtil;
+import org.identityconnectors.framework.common.objects.Schema;
 import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
@@ -70,5 +76,29 @@ public class SchemaParserTests {
     @Test
     public void parseSchemaShouldReturnSchema() {
         AssertJUnit.assertNotNull(parser.parseSchema());
+    }
+
+    @Test
+    public void parseSchemaShouldSkipSimpleTypedElement() throws IOException {
+        final File dir = Files.createTempDirectory("xsd").toFile();
+        try {
+            // the schema imports its neighbour by a relative location
+            Files.copy(XmlConnectorTestUtil.ICF_SCHEMA_FILEPATH.toPath(),
+                    new File(dir, XmlConnectorTestUtil.ICF_SCHEMA_FILEPATH.getName()).toPath());
+            final String xsd = new String(Files.readAllBytes(
+                    XmlConnectorTestUtil.XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+            AssertJUnit.assertTrue(xsd.contains("</xsd:schema>"));
+            final File withSimpleType = new File(dir, "with-simple-type.xsd");
+            Files.write(withSimpleType.toPath(), xsd.replace("</xsd:schema>",
+                    "<xsd:element name=\"note\" type=\"xsd:string\"/>\n</xsd:schema>")
+                    .getBytes(StandardCharsets.UTF_8));
+
+            final Schema schema = new SchemaParser(XMLConnector.class, withSimpleType).parseSchema();
+
+            AssertJUnit.assertNull(schema.findObjectClassInfo("note"));
+            AssertJUnit.assertEquals(parser.parseSchema(), schema);
+        } finally {
+            IOUtil.delete(dir);
+        }
     }
 }
