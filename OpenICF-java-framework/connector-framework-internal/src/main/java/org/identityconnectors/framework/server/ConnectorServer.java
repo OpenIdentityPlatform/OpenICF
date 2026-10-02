@@ -25,6 +25,7 @@
 
 package org.identityconnectors.framework.server;
 
+import java.lang.invoke.MethodHandles;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.List;
 import javax.net.ssl.KeyManager;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
@@ -110,7 +112,7 @@ public abstract class ConnectorServer {
     public static ConnectorServer newInstance() {
         try {
             final Class<?> clazz = Class.forName(IMPL_NAME);
-            return (ConnectorServer) clazz.getDeclaredConstructor().newInstance();
+            return (ConnectorServer) ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
         } catch (Exception e) {
             throw ConnectorException.wrap(e);
         }

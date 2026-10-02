@@ -26,6 +26,7 @@ package org.forgerock.openicf.framework.osgi.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -242,7 +243,7 @@ public class AsyncOsgiConnectorInfoManagerImpl extends
         try {
             Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
             APIConfigurationImpl rv = new APIConfigurationImpl();
-            Configuration config = localInfo.getConnectorConfigurationClass().getDeclaredConstructor().newInstance();
+            Configuration config = ReflectionUtil.newInstance(MethodHandles.lookup(), localInfo.getConnectorConfigurationClass());
             boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));

@@ -16,6 +16,11 @@
 package org.forgerock.openicf.connectors.xml.util;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.testng.annotations.Test;
@@ -32,6 +37,8 @@ public class AttributeTypeUtilTest {
         assertEquals(AttributeTypeUtil.createInstantiatedObject("3.5", XmlHandlerUtil.DOUBLE), 3.5);
         assertEquals(AttributeTypeUtil.createInstantiatedObject("3.5", XmlHandlerUtil.FLOAT_PRIMITIVE), 3.5f);
         assertEquals(AttributeTypeUtil.createInstantiatedObject("3.5", XmlHandlerUtil.FLOAT), 3.5f);
+        assertEquals(AttributeTypeUtil.createInstantiatedObject("3", XmlHandlerUtil.BIG_INTEGER), new BigInteger("3"));
+        assertEquals(AttributeTypeUtil.createInstantiatedObject("3.5", XmlHandlerUtil.BIG_DECIMAL), new BigDecimal("3.5"));
     }
 
     /**
@@ -40,16 +47,24 @@ public class AttributeTypeUtilTest {
      * NumberFormatException with no indication of which attribute it came
      * from.
      */
-    @Test(expectedExceptions = ConnectorException.class,
-            dataProvider = "numericTypes")
+    @Test(dataProvider = "numericTypes")
     public void createInstantiatedObjectWrapsMalformedNumber(String type) {
-        AttributeTypeUtil.createInstantiatedObject("not-a-number", type);
+        assertWrapsNumberFormatException("not-a-number", type);
     }
 
-    @Test(expectedExceptions = ConnectorException.class,
-            dataProvider = "numericTypes")
+    @Test(dataProvider = "numericTypes")
     public void createInstantiatedObjectWrapsBlankNumber(String type) {
-        AttributeTypeUtil.createInstantiatedObject("", type);
+        assertWrapsNumberFormatException("", type);
+    }
+
+    private static void assertWrapsNumberFormatException(String value, String type) {
+        try {
+            AttributeTypeUtil.createInstantiatedObject(value, type);
+            fail("ConnectorException expected for " + type);
+        } catch (ConnectorException e) {
+            assertEquals(e.getMessage(), "Value '" + value + "' is not a valid " + type);
+            assertTrue(e.getCause() instanceof NumberFormatException);
+        }
     }
 
     @org.testng.annotations.DataProvider
@@ -63,6 +78,8 @@ public class AttributeTypeUtilTest {
             { XmlHandlerUtil.DOUBLE },
             { XmlHandlerUtil.FLOAT_PRIMITIVE },
             { XmlHandlerUtil.FLOAT },
+            { XmlHandlerUtil.BIG_INTEGER },
+            { XmlHandlerUtil.BIG_DECIMAL },
         };
     }
 }

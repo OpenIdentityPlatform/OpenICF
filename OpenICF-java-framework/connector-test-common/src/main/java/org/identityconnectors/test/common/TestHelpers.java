@@ -25,6 +25,7 @@
 package org.identityconnectors.test.common;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URL;
@@ -38,6 +39,7 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.operations.SearchApiOp;
@@ -216,7 +218,7 @@ public final class TestHelpers {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.getDeclaredConstructor().newInstance();
+                Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 instance = TestHelpersSpi.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);
@@ -309,7 +311,7 @@ public final class TestHelpers {
             Class<?> configObject = Class.forName("groovy.util.ConfigObject");
             Object slurpInstance = null;
             if (StringUtil.isBlank(environment)) {
-                slurpInstance = slurper.getDeclaredConstructor().newInstance();
+                slurpInstance = ReflectionUtil.newInstance(MethodHandles.lookup(), slurper);
             } else {
                 slurpInstance = slurper.getConstructor(String.class).newInstance(environment);
             }

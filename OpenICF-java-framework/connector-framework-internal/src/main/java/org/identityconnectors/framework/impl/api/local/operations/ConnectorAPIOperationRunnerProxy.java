@@ -24,12 +24,14 @@
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.impl.api.local.ObjectPool;
@@ -96,7 +98,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             }
             else {
                 // get a new instance of the connector..
-                connector = connectorClazz.getDeclaredConstructor().newInstance();
+                connector = ReflectionUtil.newInstance(MethodHandles.lookup(), connectorClazz);
                 // initialize the connector..
                 connector.init(context.getConfiguration());
             }

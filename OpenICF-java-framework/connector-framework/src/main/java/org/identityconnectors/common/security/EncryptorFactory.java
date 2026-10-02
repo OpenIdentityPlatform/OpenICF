@@ -23,6 +23,10 @@
  */
 package org.identityconnectors.common.security;
 
+import java.lang.invoke.MethodHandles;
+
+import org.identityconnectors.common.ReflectionUtil;
+
 public abstract class EncryptorFactory {
 
     // At some point we might make this pluggable, but for now, hard-code
@@ -38,7 +42,7 @@ public abstract class EncryptorFactory {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.getDeclaredConstructor().newInstance();
+                Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 instance = EncryptorFactory.class.cast(object);
             } catch (RuntimeException e) {
                 throw e;

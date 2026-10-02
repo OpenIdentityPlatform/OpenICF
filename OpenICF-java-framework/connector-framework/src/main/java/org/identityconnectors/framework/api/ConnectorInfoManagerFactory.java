@@ -23,8 +23,10 @@
  */
 package org.identityconnectors.framework.api;
 
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 /**
@@ -48,7 +50,7 @@ public abstract class ConnectorInfoManagerFactory {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.getDeclaredConstructor().newInstance();
+                Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 instance = ConnectorInfoManagerFactory.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);

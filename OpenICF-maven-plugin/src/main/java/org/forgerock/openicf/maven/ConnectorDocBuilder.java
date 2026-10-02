@@ -26,6 +26,7 @@
 package org.forgerock.openicf.maven;
 
 import java.io.Writer;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +57,7 @@ import org.codehaus.plexus.util.PathTool;
 import org.codehaus.plexus.util.ReaderFactory;
 import org.identityconnectors.common.CollectionUtil;
 import org.identityconnectors.common.Pair;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConfigurationProperty;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
@@ -200,7 +202,7 @@ public class ConnectorDocBuilder {
                             Class<? extends Connector> connectorClass =
                                     ((LocalConnectorInfoImpl) info).getConnectorClass();
                             try {
-                                SchemaOp connector = (SchemaOp) connectorClass.getDeclaredConstructor().newInstance();
+                                SchemaOp connector = (SchemaOp) ReflectionUtil.newInstance(MethodHandles.lookup(), connectorClass);
                                 schema = connector.schema();
                             } catch (Throwable t) {
                                 handler.getLog().debug("Getting Schema with Connector Instance", t);

@@ -19,10 +19,15 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 package org.identityconnectors.common;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -113,6 +118,46 @@ public final class ReflectionUtil {
         } catch (Exception e) {
             // this should never happen
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Creates a new instance of the class through its no-argument constructor,
+     * as the deprecated {@link Class#newInstance()} did.
+     * <p>
+     * Unlike a bare {@code getDeclaredConstructor().newInstance()}, whatever
+     * the constructor throws reaches the caller unchanged instead of wrapped
+     * in an {@link java.lang.reflect.InvocationTargetException}, so callers
+     * that pass a {@link RuntimeException} through or wrap a checked exception
+     * keep seeing the original exception type and message.
+     * <p>
+     * Access to the constructor is checked against {@code lookup}, so the
+     * caller passes its own {@link MethodHandles#lookup()}: a package-private
+     * class stays instantiable from its own package, as it was with
+     * {@link Class#newInstance()}.
+     *
+     * @param <T>
+     *            the type of the instance.
+     * @param lookup
+     *            the caller's lookup, {@code MethodHandles.lookup()}.
+     * @param clazz
+     *            class to instantiate.
+     * @return the new instance.
+     * @throws Exception
+     *             whatever the constructor throws, or the reflective exception
+     *             if the class has no no-argument constructor accessible to
+     *             {@code lookup}.
+     */
+    public static <T> T newInstance(final MethodHandles.Lookup lookup, final Class<T> clazz)
+            throws Exception {
+        final MethodHandle constructor =
+                lookup.findConstructor(clazz, MethodType.methodType(void.class));
+        try {
+            return clazz.cast(constructor.invoke());
+        } catch (Exception | Error e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new UndeclaredThrowableException(t);
         }
     }
 

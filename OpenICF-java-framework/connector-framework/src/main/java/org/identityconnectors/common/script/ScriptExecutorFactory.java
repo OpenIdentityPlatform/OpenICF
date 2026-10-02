@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.api.operations.ScriptOnConnectorApiOp;
@@ -71,7 +73,7 @@ public abstract class ScriptExecutorFactory {
                     Class<?> clazz = Class.forName(factory);
                     // Create an instance in order to get the supported
                     // language.
-                    ScriptExecutorFactory instance = (ScriptExecutorFactory) clazz.getDeclaredConstructor().newInstance();
+                    ScriptExecutorFactory instance = (ScriptExecutorFactory) ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                     String language = instance.getLanguageName();
                     // Do not override a factory earlier in the classpath.
                     if (!factoryCache.containsKey(language)) {
@@ -170,7 +172,7 @@ public abstract class ScriptExecutorFactory {
         }
         // exceptions here should not happened because of the register
         try {
-            return (ScriptExecutorFactory) clazz.getDeclaredConstructor().newInstance();
+            return (ScriptExecutorFactory) ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {

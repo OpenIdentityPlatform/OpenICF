@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyright 2026 3A Systems, LLC.
  *
  * $Id$
  */
@@ -29,6 +30,7 @@ import org.testng.annotations.Test;
 import org.testng.annotations.BeforeMethod;
 import org.testng.AssertJUnit;
 import java.io.File;
+import java.io.IOException;
 
 public class XMLConfigurationTests {
 
@@ -73,5 +75,22 @@ public class XMLConfigurationTests {
     public void shouldThrowIllegalArgumentExceptionWhenValidatingWithBlankFilepath() {
         config.setXmlFilePath(new File(""));
         config.validate();
+    }
+
+    @Test
+    public void shouldValidateXmlFilePathWithoutParentDirectory() throws IOException {
+        File xsd = File.createTempFile("schema", ".xsd");
+        File xml = new File("xml-config-" + System.nanoTime() + ".xml");
+        try {
+            AssertJUnit.assertNull(xml.getParentFile());
+            config.setXsdFilePath(xsd);
+            config.setXmlFilePath(xml);
+            config.setCreateFileIfNotExists(true);
+            config.validate();
+            AssertJUnit.assertFalse(xml.exists());
+        } finally {
+            xml.delete();
+            xsd.delete();
+        }
     }
 }
