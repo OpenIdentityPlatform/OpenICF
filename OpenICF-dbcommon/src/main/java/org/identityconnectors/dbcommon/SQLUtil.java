@@ -245,7 +245,6 @@ public final class SQLUtil {
     public static Connection getDriverMangerConnection(final String driver, final String url,
             final Properties properties) {
         // create the connection base on the configuration..
-        Connection[] ret = new Connection[1];
         try {
             // load the driver class..
             Class.forName(driver);

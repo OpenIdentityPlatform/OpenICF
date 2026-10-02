@@ -230,9 +230,6 @@ public class UpdateApiOpTests extends ObjectClassRunner {
                         getObjectClassInfo(objectClass), getTestName(), 2, getOperationOptionsByOp(objectClass, CreateApiOp.class));
                 assertNotNull(uid,"Create returned null Uid.");
 
-                ConnectorObject originalObject = getConnectorFacade().getObject(objectClass, uid,
-                        getOperationOptionsByOp(objectClass, GetApiOp.class));
-
                 Collection<String> skippedAttributesForUpdateToNullValue = getSkippedAttributesForUpdateToNullValue();
                 for (AttributeInfo attInfo : getObjectClassInfo(objectClass).getAttributeInfo()) {
                     if (attInfo.isUpdateable() && !attInfo.isRequired() && !AttributeUtil.isSpecial(attInfo) && !attInfo.getType().isPrimitive()) {
