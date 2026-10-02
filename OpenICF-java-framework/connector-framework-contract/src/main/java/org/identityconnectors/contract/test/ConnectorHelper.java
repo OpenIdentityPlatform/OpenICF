@@ -970,7 +970,13 @@ public class ConnectorHelper {
             host = System.getProperty("serverHost");
         }
         if (StringUtil.isNotBlank(System.getProperty("serverPort"))) {
-            port = Integer.parseInt(System.getProperty("serverPort"));
+            String serverPort = System.getProperty("serverPort");
+            try {
+                port = Integer.parseInt(serverPort);
+            } catch (NumberFormatException e) {
+                throw new ContractException("System property serverPort is not a valid port "
+                        + "number: '" + serverPort + "'", e);
+            }
         }
         if (StringUtil.isNotBlank(System.getProperty("serverKey"))) {
             key = System.getProperty("serverKey");
