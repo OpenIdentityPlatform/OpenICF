@@ -62,6 +62,7 @@ public class FailoverLoadBalancingAlgorithm<G extends RemoteConnectionGroup<G, H
         super(requestDistributors);
     }
 
+    @Override
     protected int getInitialConnectionFactoryIndex() {
         return 0;
     }

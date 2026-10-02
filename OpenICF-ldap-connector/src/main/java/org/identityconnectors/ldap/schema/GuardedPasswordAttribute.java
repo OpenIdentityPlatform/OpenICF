@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.schema;
 
@@ -59,8 +60,10 @@ public abstract class GuardedPasswordAttribute {
             this.password = password;
         }
 
+        @Override
         public void access(final Accessor accessor) {
             password.access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     // TODO this is still not good enough. Need a simple and reliable
                     // way to convert UTF-16 to UTF-8 bytes.

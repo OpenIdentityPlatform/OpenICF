@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -87,10 +88,12 @@ public class RemoteServerConnectorInfoManager extends DelegatingAsyncConnectorIn
         connectionGroup.addCloseListener(closeListener);
     }
 
+    @Override
     protected RequestDistributor<WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> getMessageDistributor() {
         return messageDistributor;
     }
 
+    @Override
     protected void doClose() {
         for (AsyncConnectorInfoManager next : getDelegates()) {
             if (next instanceof WebSocketConnectionGroup) {

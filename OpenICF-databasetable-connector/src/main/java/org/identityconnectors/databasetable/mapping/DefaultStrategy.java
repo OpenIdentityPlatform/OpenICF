@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.databasetable.mapping;
 
@@ -46,6 +47,7 @@ public class DefaultStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLParam(java.sql.ResultSet, int, int)
      */
+    @Override
     public SQLParam getSQLParam(ResultSet resultSet, int i, String name, final int sqlType) throws SQLException {
         return SQLUtil.getSQLParam(resultSet, i, name, sqlType);
     } 
@@ -53,6 +55,7 @@ public class DefaultStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#getSQLAttributeType(int)
      */
+    @Override
     public Class<?> getSQLAttributeType(int sqlType) {
         return SQLUtil.getSQLAttributeType(sqlType);
     }
@@ -60,6 +63,7 @@ public class DefaultStrategy implements MappingStrategy {
     /* (non-Javadoc)
      * @see org.identityconnectors.databasetable.MappingStrategy#setSQLParam(java.sql.PreparedStatement, int, org.identityconnectors.dbcommon.SQLParam)
      */
+    @Override
     public void setSQLParam(final PreparedStatement stmt, final int idx, SQLParam parm) throws SQLException {
         SQLUtil.setSQLParam(stmt, idx, parm);
     }    

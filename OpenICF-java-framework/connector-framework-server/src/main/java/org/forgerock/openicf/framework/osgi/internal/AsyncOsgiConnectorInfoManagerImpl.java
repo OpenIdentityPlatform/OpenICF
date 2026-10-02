@@ -85,6 +85,7 @@ public class AsyncOsgiConnectorInfoManagerImpl extends
     private final HashMap<String, Pair<Bundle, List<OsgiConnectorInfoImpl>>> connectorInfoCache =
             new HashMap<String, Pair<Bundle, List<OsgiConnectorInfoImpl>>>();
 
+    @Override
     public void addingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         NullArgumentException.validateNotNull(list, "ManifestEntry");
@@ -107,6 +108,7 @@ public class AsyncOsgiConnectorInfoManagerImpl extends
         }
     }
 
+    @Override
     public void removingEntries(Bundle bundle, List<ManifestEntry> list) {
         NullArgumentException.validateNotNull(bundle, "Bundle");
         synchronized (connectorInfoCache) {

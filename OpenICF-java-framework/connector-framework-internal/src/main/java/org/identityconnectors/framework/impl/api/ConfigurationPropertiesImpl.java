@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -68,6 +69,7 @@ public class ConfigurationPropertiesImpl implements ConfigurationProperties {
 
         private static final long serialVersionUID = 1L;
 
+        @Override
         public int compare(final ConfigurationPropertyImpl o1, final ConfigurationPropertyImpl o2) {
             int or1 = o1.getOrder();
             int or2 = o2.getOrder();
@@ -100,6 +102,7 @@ public class ConfigurationPropertiesImpl implements ConfigurationProperties {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConfigurationProperty getProperty(String name) {
         return properties.get(name);
     }
@@ -107,6 +110,7 @@ public class ConfigurationPropertiesImpl implements ConfigurationProperties {
     /**
      * {@inheritDoc}
      */
+    @Override
     public List<String> getPropertyNames() {
         List<String> names = new ArrayList<String>(properties.keySet());
         return CollectionUtil.newReadOnlyList(names);
@@ -117,6 +121,7 @@ public class ConfigurationPropertiesImpl implements ConfigurationProperties {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPropertyValue(String name, Object value) {
         ConfigurationPropertyImpl property = properties.get(name);
         if (property == null) {

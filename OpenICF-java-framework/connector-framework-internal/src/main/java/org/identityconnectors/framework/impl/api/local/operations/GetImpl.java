@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -56,6 +57,7 @@ public class GetImpl implements GetApiOp {
         return ((SearchImpl)op).getConnector();
     }
 
+    @Override
     public ConnectorObject getObject(ObjectClass objectClass, Uid uid, OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
         if (ObjectClass.ALL.equals(objectClass)) {
@@ -71,6 +73,7 @@ public class GetImpl implements GetApiOp {
         Filter filter = FilterBuilder.equalTo(uid);
         op.search(objectClass, filter, new ResultsHandler() {
 
+            @Override
             public boolean handle(ConnectorObject obj) {
                 list.add(obj);
                 return false;

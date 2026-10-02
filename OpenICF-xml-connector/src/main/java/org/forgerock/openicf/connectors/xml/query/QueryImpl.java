@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -46,6 +47,7 @@ public class QueryImpl implements Query {
         this.parts = new LinkedList<QueryPart>();
     }
 
+    @Override
     public void set(QueryPart part) {
         if (mainPart != null && parts.contains(mainPart)) {
             int index = parts.indexOf(mainPart);
@@ -60,10 +62,12 @@ public class QueryImpl implements Query {
         mainPart = part;
     }
 
+    @Override
     public Iterator<QueryPart> iterator() {
         return parts.iterator();
     }
 
+    @Override
     public void and(Query part) {
         parts.addLast(AND);
 
@@ -72,10 +76,12 @@ public class QueryImpl implements Query {
         }
     }
 
+    @Override
     public Collection<QueryPart> getParts() {
         return parts;
     }
 
+    @Override
     public void or(Query part) {
         parts.addLast(OR);
 
@@ -92,6 +98,7 @@ public class QueryImpl implements Query {
             this.value = value;
         }
 
+        @Override
         public String getExpression() {
             return this.value;
         }

@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  * "Portions Copyrighted 2014 ForgeRock AS"
  */
 package org.identityconnectors.ldap.sync.sunds;
@@ -126,10 +127,12 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
         this.oclass = oclass;
     }
 
+    @Override
     public SyncToken getLatestSyncToken() {
         return new SyncToken(getChangeLogAttributes().getLastChangeNumber());
     }
 
+    @Override
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         String context = getChangeLogAttributes().getChangeLogContext();
         final String changeNumberAttr = getChangeNumberAttribute();
@@ -148,6 +151,7 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
             LdapInternalSearch search = new LdapInternalSearch(conn, filter, singletonList(context), new DefaultSearchStrategy(false), controls);
 
             search.execute(new LdapSearchResultsHandler() {
+                @Override
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     results[0] = true;
                     LdapEntry entry = LdapEntry.create(baseDN, result);
@@ -661,8 +665,10 @@ public class SunDSChangeLogSyncStrategy implements LdapSyncStrategy {
     private PasswordDecryptor getPasswordDecryptor() {
         if (passwordDecryptor == null) {
             conn.getConfiguration().getPasswordDecryptionKey().access(new Accessor() {
+                @Override
                 public void access(final byte[] decryptionKey) {
                     conn.getConfiguration().getPasswordDecryptionInitializationVector().access(new Accessor() {
+                        @Override
                         public void access(byte[] decryptionIV) {
                             passwordDecryptor = new PasswordDecryptor(decryptionKey, decryptionIV);
                         }

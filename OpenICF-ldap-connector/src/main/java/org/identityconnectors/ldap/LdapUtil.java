@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * "Portions Copyrighted 2013-2015 ForgeRock AS"
  */
@@ -292,94 +293,117 @@ public class LdapUtil {
             return clazz.cast(o);
         }
 
+        @Override
         public boolean add(E o) {
             return list.add(o);
         }
 
+        @Override
         public void add(int index, E element) {
             list.add(index, element);
         }
 
+        @Override
         public boolean addAll(Collection<? extends E> c) {
             return list.addAll(c);
         }
 
+        @Override
         public boolean addAll(int index, Collection<? extends E> c) {
             return list.addAll(index, c);
         }
 
+        @Override
         public void clear() {
             list.clear();
         }
 
+        @Override
         public boolean contains(Object o) {
             return list.contains(o);
         }
 
+        @Override
         public boolean containsAll(Collection<?> c) {
             return list.containsAll(c);
         }
 
+        @Override
         public E get(int index) {
             return cast(list.get(index));
         }
 
+        @Override
         public int indexOf(Object o) {
             return list.indexOf(o);
         }
 
+        @Override
         public boolean isEmpty() {
             return list.isEmpty();
         }
 
+        @Override
         public Iterator<E> iterator() {
             return new Itr(list.iterator());
         }
 
+        @Override
         public int lastIndexOf(Object o) {
             return list.lastIndexOf(o);
         }
 
+        @Override
         public ListIterator<E> listIterator() {
             return new ListItr(list.listIterator());
         }
 
+        @Override
         public ListIterator<E> listIterator(int index) {
             return new ListItr(list.listIterator(index));
         }
 
+        @Override
         public boolean remove(Object o) {
             return list.remove(o);
         }
 
+        @Override
         public E remove(int index) {
             return cast(list.remove(index));
         }
 
+        @Override
         public boolean removeAll(Collection<?> c) {
             return list.removeAll(c);
         }
 
+        @Override
         public boolean retainAll(Collection<?> c) {
             return list.retainAll(c);
         }
 
+        @Override
         public E set(int index, E element) {
             return cast(list.set(index, element));
         }
 
+        @Override
         public int size() {
             return list.size();
         }
 
+        @Override
         public List<E> subList(int fromIndex, int toIndex) {
             return list.subList(fromIndex, toIndex);
         }
 
+        @Override
         public Object[] toArray() {
             return list.toArray();
         }
 
+        @Override
         public <T> T[] toArray(T[] a) {
             Object[] result = list.toArray(a);
             for (Object o : result) {
@@ -411,14 +435,17 @@ public class LdapUtil {
                 this.iter = iter;
             }
 
+            @Override
             public boolean hasNext() {
                 return iter.hasNext();
             }
 
+            @Override
             public E next() {
                 return cast(iter.next());
             }
 
+            @Override
             public void remove() {
                 iter.remove();
             }
@@ -447,38 +474,47 @@ public class LdapUtil {
                 this.iter = iter;
             }
 
+            @Override
             public void add(E o) {
                 iter.add(o);
             }
 
+            @Override
             public boolean hasNext() {
                 return iter.hasNext();
             }
 
+            @Override
             public boolean hasPrevious() {
                 return iter.hasPrevious();
             }
 
+            @Override
             public E next() {
                 return cast(iter.next());
             }
 
+            @Override
             public int nextIndex() {
                 return iter.nextIndex();
             }
 
+            @Override
             public E previous() {
                 return cast(iter.previous());
             }
 
+            @Override
             public int previousIndex() {
                 return iter.previousIndex();
             }
 
+            @Override
             public void remove() {
                 iter.remove();
             }
 
+            @Override
             public void set(E o) {
                 iter.set(o);
             }

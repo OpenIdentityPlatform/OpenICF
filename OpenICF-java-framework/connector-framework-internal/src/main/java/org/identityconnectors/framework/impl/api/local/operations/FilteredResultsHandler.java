@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -57,6 +58,7 @@ public final class FilteredResultsHandler implements ResultsHandler {
         this.filter = filter == null ? new PassThroughFilter() : filter;
     }
 
+    @Override
     public boolean handle(ConnectorObject object) {
         if (filter.accept(object)) {
             return handler.handle(object);
@@ -70,10 +72,12 @@ public final class FilteredResultsHandler implements ResultsHandler {
      */
     public static class PassThroughFilter implements Filter {
 
+        @Override
         public boolean accept(ConnectorObject obj) {
             return true;
         }
 
+        @Override
         public <R, P> R accept(FilterVisitor<R, P> v, P p) {
             return v.visitExtendedFilter(p, this);
         }

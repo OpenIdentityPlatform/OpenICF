@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.async.impl;
@@ -68,6 +69,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
         super(remoteConnection, connectorKey, facadeKeyFunction, timeout);
     }
 
+    @Override
     public SearchResult search(final ObjectClass objectClass, final Filter filter,
             final ResultsHandler handler, final OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
@@ -114,6 +116,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             this.timeout = timeout;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 RemoteOperationContext context,
                 long requestId,
@@ -129,6 +132,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             }
         }
 
+        @Override
         protected OperationRequest.Builder createOperationRequest(
                 RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -150,6 +154,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
                 long timeout) {
             super(context, requestId, completionCallback, requestBuilder);
             resultBuffer = new ResultBuffer<ConnectorObject, SearchResult>(timeout) {
+                @Override
                 protected boolean handle(Object result) {
                     if (result instanceof ConnectorObject) {
                         try {
@@ -199,6 +204,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             return getPromise();
         }
 
+        @Override
         public boolean check() {
             boolean stopped = resultBuffer.isStopped();
             if (stopped) {
@@ -212,6 +218,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             }
         }
 
+        @Override
         public void inconsistent() {
             if (!resultBuffer.hasLast() || !resultBuffer.hasAll()) {
                 inconsistencyCounter++;
@@ -226,6 +233,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             }
         }
 
+        @Override
         protected SearchOpResponse getOperationResponseMessages(
                 OperationMessages.OperationResponse message) {
             if (message.hasSearchOpResponse()) {
@@ -236,6 +244,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 SearchOpResponse message) {
             if (message.hasConnectorObject()) {
@@ -293,6 +302,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             }
             final SearchResult result =
                     connectorFacade.search(objectClass, filter, new ResultsHandler() {
+                        @Override
                         public boolean handle(ConnectorObject connectorObject) {
 
                             if (doContinue.get() && null != connectorObject) {
@@ -326,6 +336,7 @@ public class SearchAsyncApiOpImpl extends AbstractAPIOperation implements Search
             return response;
         }
 
+        @Override
         protected boolean tryCancel() {
             doContinue.set(Boolean.FALSE);
             return super.tryCancel();

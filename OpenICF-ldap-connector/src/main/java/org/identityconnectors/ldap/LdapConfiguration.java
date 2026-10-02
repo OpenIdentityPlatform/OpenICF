@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2013-2016 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap;
 
@@ -272,6 +273,7 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
     /**
      * {@inheritDoc}
      */
+    @Override
     public void validate() {
         checkNotBlank(host, "host.notBlank");
 
@@ -344,6 +346,7 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
         final int[] length = { 0 };
         if (array != null) {
             array.access(new Accessor() {
+                @Override
                 public void access(byte[] clearBytes) {
                     length[0] = clearBytes.length;
                 }
@@ -930,5 +933,6 @@ public class LdapConfiguration extends AbstractConfiguration implements Stateful
     // =======================================================================
     // Interface Implementation
     // =======================================================================
+    @Override
     public void release() {}
 }

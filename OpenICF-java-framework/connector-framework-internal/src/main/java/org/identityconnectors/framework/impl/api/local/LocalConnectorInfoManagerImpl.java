@@ -423,6 +423,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return paths;
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
         for (ConnectorInfo info : connectorInfos) {
             if (info.getConnectorKey().equals(key)) {
@@ -432,6 +433,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         return null;
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         return Collections.unmodifiableList(connectorInfos);
     }

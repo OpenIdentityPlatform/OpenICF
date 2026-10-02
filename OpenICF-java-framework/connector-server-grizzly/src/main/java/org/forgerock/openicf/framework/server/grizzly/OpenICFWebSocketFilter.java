@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.server.grizzly;
@@ -59,6 +60,7 @@ public class OpenICFWebSocketFilter extends WebSocketFilter {
         super(wsTimeoutInSeconds);
     }
 
+    @Override
     protected NextAction handleHandshake(final FilterChainContext ctx, final HttpContent content)
             throws IOException {
         // get HTTP request headers
@@ -168,6 +170,7 @@ public class OpenICFWebSocketFilter extends WebSocketFilter {
         }
     }
 
+    @Override
     protected boolean doServerUpgrade(final FilterChainContext ctx, final HttpContent requestContent)
             throws IOException {
         return WebSocketEngine.getEngine().upgrade(ctx, requestContent);

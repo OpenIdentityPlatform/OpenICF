@@ -87,6 +87,7 @@ public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void
         return map;
     }
 
+    @Override
     public Map<String, Object> visitAndFilter(Void parameter, AndFilter subFilters) {
         Map<String, Object> map = new LinkedHashMap<String, Object>(3);
         map.put("operation", "AND");
@@ -95,48 +96,58 @@ public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void
         return map;
     }
 
+    @Override
     public Map<String, Object> visitContainsAllValuesFilter(Void parameter,
             ContainsAllValuesFilter filter) {
         throw new UnsupportedOperationException(
                 "ContainsAllValuesFilter transformation is not supported");
     }
 
+    @Override
     public Map<String, Object> visitContainsFilter(Void parameter, ContainsFilter filter) {
         return createMap("CONTAINS", filter);
     }
 
+    @Override
     public Map<String, Object> visitEndsWithFilter(Void parameter, EndsWithFilter filter) {
         return createMap("ENDSWITH", filter);
     }
 
+    @Override
     public Map<String, Object> visitEqualsFilter(Void parameter, EqualsFilter filter) {
         return createMap("EQUALS", filter);
     }
 
+    @Override
     public Map<String, Object> visitGreaterThanFilter(Void parameter, GreaterThanFilter filter) {
         return createMap("GREATERTHAN", filter);
     }
 
+    @Override
     public Map<String, Object> visitGreaterThanOrEqualFilter(Void parameter,
             GreaterThanOrEqualFilter filter) {
         return createMap("GREATERTHANOREQUAL", filter);
     }
 
+    @Override
     public Map<String, Object> visitLessThanFilter(Void parameter, LessThanFilter filter) {
         return createMap("LESSTHAN", filter);
     }
 
+    @Override
     public Map<String, Object> visitLessThanOrEqualFilter(Void parameter,
             LessThanOrEqualFilter filter) {
         return createMap("LESSTHANOREQUAL", filter);
     }
 
+    @Override
     public Map<String, Object> visitNotFilter(Void parameter, NotFilter subFilter) {
         Map<String, Object> map = subFilter.getFilter().accept(this, null);
         map.put("not", true);
         return map;
     }
 
+    @Override
     public Map<String, Object> visitOrFilter(Void parameter, OrFilter subFilters) {
         Map<String, Object> map = new LinkedHashMap<String, Object>(3);
         map.put("operation", "OR");
@@ -145,10 +156,12 @@ public class MapFilterVisitor implements FilterVisitor<Map<String, Object>, Void
         return map;
     }
 
+    @Override
     public Map<String, Object> visitStartsWithFilter(Void parameter, StartsWithFilter filter) {
         return createMap("STARTSWITH", filter);
     }
 
+    @Override
     public Map<String, Object> visitExtendedFilter(Void aVoid, Filter filter) {
         throw new UnsupportedOperationException("Filter type is not supported: "
                 + filter.getClass());

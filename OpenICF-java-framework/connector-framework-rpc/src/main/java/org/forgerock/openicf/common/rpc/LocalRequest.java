@@ -121,11 +121,13 @@ public abstract class LocalRequest<V, E extends Exception, G extends RemoteConne
         return false;
     }
 
+    @Override
     public final void handleResult(final V result) {
         remoteConnectionContext.getRemoteConnectionGroup().removeRequest(getRequestId());
         tryHandleResult(result);
     }
 
+    @Override
     public final void handleException(final E error) {
         remoteConnectionContext.getRemoteConnectionGroup().removeRequest(getRequestId());
         tryHandleError(error);

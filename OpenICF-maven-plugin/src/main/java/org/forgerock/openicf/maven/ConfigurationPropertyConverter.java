@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -41,18 +42,21 @@ public class ConfigurationPropertyConverter extends AbstractConfigurationConvert
         LogEnabled {
     private Logger log;
 
+    @Override
     public void enableLogging(final Logger logger) {
         assert logger != null;
 
         this.log = logger;
     }
 
+    @Override
     public boolean canConvert(final Class type) {
         assert type != null;
 
         return PropertyBag.class.isAssignableFrom(type);
     }
 
+    @Override
     public Object fromConfiguration(final ConverterLookup converterLookup,
             final PlexusConfiguration configuration, final Class type, final Class baseType,
             final ClassLoader classLoader, final ExpressionEvaluator expressionEvaluator,

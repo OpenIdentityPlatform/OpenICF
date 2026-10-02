@@ -50,6 +50,7 @@ public class AuthenticationImpl extends ConnectorAPIOperationRunner implements
      * Delegates to the connector's {@link AuthenticateOp#authenticate} implementation
      * after validating that the object class, username and password are supplied.
      */
+    @Override
     public Uid authenticate(final ObjectClass objectClass, final String username,
             final GuardedString password,
             OperationOptions options) {

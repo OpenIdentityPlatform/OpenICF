@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -72,6 +73,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
         OPERATIONAL_ATTRIBUTE_NAMES.add(Name.NAME);
     };
 
+    @Override
     public Uid update(final ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
             OperationOptions options) {
         // validate all the parameters..
@@ -89,6 +91,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
         return (Uid) normalizer.normalizeAttribute(ret);
     }
 
+    @Override
     public Uid addAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToAdd,
             OperationOptions options) {
         // validate all the parameters..
@@ -114,6 +117,7 @@ public class UpdateImpl extends ConnectorAPIOperationRunner implements
         return (Uid) normalizer.normalizeAttribute(ret);
     }
 
+    @Override
     public Uid removeAttributeValues(ObjectClass objclass, Uid uid, Set<Attribute> valuesToRemove,
             OperationOptions options) {
         // validate all the parameters..

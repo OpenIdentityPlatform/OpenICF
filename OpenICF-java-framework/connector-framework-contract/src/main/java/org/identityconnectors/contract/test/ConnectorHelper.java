@@ -282,6 +282,7 @@ public class ConnectorHelper {
         final List<ConnectorObject> foundObjects = new ArrayList<ConnectorObject>();
         connectorFacade.search(objClass, nameFilter,
                 new ResultsHandler() {
+                    @Override
                     public boolean handle(ConnectorObject obj) {
                         foundObjects.add(obj);
                         return false;
@@ -304,6 +305,7 @@ public class ConnectorHelper {
         final List<ConnectorObject> foundObjects = new ArrayList<ConnectorObject>();
         connectorFacade.search(objClass, filter,
                 new ResultsHandler() {
+                    @Override
                     public boolean handle(ConnectorObject obj) {
                         foundObjects.add(obj);
                         return true;
@@ -320,6 +322,7 @@ public class ConnectorHelper {
         final Map<Uid, ConnectorObject> foundObjects = new Hashtable<Uid, ConnectorObject>();
         connectorFacade.search(objClass, filter,
                 new ResultsHandler() {
+                    @Override
                     public boolean handle(ConnectorObject obj) {
                         foundObjects.put(obj.getUid(), obj);
                         return true;
@@ -337,6 +340,7 @@ public class ConnectorHelper {
         final List<SyncDelta> returnedDeltas = new ArrayList<SyncDelta>();
 
         connectorFacade.sync(objClass, token, new SyncResultsHandler() {
+            @Override
             public boolean handle(SyncDelta delta) {
                 returnedDeltas.add(delta);
                 return true;

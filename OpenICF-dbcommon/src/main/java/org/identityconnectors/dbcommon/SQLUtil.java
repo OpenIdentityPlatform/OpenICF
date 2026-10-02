@@ -111,6 +111,7 @@ public final class SQLUtil {
             final DataSource ds = (DataSource) ic.lookup(datasourceName);
             final Connection[] ret = new Connection[1];
             password.access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     try {
                         ret[0] = ds.getConnection(user, new String(clearChars));
@@ -220,6 +221,7 @@ public final class SQLUtil {
         }
         if (password != null) {
             password.access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     info.put("password", new String(clearChars));
                 }
@@ -997,6 +999,7 @@ public final class SQLUtil {
             GuardedString guard) throws SQLException {
         try {
             guard.access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     try {
                         // Never use setString, the DB2 database will fail for

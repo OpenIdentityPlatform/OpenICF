@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.testconnector;
@@ -37,14 +38,17 @@ public class TstStatefulPoolableConnector extends TstAbstractConnector implement
         super.init(cfg);
     }
 
+    @Override
     public Configuration getConfiguration() {
         return config;
     }
 
+    @Override
     public void dispose() {
         config = null;
     }
 
+    @Override
     public void checkAlive() {
     }
 

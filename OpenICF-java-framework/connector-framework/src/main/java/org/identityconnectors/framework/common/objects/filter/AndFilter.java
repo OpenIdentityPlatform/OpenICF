@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -53,6 +54,7 @@ public final class AndFilter extends CompositeFilter {
      *
      * @see Filter#accept(ConnectorObject)
      */
+    @Override
     public boolean accept(final ConnectorObject obj) {
         boolean result = true;
         for (final Filter subFilter : subFilters) {
@@ -64,6 +66,7 @@ public final class AndFilter extends CompositeFilter {
         return result;
     }
 
+    @Override
     public <R, P> R accept(FilterVisitor<R, P> v, P p) {
         return v.visitAndFilter(p, this);
     }

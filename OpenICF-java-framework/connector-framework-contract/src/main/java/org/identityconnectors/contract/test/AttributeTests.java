@@ -704,6 +704,7 @@ class LogInfo {
         return oc;
     }
 
+    @Override
     public String toString() {
         return " \n ObjectClass: " + oc.toString() + "\n AttributeSet: " + attrSet.toString();
     }

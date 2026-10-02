@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.logging.impl;
 
@@ -38,10 +39,12 @@ public class NoOpLogger implements LogSpi {
     /**
      * Logs nothing. Its a black hole command.
      */
+    @Override
     public void log(Class<?> clazz, String methodName, Level level,
                     String message, Throwable ex) {
     }
 
+    @Override
     public void log(Class<?> clazz, StackTraceElement method, Level level,
                     String message, Throwable ex) {
     }
@@ -49,10 +52,12 @@ public class NoOpLogger implements LogSpi {
     /**
      * Always returns <code>false</code> because there nothing to do.
      */
+    @Override
     public boolean isLoggable(Class<?> clazz, Level level) {
         return false;
     }
 
+    @Override
     public boolean needToInferCaller(Class<?> clazz, Level level) {
         return false;
     }

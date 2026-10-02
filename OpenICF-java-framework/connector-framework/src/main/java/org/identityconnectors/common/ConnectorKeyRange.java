@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.common;
@@ -74,6 +75,7 @@ public final class ConnectorKeyRange {
         this.connectorName = connectorName;
     }
 
+    @Override
     public boolean equals(Object o) {
         if (this == o)
             return true;
@@ -87,6 +89,7 @@ public final class ConnectorKeyRange {
                 && connectorName.equals(that.connectorName);
     }
 
+    @Override
     public int hashCode() {
         int result = bundleName.hashCode();
         result = 31 * result + bundleVersionRange.hashCode();

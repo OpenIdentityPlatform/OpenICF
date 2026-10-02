@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -47,6 +48,7 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         super(context, connector);
     }
 
+    @Override
     public SyncToken sync(final ObjectClass objectClass, final SyncToken token,
             SyncResultsHandler handler, OperationOptions options) {
         Assertions.nullCheck(objectClass, "objectClass");
@@ -72,10 +74,12 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         // SyncTokenResultsHandler handlerChain =
         ((SyncOp) getConnector()).sync(objectClass, token, new SyncTokenResultsHandler() {
 
+            @Override
             public void handleResult(SyncToken token) {
                 result.compareAndSet(null, token);
             }
 
+            @Override
             public boolean handle(final SyncDelta delta) {
                 if (doAll && SyncDeltaType.DELETE.equals(delta.getDeltaType())
                         && null == delta.getObjectClass()) {
@@ -88,6 +92,7 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
         return result.get();
     }
 
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         Assertions.nullCheck(objectClass, "objectClass");
         return ((SyncOp) getConnector()).getLatestSyncToken(objectClass);
@@ -108,6 +113,7 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
             this.handler = handler;
         }
 
+        @Override
         public boolean handle(final SyncDelta delta) {
             SyncDeltaBuilder bld = new SyncDeltaBuilder(delta);
             if (delta.getObject() != null) {

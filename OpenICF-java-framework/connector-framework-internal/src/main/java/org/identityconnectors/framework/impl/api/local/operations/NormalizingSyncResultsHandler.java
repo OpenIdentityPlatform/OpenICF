@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -42,6 +43,7 @@ public class NormalizingSyncResultsHandler implements SyncResultsHandler {
         this.normalizer = normalizer;
     }
 
+    @Override
     public boolean handle(SyncDelta delta) {
         SyncDelta normalized = normalizer.normalizeSyncDelta(delta);
         return target.handle(normalized);

@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013-2014 Evolveum
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -36,6 +37,7 @@ import java.util.List;
  */
 public class CaseNormalizer implements AttributeNormalizer {
 
+    @Override
     public Attribute normalizeAttribute(ObjectClass oclass, Attribute attribute) {
         Attribute rv = attribute;
         boolean converted = false;

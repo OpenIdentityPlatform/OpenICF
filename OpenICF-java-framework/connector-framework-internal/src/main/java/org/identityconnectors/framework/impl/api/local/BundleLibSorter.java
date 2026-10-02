@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2013 ConnId
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local;
 
@@ -36,6 +37,7 @@ public class BundleLibSorter implements Comparator<File>, Serializable {
 
     private static final long serialVersionUID = 1885450684185821535L;
 
+    @Override
     public int compare(final File arg0, final File arg1) {
         final String name1 = arg0.getName();
         final String name2 = arg1.getName();

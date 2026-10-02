@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.testconnector;
 
@@ -88,6 +89,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         checkClassLoader();
     }
 
+    @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes, OperationOptions options) {
         checkClassLoader();
         Integer delay = (Integer)options.getOptions().get("delay");
@@ -103,6 +105,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public void init(Configuration cfg) {
         checkClassLoader();
         _config = (TstConnectorConfig)cfg;
@@ -112,10 +115,12 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         _myConnection = new MyTstConnection(_connectionCount++);
     }
 
+    @Override
     public Configuration getConfiguration() {
         return _config;
     }
 
+    @Override
     public void dispose() {
         checkClassLoader();
         if (_myConnection != null) {
@@ -124,6 +129,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public void checkAlive() {
         checkClassLoader();
         _myConnection.test();
@@ -144,12 +150,14 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         return s1+s2;
     }
 
+    @Override
     public FilterTranslator<String> createFilterTranslator(ObjectClass objectClass, OperationOptions options) {
          checkClassLoader();
          //no translation - ok since this is just for tests
          return new AbstractFilterTranslator<String>(){};
     }
 
+    @Override
     public void executeQuery(ObjectClass objectClass, String query, ResultsHandler handler, OperationOptions options) {
         checkClassLoader();
         int remaining = _config.getNumResults();
@@ -180,6 +188,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public void sync(ObjectClass objectClass, SyncToken token,
                      SyncResultsHandler handler,
                      OperationOptions options) {
@@ -209,11 +218,13 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         checkClassLoader();
         return new SyncToken("mylatest");
     }
 
+    @Override
     public Schema schema() {
         checkClassLoader();
         SchemaBuilder builder = new SchemaBuilder(TstConnector.class);
@@ -230,6 +241,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
 
     BatchUseCase3Processor processorUseCase3 = null;
 
+    @Override
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
                                    final OperationOptions options) {
         checkClassLoader();
@@ -238,15 +250,18 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             final BatchToken token = new BatchUseCase2Processor().executeBatch(tasks, options);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     assert _myConnection != null;
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     assert _myConnection != null;
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     assert _myConnection != null;
                     return token;
@@ -257,15 +272,18 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             final BatchToken token = processorUseCase3.executeBatch(tasks, options, observer);
 
             return new Subscription() {
+                @Override
                 public void close() {
                     assert _myConnection != null;
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     assert _myConnection != null;
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     assert _myConnection != null;
                     return token;
@@ -294,15 +312,18 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             }
             observer.onCompleted();
             return new Subscription() {
+                @Override
                 public void close() {
                     assert _myConnection != null;
                 }
 
+                @Override
                 public boolean isUnsubscribed() {
                     assert _myConnection != null;
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     assert _myConnection != null;
                     return null;
@@ -311,6 +332,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
+    @Override
     public Subscription queryBatch(final BatchToken batchToken, final Observer<BatchResult> observer,
                                  final OperationOptions options) {
         checkClassLoader();
@@ -318,12 +340,15 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         final AtomicBoolean opComplete = new AtomicBoolean(false);
 
         Subscription ret = new Subscription() {
+            @Override
             public void close() {}
 
+            @Override
             public boolean isUnsubscribed() {
                 return true;
             }
 
+            @Override
             public Object getReturnValue() {
                 return opComplete.get() ? null : batchToken;
             }
@@ -378,6 +403,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             return new BatchToken(token);
         }
 
+        @Override
         public void run() {
             List<BatchTask> tasks = BatchRemoteCache.getTasks(token);
             int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")
@@ -430,6 +456,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             return new BatchToken(token);
         }
 
+        @Override
         public void run() {
             List<BatchTask> tasks = BatchRemoteCache.getTasks(token);
             int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")

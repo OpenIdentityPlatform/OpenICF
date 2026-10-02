@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.server;
 
@@ -160,6 +161,7 @@ public final class Main {
 
     private static Thread beforeReadPassword() {
         Thread maskThread = new Thread() {
+            @Override
             public void run() {
                 while (!interrupted()) {
                     try {

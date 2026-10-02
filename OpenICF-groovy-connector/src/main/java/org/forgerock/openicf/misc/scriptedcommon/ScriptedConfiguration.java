@@ -656,6 +656,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     // Interface Implementation
     // =======================================================================
 
+    @Override
     public void release() {
         synchronized (this) {
             Closure c = getReleaseClosure();
@@ -675,6 +676,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /**
      * {@inheritDoc}
      */
+    @Override
     public void validate() {
         logger.info("Load and compile configured scripts");
         if (getScriptRoots() == null || getScriptRoots().length < 1) {

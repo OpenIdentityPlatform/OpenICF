@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -75,6 +76,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
         return runnerImplConstructor.newInstance(operationalContext, connector);
     }
     
+    @Override
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable {
         //do not proxy equals, hashCode, toString
@@ -165,6 +167,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             this.poolEntry = poolEntry;
         }
 
+        @Override
         public void close() {
             try {
                 subscription.close();
@@ -175,10 +178,12 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             }
         }
 
+        @Override
         public boolean isUnsubscribed() {
             return subscription.isUnsubscribed();
         }
 
+        @Override
         public Object getReturnValue() {
             return subscription.getReturnValue();
         }

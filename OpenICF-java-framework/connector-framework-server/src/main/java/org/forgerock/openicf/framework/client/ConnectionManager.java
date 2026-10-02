@@ -137,6 +137,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
     private final ScheduledFuture<?> groupCheckFuture;
 
     private final Runnable groupChecker = new Runnable() {
+        @Override
         public void run() {
             if (isRunning()) {
                 for (WebSocketConnectionGroup group : connectionGroups.values()) {
@@ -163,6 +164,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         clientTransport.start();
     }
 
+    @Override
     protected void doClose() {
         try {
             groupCheckFuture.cancel(false);
@@ -188,6 +190,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
         scheduledExecutorService.release();
     }
 
+    @Override
     public ClientRemoteConnectorInfoManager connect(final RemoteWSFrameworkConnectionInfo info) {
         if (isRunning()) {
             ClientRemoteConnectorInfoManager manager = registry.get(info);
@@ -206,6 +209,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                         }
 
                         manager.addCloseListener(new org.forgerock.openicf.framework.CloseListener<ClientRemoteConnectorInfoManager>() {
+                            @Override
                             public void onClosed(ClientRemoteConnectorInfoManager source) {
                                 registry.remove(info);
                             }
@@ -290,6 +294,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
             final IdleTimeoutFilter timeoutFilter =
                     new IdleTimeoutFilter(timeoutExecutor, timeoutResolver,
                             new IdleTimeoutFilter.TimeoutHandler() {
+                                @Override
                                 public void onTimeout(Connection connection) {
                                     WebSocketHolder.get(connection).webSocket.close(
                                             WebSocket.NORMAL_CLOSURE, "Idle timeout occurred");
@@ -366,6 +371,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 configurator.set(new SSLContextConfigurator(false));
             }
             clientConfig.getTrustStorePass().access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     configurator.get().setTrustStorePass(new String(clearChars));
                 }
@@ -377,6 +383,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 configurator.set(new SSLContextConfigurator(false));
             }
             clientConfig.getKeyStorePass().access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     configurator.get().setKeyStorePass(clearChars);
                 }
@@ -387,6 +394,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
                 configurator.set(new SSLContextConfigurator(false));
             }
             clientConfig.getKeyPass().access(new GuardedString.Accessor() {
+                @Override
                 public void access(char[] clearChars) {
                     configurator.get().setKeyPass(clearChars);
                 }
@@ -535,6 +543,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
 
         private static final Logger logger = Grizzly.logger(WebSocketClientFilter.class);
 
+        @Override
         public NextAction handleRead(FilterChainContext ctx) throws IOException {
             // Get connection
             final Connection connection = ctx.getConnection();
@@ -589,6 +598,7 @@ public class ConnectionManager extends RemoteConnectionInfoManagerFactory {
             }
         }
 
+        @Override
         protected void onHandshakeFailure(final Connection connection, final HandshakeException e) {
             super.onHandshakeFailure(connection, e);
             ClientRemoteConnectorInfoManager.CONNECT_PROMISE.get(connection).handleException(

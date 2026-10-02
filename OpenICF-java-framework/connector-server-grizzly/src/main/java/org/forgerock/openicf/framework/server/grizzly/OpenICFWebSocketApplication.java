@@ -83,6 +83,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
 
     protected ScheduledFuture<?> healthChecker = executorService.scheduleWithFixedDelay(
             new Runnable() {
+                @Override
                 public void run() {
                     for (WebSocketConnectionGroup e : globalConnectionGroups.values()) {
                         if (!e.checkIsActive()) {
@@ -99,6 +100,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
         this.keyHash = keyHash;
     }
 
+    @Override
     public List<String> getSupportedProtocols(List<String> subProtocol) {
         if (subProtocol.contains(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL)) {
             return Arrays.asList(RemoteWSFrameworkConnectionInfo.OPENICF_PROTOCOL);
@@ -135,6 +137,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
         }
     }
 
+    @Override
     public void close() {
         healthChecker.cancel(false);
         executorService.shutdown();
@@ -160,6 +163,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             return super.handshake(webSocketConnection, message);
         }
 
+        @Override
         protected void doClose() {
 
         }
@@ -177,6 +181,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
 
         private final WebSocketConnectionHolder adapter = new WebSocketConnectionHolder() {
 
+            @Override
             protected void handshake(HandshakeMessage message) {
                 context = connectionPrincipal.handshake(this, message);
                 if (null == context) {
@@ -187,14 +192,17 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
                 }
             }
 
+            @Override
             public boolean isOperational() {
                 return isConnected();
             }
 
+            @Override
             public RemoteOperationContext getRemoteConnectionContext() {
                 return context;
             }
 
+            @Override
             public Future<?> sendBytes(byte[] data) {
                 if (isConnected()) {
                     return protocolHandler.send(data);
@@ -204,6 +212,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
                 }
             }
 
+            @Override
             public Future<?> sendString(String data) {
                 if (isConnected()) {
                     return protocolHandler.send(data);
@@ -213,6 +222,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
                 }
             }
 
+            @Override
             public void sendPing(byte[] applicationData) throws Exception {
                 if (isConnected()) {
                     protocolHandler.send(new DataFrame(new PingFrameType(), applicationData));
@@ -221,6 +231,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
                 }
             }
 
+            @Override
             public void sendPong(byte[] applicationData) throws Exception {
                 if (isConnected()) {
                     protocolHandler.send(new DataFrame(new PongFrameType(), applicationData));
@@ -229,6 +240,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
                 }
             }
 
+            @Override
             protected void tryClose() {
                 logger.finest("Closing WebSocketConnectionHolder");
                 OpenICFWebSocket.this.close();
@@ -253,6 +265,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             return listeners.remove(listener);
         }
 
+        @Override
         public void onClose(DataFrame frame) {
             super.onClose(frame);
             final ClosingFrame closing = (ClosingFrame) frame;
@@ -269,6 +282,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             }
         }
 
+        @Override
         public void onConnect() {
             super.onConnect();
             for (OperationMessageListener listener : listeners) {
@@ -276,6 +290,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             }
         }
 
+        @Override
         public void onMessage(byte[] data) {
             super.onMessage(data);
             for (OperationMessageListener listener : listeners) {
@@ -283,6 +298,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             }
         }
 
+        @Override
         public void onMessage(String text) {
             super.onMessage(text);
             for (OperationMessageListener listener : listeners) {
@@ -290,6 +306,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             }
         }
 
+        @Override
         public void onPing(DataFrame frame) {
             super.onPing(frame);
             for (OperationMessageListener listener : listeners) {
@@ -297,6 +314,7 @@ public class OpenICFWebSocketApplication extends WebSocketApplication implements
             }
         }
 
+        @Override
         public void onPong(DataFrame frame) {
             super.onPong(frame);
             for (OperationMessageListener listener : listeners) {

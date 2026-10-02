@@ -97,11 +97,13 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         handshakeMessage = MessagesUtil.createHandshakeMessage(keyPair.getPublic());
     }
 
+    @Override
     public void onClose(final WebSocketConnectionHolder socket, int code, String reason) {
         logger.info("{0} onClose({1},{2}) ", loggerName(), String.valueOf(code), String
                 .valueOf(reason));
     }
 
+    @Override
     public void onConnect(final WebSocketConnectionHolder socket) {
         if (isClient()) {
             logger.info("Client onConnect() - send Handshake '({0})'", handshakeMessage.build().getSessionId());
@@ -115,14 +117,17 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         }
     }
 
+    @Override
     public void onError(Throwable t) {
         logger.ok(t, "Socket error");
     }
 
+    @Override
     public void onMessage(WebSocketConnectionHolder socket, String data) {
         logger.warn("String message is ignored: {0}", data);
     }
 
+    @Override
     public void onMessage(final WebSocketConnectionHolder socket, final byte[] bytes) {
         logger.ok("{0} onMessage({1}:bytes)", loggerName(), bytes.length);
 
@@ -132,6 +137,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         // Operation requests are handed off to the shared pool inside
         // processMessage, so operations of one socket still run concurrently.
         socket.executeSerially(connectorFramework.getMessageExecutor(), new Runnable() {
+            @Override
             public void run() {
                 processMessage(socket, bytes);
             }
@@ -258,6 +264,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         }
     }
 
+    @Override
     public void onPing(WebSocketConnectionHolder socket, byte[] bytes) {
         // Nothing to do, pong response has been sent
         logger.info("{0} onPing()", loggerName());
@@ -269,6 +276,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
         // socket.touch();
     }
 
+    @Override
     public void onPong(WebSocketConnectionHolder socket, byte[] bytes) {
         // Confirm ping response!
         logger.info("{0} onPong()", loggerName());
@@ -516,6 +524,7 @@ public class OpenICFServerAdapter implements OperationMessageListener {
             this.config = config;
         }
 
+        @Override
         public void configurationPropertyChange(List<ConfigurationProperty> changes) {
             try {
                 RemoteMessage.Builder request =

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.osgi.internal;
@@ -37,10 +38,12 @@ public class OsgiConnectorFramework extends ConnectorFramework {
         this.connectorInfoManagerDelegate = connectorInfoManager.wrap();
     }
 
+    @Override
     public AsyncConnectorInfoManager getOSGiConnectorInfoManager() {
         return connectorInfoManagerDelegate;
     }
 
+    @Override
     public boolean isOSGiEnabled() {
         return true;
     }
