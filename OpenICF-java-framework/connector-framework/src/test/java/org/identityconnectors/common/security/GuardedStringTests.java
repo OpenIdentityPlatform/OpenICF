@@ -124,10 +124,11 @@ public class GuardedStringTests {
     }
 
     @Test
-    public void testToStringNeverExposesTheClearText() {
-        GuardedString str = new GuardedString("secret".toCharArray());
-        assertFalse(str.toString().contains("secret"),
-                "toString() must never leak the clear text");
+    public void testToStringDoesNotDependOnTheSecret() {
+        GuardedString first = new GuardedString("secret".toCharArray());
+        GuardedString second = new GuardedString("other".toCharArray());
+        assertEquals(first.toString(), second.toString(),
+                "toString() must not carry anything derived from the clear text");
     }
 
     @Test
