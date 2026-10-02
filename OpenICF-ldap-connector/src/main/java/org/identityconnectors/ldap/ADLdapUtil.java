@@ -83,7 +83,8 @@ public class ADLdapUtil {
 
     /**
      * As {@link #parseADInteger(String)}, for the numeric AD attributes that
-     * do not fit in an int (such as the AD epoch time values).
+     * do not fit in an int (such as the AD epoch time values and the 64-bit
+     * update sequence numbers uSNChanged and highestCommittedUSN).
      */
     public static long parseADLong(String value) {
         try {

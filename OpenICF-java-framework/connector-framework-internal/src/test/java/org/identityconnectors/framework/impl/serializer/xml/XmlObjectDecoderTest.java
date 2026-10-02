@@ -16,6 +16,7 @@
 package org.identityconnectors.framework.impl.serializer.xml;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
@@ -38,34 +39,75 @@ public class XmlObjectDecoderTest {
 
     @Test
     public void rejectsAMalformedInt() {
-        String xml = corrupt(SerializerUtil.serializeXmlObject(Integer.valueOf(42), true), "42");
-        try {
-            SerializerUtil.deserializeXmlObject(xml, true);
-            fail("Expected the malformed value to be rejected");
-        } catch (ConnectorException expected) {
-            // expected: not a bare NumberFormatException
-        }
+        assertRejected(corrupt(SerializerUtil.serializeXmlObject(Integer.valueOf(42), true), "42"), "int");
     }
 
     @Test
     public void rejectsAMalformedLong() {
-        String xml = corrupt(SerializerUtil.serializeXmlObject(Long.valueOf(42L), true), "42");
-        try {
-            SerializerUtil.deserializeXmlObject(xml, true);
-            fail("Expected the malformed value to be rejected");
-        } catch (ConnectorException expected) {
-            // expected
-        }
+        assertRejected(corrupt(SerializerUtil.serializeXmlObject(Long.valueOf(42L), true), "42"), "long");
     }
 
     @Test
     public void rejectsAMalformedDouble() {
-        String xml = corrupt(SerializerUtil.serializeXmlObject(Double.valueOf(4.2), true), "4.2");
+        assertRejected(corrupt(SerializerUtil.serializeXmlObject(Double.valueOf(4.2), true), "4.2"), "double");
+    }
+
+    @Test
+    public void rejectsAMalformedFloat() {
+        assertRejected(corrupt(SerializerUtil.serializeXmlObject(Float.valueOf(4.5f), true), "4.5"), "float");
+    }
+
+    @Test
+    public void rejectsAMalformedByte() {
+        assertRejected(corrupt(SerializerUtil.serializeXmlObject(Byte.valueOf((byte) 42), true), "42"), "byte");
+    }
+
+    /**
+     * An element with no text node decodes to null, which Double, Float and
+     * Byte parsing reject with a NullPointerException rather than a
+     * NumberFormatException.
+     */
+    @Test
+    public void rejectsAnEmptyDouble() {
+        assertRejectedEmpty(empty(SerializerUtil.serializeXmlObject(Double.valueOf(4.2), true), "4.2"), "double");
+    }
+
+    @Test
+    public void rejectsAnEmptyFloat() {
+        assertRejectedEmpty(empty(SerializerUtil.serializeXmlObject(Float.valueOf(4.5f), true), "4.5"), "float");
+    }
+
+    @Test
+    public void rejectsAnEmptyByte() {
+        assertRejectedEmpty(empty(SerializerUtil.serializeXmlObject(Byte.valueOf((byte) 42), true), "42"), "byte");
+    }
+
+    @Test
+    public void rejectsAnEmptyInt() {
+        assertRejectedEmpty(empty(SerializerUtil.serializeXmlObject(Integer.valueOf(42), true), "42"), "int");
+    }
+
+    @Test
+    public void rejectsAnEmptyLong() {
+        assertRejectedEmpty(empty(SerializerUtil.serializeXmlObject(Long.valueOf(42L), true), "42"), "long");
+    }
+
+    private static void assertRejected(String xml, String type) {
         try {
             SerializerUtil.deserializeXmlObject(xml, true);
             fail("Expected the malformed value to be rejected");
-        } catch (ConnectorException expected) {
-            // expected
+        } catch (ConnectorException e) {
+            assertEquals(e.getMessage(), "Malformed " + type + " value on the wire: 'not-a-number'");
+            assertTrue(e.getCause() instanceof NumberFormatException, String.valueOf(e.getCause()));
+        }
+    }
+
+    private static void assertRejectedEmpty(String xml, String type) {
+        try {
+            SerializerUtil.deserializeXmlObject(xml, true);
+            fail("Expected the empty value to be rejected");
+        } catch (ConnectorException e) {
+            assertEquals(e.getMessage(), "Malformed " + type + " value on the wire: empty element");
         }
     }
 
@@ -75,11 +117,23 @@ public class XmlObjectDecoderTest {
      * only the value under test is corrupted.
      */
     private static String corrupt(String validXml, String encodedValue) {
-        String corrupted = validXml.replace(">" + encodedValue + "<", ">not-a-number<");
-        if (corrupted.equals(validXml)) {
+        return replaceValue(validXml, encodedValue, "not-a-number");
+    }
+
+    /**
+     * Removes the encoded numeric payload of a valid wire message, leaving an
+     * element with no text node, which the DTD's #PCDATA content allows.
+     */
+    private static String empty(String validXml, String encodedValue) {
+        return replaceValue(validXml, encodedValue, "");
+    }
+
+    private static String replaceValue(String validXml, String encodedValue, String replacement) {
+        String changed = validXml.replace(">" + encodedValue + "<", ">" + replacement + "<");
+        if (changed.equals(validXml)) {
             throw new IllegalStateException("Could not locate '" + encodedValue
-                    + "' in the serialized XML to corrupt it: " + validXml);
+                    + "' in the serialized XML to replace it: " + validXml);
         }
-        return corrupted;
+        return changed;
     }
 }
