@@ -100,13 +100,18 @@ public class SchemaParser {
             if (type == null) {
                 continue;
             }
+            XSComplexType xsCompType = type.getType().asComplexType();
+            if (xsCompType == null) {
+                log.warn("Element {0} has a simple type, it is not an object class: skipped",
+                        type.getName());
+                continue;
+            }
 
             Set<AttributeInfo> attributes = new HashSet<AttributeInfo>();
             List<Class<? extends SPIOperation>> supportedOp = new LinkedList<Class<? extends SPIOperation>>();
 
             ObjectClassInfoBuilder objectClassBuilder = new ObjectClassInfoBuilder();
             objectClassBuilder.setType(type.getName());
-            XSComplexType xsCompType = type.getType().asComplexType();
 
             if (xsCompType.getAnnotation() != null) {
                 String supportedOpString = xsCompType.getAnnotation().getAnnotation().toString();

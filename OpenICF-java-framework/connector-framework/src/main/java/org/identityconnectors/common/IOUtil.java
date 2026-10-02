@@ -294,6 +294,8 @@ public final class IOUtil {
     public static String getResourceAsString(final Class<?> clazz, final String res,
             final Charset charset) {
         assert clazz != null && StringUtil.isNotBlank(res);
+        // checked before the stream opens: the reader would throw with the stream open
+        Assertions.nullCheck(charset, "charset");
         String ret = null;
         final InputStream ins = getResourceAsStream(clazz, res);
         if (ins != null) {
