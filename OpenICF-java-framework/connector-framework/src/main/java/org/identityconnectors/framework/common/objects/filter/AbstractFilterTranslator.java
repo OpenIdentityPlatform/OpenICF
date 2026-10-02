@@ -409,27 +409,88 @@ abstract public class AbstractFilterTranslator<T> implements FilterTranslator<T>
      * @return The expression or null (for everything)
      */
     private T createLeafExpression(Filter filter, boolean not) {
-        if (filter instanceof ContainsFilter) {
-            return createContainsExpression((ContainsFilter) filter, not);
-        } else if (filter instanceof EndsWithFilter) {
-            return createEndsWithExpression((EndsWithFilter) filter, not);
-        } else if (filter instanceof EqualsFilter) {
-            return createEqualsExpression((EqualsFilter) filter, not);
-        } else if (filter instanceof GreaterThanFilter) {
-            return createGreaterThanExpression((GreaterThanFilter) filter, not);
-        } else if (filter instanceof GreaterThanOrEqualFilter) {
-            return createGreaterThanOrEqualExpression((GreaterThanOrEqualFilter) filter, not);
-        } else if (filter instanceof LessThanFilter) {
-            return createLessThanExpression((LessThanFilter) filter, not);
-        } else if (filter instanceof LessThanOrEqualFilter) {
-            return createLessThanOrEqualExpression((LessThanOrEqualFilter) filter, not);
-        } else if (filter instanceof StartsWithFilter) {
-            return createStartsWithExpression((StartsWithFilter) filter, not);
-        } else if (filter instanceof ContainsAllValuesFilter) {
-            return createContainsAllValuesExpression((ContainsAllValuesFilter) filter, not);
-        } else {
+        if (filter == null) {
+            return null;
+        }
+        return filter.accept(new LeafExpressionVisitor(), not);
+    }
+
+    /**
+     * Dispatches a leaf filter to its corresponding createXxxExpression
+     * override. AND/OR/NOT filters never reach here (see
+     * {@link #createLeafExpression(Filter)}, which already unwraps a
+     * top-level NOT); those and any other unrecognized filter kind return
+     * {@code null}, matching the previous instanceof-chain's fallback.
+     */
+    private final class LeafExpressionVisitor implements FilterVisitor<T, Boolean> {
+
+        @Override
+        public T visitAndFilter(Boolean not, AndFilter filter) {
             // unrecognized expression - nothing we can do
             return null;
+        }
+
+        @Override
+        public T visitContainsFilter(Boolean not, ContainsFilter filter) {
+            return createContainsExpression(filter, not);
+        }
+
+        @Override
+        public T visitContainsAllValuesFilter(Boolean not, ContainsAllValuesFilter filter) {
+            return createContainsAllValuesExpression(filter, not);
+        }
+
+        @Override
+        public T visitEqualsFilter(Boolean not, EqualsFilter filter) {
+            return createEqualsExpression(filter, not);
+        }
+
+        @Override
+        public T visitExtendedFilter(Boolean not, Filter filter) {
+            // unrecognized expression - nothing we can do
+            return null;
+        }
+
+        @Override
+        public T visitGreaterThanFilter(Boolean not, GreaterThanFilter filter) {
+            return createGreaterThanExpression(filter, not);
+        }
+
+        @Override
+        public T visitGreaterThanOrEqualFilter(Boolean not, GreaterThanOrEqualFilter filter) {
+            return createGreaterThanOrEqualExpression(filter, not);
+        }
+
+        @Override
+        public T visitLessThanFilter(Boolean not, LessThanFilter filter) {
+            return createLessThanExpression(filter, not);
+        }
+
+        @Override
+        public T visitLessThanOrEqualFilter(Boolean not, LessThanOrEqualFilter filter) {
+            return createLessThanOrEqualExpression(filter, not);
+        }
+
+        @Override
+        public T visitNotFilter(Boolean not, NotFilter filter) {
+            // unrecognized expression - nothing we can do
+            return null;
+        }
+
+        @Override
+        public T visitOrFilter(Boolean not, OrFilter filter) {
+            // unrecognized expression - nothing we can do
+            return null;
+        }
+
+        @Override
+        public T visitStartsWithFilter(Boolean not, StartsWithFilter filter) {
+            return createStartsWithExpression(filter, not);
+        }
+
+        @Override
+        public T visitEndsWithFilter(Boolean not, EndsWithFilter filter) {
+            return createEndsWithExpression(filter, not);
         }
     }
 

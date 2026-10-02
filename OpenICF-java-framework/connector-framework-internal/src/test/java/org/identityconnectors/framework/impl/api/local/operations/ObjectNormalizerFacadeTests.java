@@ -19,11 +19,15 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+
+import java.util.Collections;
 
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -35,8 +39,11 @@ import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncDeltaBuilder;
 import org.identityconnectors.framework.common.objects.SyncDeltaType;
 import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.filter.AndFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.common.objects.filter.NotFilter;
+import org.identityconnectors.framework.common.objects.filter.OrFilter;
 import org.identityconnectors.framework.common.serializer.SerializerUtil;
 import org.identityconnectors.framework.spi.AttributeNormalizer;
 import org.testng.annotations.Test;
@@ -160,6 +167,31 @@ public class ObjectNormalizerFacadeTests {
                 FilterBuilder.not(FilterBuilder.contains(createNormalizedTestAttribute()));
         Filter filter = FilterBuilder.not(FilterBuilder.contains(createTestAttribute()));
         assertNormalizedFilter(expected, filter);
+    }
+
+    @Test
+    public void testPresenceFilterPassedThroughUnchanged() {
+        Filter filter = FilterBuilder.present("foo");
+        assertNormalizedFilter(filter, filter);
+    }
+
+    @Test
+    public void testNullFilterReturnsNull() {
+        assertEquals(createTestNormalizer().normalizeFilter(null), null);
+    }
+
+    @Test
+    public void testNullSubFilterIsPassedThrough() {
+        ObjectNormalizerFacade normalizer = createTestNormalizer();
+        Filter contains = FilterBuilder.contains(createTestAttribute());
+        assertNull(((NotFilter) normalizer.normalizeFilter(new NotFilter(null))).getFilter());
+        assertNull(((AndFilter) normalizer.normalizeFilter(new AndFilter(contains, null)))
+                .getRight());
+        assertNull(((OrFilter) normalizer.normalizeFilter(new OrFilter(contains, null)))
+                .getRight());
+        // a one-element AndFilter has a null right-hand side
+        assertNull(((AndFilter) normalizer.normalizeFilter(new AndFilter(Collections
+                .singletonList(contains)))).getRight());
     }
 
     @Test
