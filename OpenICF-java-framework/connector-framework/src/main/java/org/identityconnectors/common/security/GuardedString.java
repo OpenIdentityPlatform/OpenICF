@@ -293,8 +293,9 @@ public final class GuardedString {
     }
 
     /**
-     * Never prints the clear text; the default {@link Object#toString()} would not either,
-     * but its output is just a class name and hash code, not useful for logging.
+     * Never prints the clear text, nor anything derived from it: the inherited
+     * {@link Object#toString()} would print {@link #hashCode()}, which is computed
+     * from the SHA-1 hash of the clear text.
      */
     @Override
     public String toString() {
