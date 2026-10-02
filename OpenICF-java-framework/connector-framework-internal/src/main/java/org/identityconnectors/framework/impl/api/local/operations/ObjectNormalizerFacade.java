@@ -156,67 +156,81 @@ public final class ObjectNormalizerFacade {
     /**
      * Applies {@link #normalizeAttribute(Attribute)} to every attribute
      * referenced by a filter, recursing through composite (AND/OR/NOT)
-     * filters. Filter kinds with no attribute of their own (e.g. presence,
-     * extended) are returned unchanged.
+     * filters. Filters dispatched to visitExtendedFilter (presence,
+     * extended-match, pass-through and custom filters) are returned
+     * unchanged; an ExtendedMatchFilter's attribute is not normalized.
      */
     private static final class NormalizingFilterVisitor implements
             FilterVisitor<Filter, ObjectNormalizerFacade> {
 
         static final NormalizingFilterVisitor INSTANCE = new NormalizingFilterVisitor();
 
+        @Override
         public Filter visitAndFilter(ObjectNormalizerFacade p, AndFilter filter) {
             return new AndFilter(p.normalizeFilter(filter.getLeft()), p.normalizeFilter(filter
                     .getRight()));
         }
 
+        @Override
         public Filter visitContainsFilter(ObjectNormalizerFacade p, ContainsFilter filter) {
             return new ContainsFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitContainsAllValuesFilter(ObjectNormalizerFacade p,
                 ContainsAllValuesFilter filter) {
             return new ContainsAllValuesFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitEqualsFilter(ObjectNormalizerFacade p, EqualsFilter filter) {
             return new EqualsFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitExtendedFilter(ObjectNormalizerFacade p, Filter filter) {
             return filter;
         }
 
+        @Override
         public Filter visitGreaterThanFilter(ObjectNormalizerFacade p, GreaterThanFilter filter) {
             return new GreaterThanFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitGreaterThanOrEqualFilter(ObjectNormalizerFacade p,
                 GreaterThanOrEqualFilter filter) {
             return new GreaterThanOrEqualFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitLessThanFilter(ObjectNormalizerFacade p, LessThanFilter filter) {
             return new LessThanFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitLessThanOrEqualFilter(ObjectNormalizerFacade p,
                 LessThanOrEqualFilter filter) {
             return new LessThanOrEqualFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitNotFilter(ObjectNormalizerFacade p, NotFilter filter) {
             return new NotFilter(p.normalizeFilter(filter.getFilter()));
         }
 
+        @Override
         public Filter visitOrFilter(ObjectNormalizerFacade p, OrFilter filter) {
             return new OrFilter(p.normalizeFilter(filter.getLeft()), p.normalizeFilter(filter
                     .getRight()));
         }
 
+        @Override
         public Filter visitStartsWithFilter(ObjectNormalizerFacade p, StartsWithFilter filter) {
             return new StartsWithFilter(p.normalizeAttribute(filter.getAttribute()));
         }
 
+        @Override
         public Filter visitEndsWithFilter(ObjectNormalizerFacade p, EndsWithFilter filter) {
             return new EndsWithFilter(p.normalizeAttribute(filter.getAttribute()));
         }

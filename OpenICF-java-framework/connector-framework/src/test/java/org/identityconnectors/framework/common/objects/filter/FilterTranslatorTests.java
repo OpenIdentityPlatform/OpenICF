@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects.filter;
 
@@ -490,6 +491,14 @@ public class FilterTranslatorTests {
         results = new NoAndNoOrNoEndsWithTranslator().translate(filter);
         assertThat(results).hasSize(2).contains("( CONTAINS c c )", atIndex(0)).contains(
                 "( CONTAINS d d )", atIndex(1));
+    }
+
+    @Test
+    public void testNullLeafTranslatesToEverything() {
+        Filter eq = FilterBuilder.equalTo(AttributeBuilder.build("a", "a"));
+        assertEquals(new AllFiltersTranslator().translate(new AndFilter(eq, null)),
+                new AllFiltersTranslator().translate(eq));
+        assertThat(new AllFiltersTranslator().translate(new NotFilter(null))).isEmpty();
     }
 
     private static String translateSingle(AbstractFilterTranslator<String> translator, Filter filter) {
