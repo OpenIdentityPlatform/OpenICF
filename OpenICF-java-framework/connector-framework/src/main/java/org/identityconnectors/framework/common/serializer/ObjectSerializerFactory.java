@@ -26,7 +26,9 @@ package org.identityconnectors.framework.common.serializer;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.lang.invoke.MethodHandles;
 
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.xml.sax.InputSource;
 
@@ -51,7 +53,7 @@ public abstract class ObjectSerializerFactory {
             if (instance == null) {
                 try {
                     final Class<?> clazz = Class.forName(IMPL_NAME);
-                    final Object object = clazz.newInstance();
+                    final Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                     instance = ObjectSerializerFactory.class.cast(object);
                 } catch (Exception e) {
                     throw ConnectorException.wrap(e);

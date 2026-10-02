@@ -423,12 +423,8 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
                                 }
                             } else {
                                 if (!destination.exists()) {
-                                    FileOutputStream output = null;
-                                    try {
-                                        output = new FileOutputStream(destination);
+                                    try (FileOutputStream output = new FileOutputStream(destination)) {
                                         IOUtil.copy(zip, output);
-                                    } finally {
-                                        IOUtil.close(output);
                                     }
                                 }
                             }

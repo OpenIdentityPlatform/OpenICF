@@ -31,6 +31,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import java.util.Set;
 
 
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.contract.data.DataProvider;
@@ -119,10 +121,10 @@ public class ConnectorHelper {
                     throw new Exception("Class " + customDataProvider + " is not of type "
                             + DataProvider.class.getName());
                 }
-                dp = (DataProvider) dpClass.newInstance();
+                dp = (DataProvider) ReflectionUtil.newInstance(MethodHandles.lookup(), dpClass);
             } else {
                 logger.info("DataProvider class not specified, using default ''"+DEFAULT_DATA_PROVIDER+"''.");
-                dp = (DataProvider) DEFAULT_DATA_PROVIDER.newInstance();
+                dp = (DataProvider) ReflectionUtil.newInstance(MethodHandles.lookup(), DEFAULT_DATA_PROVIDER);
             }
         } catch (Exception ex) {
             throw ContractException.wrap(ex);

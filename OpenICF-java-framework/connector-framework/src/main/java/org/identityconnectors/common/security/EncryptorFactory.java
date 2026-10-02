@@ -19,8 +19,13 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
+
+import java.lang.invoke.MethodHandles;
+
+import org.identityconnectors.common.ReflectionUtil;
 
 public abstract class EncryptorFactory {
 
@@ -37,7 +42,7 @@ public abstract class EncryptorFactory {
         if (instance == null) {
             try {
                 Class<?> clazz = Class.forName(IMPL_NAME);
-                Object object = clazz.newInstance();
+                Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 instance = EncryptorFactory.class.cast(object);
             } catch (RuntimeException e) {
                 throw e;

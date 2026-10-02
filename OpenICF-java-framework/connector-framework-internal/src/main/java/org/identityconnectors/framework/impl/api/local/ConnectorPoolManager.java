@@ -20,15 +20,18 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.api.local;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.identityconnectors.common.Pair;
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.pooling.ObjectPoolConfiguration;
 import org.identityconnectors.framework.api.ConfigurationPropertyChangeListener;
@@ -165,7 +168,7 @@ public class ConnectorPoolManager {
                         config = context.getConfiguration();
                     }
 
-                    connector = (PoolableConnector) clazz.newInstance();
+                    connector = (PoolableConnector) ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                     connector.init(config);
                 } else {
                     throw new ConnectorException("The Connector is not PoolableConnector: "

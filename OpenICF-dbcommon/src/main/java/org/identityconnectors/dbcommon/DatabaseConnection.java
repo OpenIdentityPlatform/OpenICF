@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.identityconnectors.common.logging.Log;
+import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.spi.Configuration;
 
@@ -76,9 +78,8 @@ public class DatabaseConnection {
     /**
      * Closes the internal {@link java.sql.Connection}.
      */
-    @SuppressWarnings("deprecation")
     public void dispose() {
-        SQLUtil.closeQuietly(nativeConn);
+        IOUtil.quietClose(nativeConn);
     }
 
     /**

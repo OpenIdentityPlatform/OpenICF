@@ -28,6 +28,7 @@ import java.beans.BeanInfo;
 import java.beans.IndexedPropertyDescriptor;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.text.MessageFormat;
@@ -216,7 +217,7 @@ public class JavaClassProperties {
 
     private static Configuration createBean2(ConfigurationPropertiesImpl properties,
                                              Class<? extends Configuration> configClass) throws Exception {
-        Configuration rv = configClass.newInstance();
+        Configuration rv = ReflectionUtil.newInstance(MethodHandles.lookup(), configClass);
         rv.setConnectorMessages(properties.getParent().getConnectorInfo().getMessages());
         mergeIntoBean2(properties, rv);
         return rv;

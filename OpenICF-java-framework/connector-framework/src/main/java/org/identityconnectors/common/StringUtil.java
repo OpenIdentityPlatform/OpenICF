@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common;
 
@@ -285,7 +286,7 @@ public final class StringUtil {
      * @return true if the string is empty else false.
      */
     public static boolean isEmpty(final String val) {
-        return (val == null) ? true : "".equals(val) ? true : false;
+        return (val == null) || val.isEmpty();
     }
 
     /**

@@ -31,6 +31,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
+import java.lang.invoke.MethodHandles;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -326,7 +327,7 @@ public class LocalConnectorInfoManagerImpl implements ConnectorInfoManager {
         try {
             final Class<? extends Connector> connectorClass = localInfo.getConnectorClass();
             final APIConfigurationImpl rv = new APIConfigurationImpl();
-            final Configuration config = localInfo.getConnectorConfigurationClass().newInstance();
+            final Configuration config = ReflectionUtil.newInstance(MethodHandles.lookup(), localInfo.getConnectorConfigurationClass());
             final boolean pooling = PoolableConnector.class.isAssignableFrom(connectorClass);
             rv.setConnectorPoolingSupported(pooling);
             rv.setConfigurationProperties(JavaClassProperties.createConfigurationProperties(config));
