@@ -29,7 +29,21 @@ public class PagedSearchStrategyTest {
 
     @Test(expectedExceptions = ConnectorException.class)
     public void rejectsACookieWithAMalformedContextIndex() throws Exception {
-        PagedSearchStrategy strategy = new PagedSearchStrategy(10, "AAAA:not-a-number", 0, null,
+        search("AAAA:not-a-number");
+    }
+
+    @Test(expectedExceptions = ConnectorException.class)
+    public void rejectsACookieWithAContextIndexPastTheBaseDNs() throws Exception {
+        search("AAAA:5");
+    }
+
+    @Test(expectedExceptions = ConnectorException.class)
+    public void rejectsACookieWithANegativeContextIndex() throws Exception {
+        search("AAAA:-1");
+    }
+
+    private static void search(String pagedResultsCookie) throws Exception {
+        PagedSearchStrategy strategy = new PagedSearchStrategy(10, pagedResultsCookie, 0, null,
                 new org.identityconnectors.framework.common.objects.SortKey[0]);
         strategy.doSearch(null, Collections.<String> singletonList("dc=example,dc=com"), "(uid=*)",
                 new javax.naming.directory.SearchControls(), null);

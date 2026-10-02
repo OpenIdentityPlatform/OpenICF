@@ -99,6 +99,9 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
                 } catch (RuntimeException e) {
                     throw new ConnectorException("PagedResultsCookie is not properly encoded", e);
                 }
+                if (context < 0 || context >= baseDNs.size()) {
+                    throw new ConnectorException("PagedResultsCookie is not properly encoded");
+                }
             } else {
                 throw new ConnectorException("PagedResultsCookie is not properly formatted");
             }

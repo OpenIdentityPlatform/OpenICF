@@ -200,6 +200,9 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private byte decodeByte(String v) {
+        if (v == null) {
+            throw new ConnectorException("Malformed byte value on the wire: empty element");
+        }
         try {
             return Byte.decode(v);
         } catch (NumberFormatException e) {
@@ -228,6 +231,9 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private double decodeDouble(String val) {
+        if (val == null) {
+            throw new ConnectorException("Malformed double value on the wire: empty element");
+        }
         try {
             return Double.parseDouble(val);
         } catch (NumberFormatException e) {
@@ -236,6 +242,9 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private float decodeFloat(String val) {
+        if (val == null) {
+            throw new ConnectorException("Malformed float value on the wire: empty element");
+        }
         try {
             return Float.parseFloat(val);
         } catch (NumberFormatException e) {
@@ -244,6 +253,9 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private int decodeInt(String val) {
+        if (val == null) {
+            throw new ConnectorException("Malformed int value on the wire: empty element");
+        }
         try {
             return Integer.parseInt(val);
         } catch (NumberFormatException e) {
@@ -252,6 +264,9 @@ public class XmlObjectDecoder implements ObjectDecoder {
     }
 
     private long decodeLong(String val) {
+        if (val == null) {
+            throw new ConnectorException("Malformed long value on the wire: empty element");
+        }
         try {
             return Long.parseLong(val);
         } catch (NumberFormatException e) {

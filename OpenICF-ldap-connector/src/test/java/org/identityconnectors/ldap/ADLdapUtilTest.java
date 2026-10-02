@@ -38,7 +38,8 @@ public class ADLdapUtilTest {
         try {
             ADLdapUtil.parseADInteger("not-a-number");
         } catch (ConnectorException e) {
-            assertTrue(e.getMessage().contains("not-a-number"), e.getMessage());
+            assertEquals(e.getMessage(), "Not a valid Active Directory numeric value: 'not-a-number'");
+            assertTrue(e.getCause() instanceof NumberFormatException, String.valueOf(e.getCause()));
             return;
         }
         throw new AssertionError("Expected a ConnectorException");
@@ -49,8 +50,30 @@ public class ADLdapUtilTest {
         assertEquals(ADLdapUtil.parseADLong("131425440000000000"), 131425440000000000L);
     }
 
+    @Test
+    public void parseADLongParsesAUSNPastTheIntRange() {
+        assertEquals(ADLdapUtil.parseADLong("2147483648"), 2147483648L);
+    }
+
     @Test(expectedExceptions = ConnectorException.class)
     public void parseADLongWrapsAMalformedValue() {
         ADLdapUtil.parseADLong("not-a-number");
+    }
+
+    @Test
+    public void parseADLongErrorMessageNamesTheValue() {
+        try {
+            ADLdapUtil.parseADLong("not-a-number");
+        } catch (ConnectorException e) {
+            assertEquals(e.getMessage(), "Not a valid Active Directory numeric value: 'not-a-number'");
+            assertTrue(e.getCause() instanceof NumberFormatException, String.valueOf(e.getCause()));
+            return;
+        }
+        throw new AssertionError("Expected a ConnectorException");
+    }
+
+    @Test(expectedExceptions = ConnectorException.class)
+    public void getJavaDateFromADTimeWrapsAMalformedValue() {
+        ADLdapUtil.getJavaDateFromADTime("not-a-number");
     }
 }
