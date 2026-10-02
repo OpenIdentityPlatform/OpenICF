@@ -198,7 +198,10 @@ jobs:
       - name: Scan image for vulnerabilities (Trivy)
         # trivy resolves the image from the local Docker daemon, so only the runner's
         # linux/amd64 manifest is scanned; cache: false keeps the ~1GB trivy DBs from
-        # evicting the m2-repository caches out of the repo's 10GB actions-cache quota
+        # evicting the m2-repository caches out of the repo's 10GB actions-cache quota.
+        # Findings do not fail the step; a Trivy or trivy-db registry outage does, and
+        # must not fail the image smoke test above
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: localhost:5000/${{ env.image_repository }}:${{ env.release_version }}
@@ -294,7 +297,10 @@ jobs:
       - name: Scan image for vulnerabilities (Trivy)
         # trivy resolves the image from the local Docker daemon, so only the runner's
         # linux/amd64 manifest is scanned; cache: false keeps the ~1GB trivy DBs from
-        # evicting the m2-repository caches out of the repo's 10GB actions-cache quota
+        # evicting the m2-repository caches out of the repo's 10GB actions-cache quota.
+        # Findings do not fail the step; a Trivy or trivy-db registry outage does, and
+        # must not fail the image smoke test above
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: localhost:5000/${{ env.image_repository }}:${{ env.release_version }}-alpine
