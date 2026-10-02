@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * "Portions Copyrighted 2014 ForgeRock AS"
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.ldap.search;
 
@@ -59,9 +60,9 @@ public class LdapInternalSearch {
     }
 
     public void execute(LdapSearchResultsHandler handler) {
-        String filter = blankAsAllObjects(this.filter);
+        String effectiveFilter = blankAsAllObjects(this.filter);
         try {
-            strategy.doSearch(conn.getInitialContext(), baseDNs, filter, controls, handler);
+            strategy.doSearch(conn.getInitialContext(), baseDNs, effectiveFilter, controls, handler);
         } catch (IOException e) {
             throw new ConnectorException(e);
         } catch (PartialResultException e) {

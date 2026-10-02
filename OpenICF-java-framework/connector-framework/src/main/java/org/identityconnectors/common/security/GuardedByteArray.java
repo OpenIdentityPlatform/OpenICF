@@ -270,4 +270,14 @@ public final class GuardedByteArray {
     public int hashCode() {
         return base64SHA1Hash.hashCode();
     }
+
+    /**
+     * Never prints the clear bytes, nor anything derived from them: the inherited
+     * {@link Object#toString()} would print {@link #hashCode()}, which is computed
+     * from the SHA-1 hash of the clear bytes.
+     */
+    @Override
+    public String toString() {
+        return "GuardedByteArray(...)";
+    }
 }
