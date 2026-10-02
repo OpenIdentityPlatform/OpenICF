@@ -106,6 +106,11 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
             for (Map.Entry<String, Object> entry : args.entrySet()) {
                 engineScope.put(entry.getKey(), entry.getValue());
             }
+            // No loader requested: keep the caller's context classloader, as
+            // GroovyShell falls back to its own loader for a null parent.
+            if (loader == null) {
+                return compiled.eval(newContext);
+            }
             Thread currentThread = Thread.currentThread();
             ClassLoader previousLoader = currentThread.getContextClassLoader();
             currentThread.setContextClassLoader(loader);
@@ -133,6 +138,9 @@ public class JavaScriptExecutorFactory extends ScriptExecutorFactory {
 
             for (Map.Entry<String, Object> entry : args.entrySet()) {
                 engine.put(entry.getKey(), entry.getValue());
+            }
+            if (loader == null) {
+                return engine.eval(script);
             }
             Thread currentThread = Thread.currentThread();
             ClassLoader previousLoader = currentThread.getContextClassLoader();

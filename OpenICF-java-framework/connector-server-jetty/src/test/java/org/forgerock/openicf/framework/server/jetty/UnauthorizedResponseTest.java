@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.security.auth.callback.NameCallback;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeRequest;
 import org.eclipse.jetty.websocket.server.JettyServerUpgradeResponse;
 import org.forgerock.openicf.framework.remote.rpc.OperationMessageListener;
@@ -97,6 +99,43 @@ public class UnauthorizedResponseTest {
             Assert.assertNotNull(sentMessage.get(), "createWebSocket() must reject with an error response");
             Assert.assertTrue(sentMessage.get().contains("Unknown Principal"),
                     "the rejection must surface the specific reason it was passed, not just the generic explanation");
+        } finally {
+            scheduler.shutdownNow();
+        }
+    }
+
+    @Test(timeOut = 30000)
+    public void testUnauthorizedForwardsTheGivenReasonWith403() throws Exception {
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
+        try {
+            OpenICFWebSocketCreator creator = new OpenICFWebSocketCreator(null, noopListener(),
+                    new Authenticator() {
+                        @Override
+                        public void authenticate(JettyServerUpgradeRequest request,
+                                JettyServerUpgradeResponse response, NameCallback callback) {
+                        }
+                    }, scheduler);
+
+            final Object[] sent = new Object[2];
+            JettyServerUpgradeResponse response = (JettyServerUpgradeResponse) Proxy.newProxyInstance(
+                    UnauthorizedResponseTest.class.getClassLoader(),
+                    new Class<?>[] { JettyServerUpgradeResponse.class },
+                    new InvocationHandler() {
+                        public Object invoke(Object p, Method m, Object[] a) {
+                            if ("sendError".equals(m.getName())) {
+                                sent[0] = a[0];
+                                sent[1] = a[1];
+                            }
+                            return null;
+                        }
+                    });
+
+            // A reason other than the one literal createWebSocket() passes.
+            creator.unauthorized(response, "Key mismatch");
+
+            Assert.assertEquals(sent[0], HttpServletResponse.SC_FORBIDDEN);
+            Assert.assertTrue(((String) sent[1]).startsWith("Key mismatch: "),
+                    "unauthorized() must forward the reason it was given, got: " + sent[1]);
         } finally {
             scheduler.shutdownNow();
         }
