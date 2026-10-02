@@ -123,6 +123,7 @@ jobs:
             OpenICF-xml-connector/target/*.jar
             !**/*-sources.jar
   build-docker:
+    needs: build-maven
     runs-on: 'ubuntu-latest'
     permissions:
       contents: read
@@ -136,6 +137,17 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: ubuntu-latest-11
+      - name: Prepare Dockerfile
+        # build the image from the ZIP of this commit, not from the last release
+        shell: bash
+        run: |
+          sed -i -E '/^#COPY OpenICF/s/^#//' ./Dockerfile
+          grep '^COPY OpenICF-java-framework/openicf-zip/target/' ./Dockerfile
+          ls -l OpenICF-java-framework/openicf-zip/target/*.zip
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
       # The tag is what the Dockerfile's releases/download URL needs, and that
@@ -206,6 +218,7 @@ jobs:
           # distinct from the docker-scan.yml categories, which track the published images
           category: trivy-build-default
   build-docker-alpine:
+    needs: build-maven
     runs-on: 'ubuntu-latest'
     permissions:
       contents: read
@@ -219,6 +232,17 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: ubuntu-latest-11
+      - name: Prepare Dockerfile
+        # build the image from the ZIP of this commit, not from the last release
+        shell: bash
+        run: |
+          sed -i -E '/^#COPY OpenICF/s/^#//' ./Dockerfile-alpine
+          grep '^COPY OpenICF-java-framework/openicf-zip/target/' ./Dockerfile-alpine
+          ls -l OpenICF-java-framework/openicf-zip/target/*.zip
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
       # The tag is what the Dockerfile's releases/download URL needs, and that
