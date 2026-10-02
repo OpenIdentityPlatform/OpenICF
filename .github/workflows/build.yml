@@ -135,13 +135,15 @@ jobs:
           fetch-depth: 0
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
-      # The tag is what the Dockerfile's releases/download URL needs.
+      # The tag is what the Dockerfile's releases/download URL needs, and that
+      # URL is upstream's, so a fork build asks upstream too. `|| true` keeps a
+      # failed lookup going to the `last release:` line, and `test -n` stops it.
       - name: Get latest release version
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          release_version="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
+          release_version="$(gh release view --repo OpenIdentityPlatform/OpenICF --json tagName --jq .tagName || true)"
           echo "last release: $release_version"
           test -n "$release_version"
           echo "release_version=$release_version" >> "$GITHUB_ENV"
@@ -190,13 +192,15 @@ jobs:
           fetch-depth: 0
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
-      # The tag is what the Dockerfile's releases/download URL needs.
+      # The tag is what the Dockerfile's releases/download URL needs, and that
+      # URL is upstream's, so a fork build asks upstream too. `|| true` keeps a
+      # failed lookup going to the `last release:` line, and `test -n` stops it.
       - name: Get latest release version
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          release_version="$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)"
+          release_version="$(gh release view --repo OpenIdentityPlatform/OpenICF --json tagName --jq .tagName || true)"
           echo "last release: $release_version"
           test -n "$release_version"
           echo "release_version=$release_version" >> "$GITHUB_ENV"
