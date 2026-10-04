@@ -15,6 +15,8 @@
  */
 package org.forgerock.openicf.framework.client;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.net.URI;
@@ -48,7 +50,11 @@ public class RemoteWSFrameworkConnectionInfoTest {
             info.loadSystemProxy();
             fail("Expected the malformed proxy port to be rejected");
         } catch (ConnectorException expected) {
-            // expected: not a bare NumberFormatException
+            assertEquals(expected.getMessage(), "System property "
+                    + RemoteWSFrameworkConnectionInfo.PROXY_PORT
+                    + " is not a valid port number: 'not-a-number'");
+            assertTrue(expected.getCause() instanceof NumberFormatException,
+                    String.valueOf(expected.getCause()));
         }
     }
 }

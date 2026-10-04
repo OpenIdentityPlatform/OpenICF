@@ -604,19 +604,29 @@ public class SQLUtilTests {
      * ConnectorException naming the value and the type, not a bare
      * NumberFormatException.
      */
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test
     public void testAttribute2JdbcValueRejectsMalformedDouble() throws SQLException {
-        SQLUtil.attribute2jdbcValue("not-a-number", Types.DOUBLE);
+        assertRejected(Types.DOUBLE);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test
     public void testAttribute2JdbcValueRejectsMalformedFloat() throws SQLException {
-        SQLUtil.attribute2jdbcValue("not-a-number", Types.FLOAT);
+        assertRejected(Types.FLOAT);
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test
     public void testAttribute2JdbcValueRejectsMalformedInteger() throws SQLException {
-        SQLUtil.attribute2jdbcValue("not-a-number", Types.INTEGER);
+        assertRejected(Types.INTEGER);
+    }
+
+    private static void assertRejected(int sqlType) throws SQLException {
+        try {
+            SQLUtil.attribute2jdbcValue("not-a-number", sqlType);
+            Assert.fail("Expected a ConnectorException");
+        } catch (ConnectorException e) {
+            assertEquals("Value 'not-a-number' is not valid for SQL type " + sqlType, e.getMessage());
+            assertTrue(String.valueOf(e.getCause()), e.getCause() instanceof NumberFormatException);
+        }
     }
 
     /**

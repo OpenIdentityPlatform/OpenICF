@@ -42,6 +42,11 @@ public class PagedSearchStrategyTest {
         search("AAAA:-1");
     }
 
+    @Test(expectedExceptions = ConnectorException.class)
+    public void rejectsACookieWithAContextIndexEqualToTheBaseDNCount() throws Exception {
+        search("AAAA:1");
+    }
+
     private static void search(String pagedResultsCookie) throws Exception {
         PagedSearchStrategy strategy = new PagedSearchStrategy(10, pagedResultsCookie, 0, null,
                 new org.identityconnectors.framework.common.objects.SortKey[0]);
