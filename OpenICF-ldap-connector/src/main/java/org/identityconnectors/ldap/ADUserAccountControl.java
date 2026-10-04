@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems LLC.
  */
 package org.identityconnectors.ldap;
 
@@ -208,9 +210,9 @@ public class ADUserAccountControl {
     public ADUserAccountControl() {
     }
 
-    private ADUserAccountControl(int uac, int msDSUac) {
+    ADUserAccountControl(int uac, int msDSUac) {
         this.uac = uac;
-        this.msDSUac = uac;
+        this.msDSUac = msDSUac;
     }
 
     public boolean isNormalAccount() {

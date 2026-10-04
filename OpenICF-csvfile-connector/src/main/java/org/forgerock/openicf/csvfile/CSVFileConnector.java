@@ -270,7 +270,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         if (name == null) {
             throw new InvalidCredentialException("Name cannot be null.");
         }
-        Uid uid = findAccount(new Uid(name), password, options);
+        Uid uid = findAccount(new Uid(name), password);
         if (uid == null) {
             throw new InvalidCredentialException(String.format("Account %s does not exist.", name));
         }
@@ -293,7 +293,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     @Override
     public void delete(final ObjectClass objectClass, final Uid uid, final OperationOptions options) {
         isAccount(objectClass);
-        doDelete(uid, options);
+        doDelete(uid);
     }
 
     /**
@@ -628,7 +628,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     @Override
     public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> attributes, OperationOptions options) {
         isAccount(objectClass);
-        return doUpdate(UpdateType.UPDATE, uid, attributes, options);
+        return doUpdate(UpdateType.UPDATE, uid, attributes);
     }
 
     /**
@@ -638,7 +638,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     public Uid addAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
             OperationOptions options) {
         isAccount(objectClass);
-        return doUpdate(UpdateType.ADDVALUES, uid, attributes, options);
+        return doUpdate(UpdateType.ADDVALUES, uid, attributes);
     }
 
     /**
@@ -648,7 +648,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     public Uid removeAttributeValues(ObjectClass objectClass, Uid uid, Set<Attribute> attributes,
             OperationOptions options) {
         isAccount(objectClass);
-        return doUpdate(UpdateType.REMOVEVALUES, uid, attributes, options);
+        return doUpdate(UpdateType.REMOVEVALUES, uid, attributes);
     }
 
     /**
@@ -696,13 +696,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         @Override
         public BatchEmptyResult execute(DeleteBatchTask task) {
-            doDelete(task.getUid(), task.getOptions());
+            doDelete(task.getUid());
             return null;
         }
 
         @Override
         public Uid execute(UpdateBatchTask task) {
-            return doUpdate(task.getUpdateType(), task.getUid(), task.getAttributes(), task.getOptions());
+            return doUpdate(task.getUpdateType(), task.getUid(), task.getAttributes());
         }
     }
 
@@ -724,8 +724,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
     }
 
-    private Uid findAccount(final Uid uid, final GuardedString password,
-            final OperationOptions options) {
+    private Uid findAccount(final Uid uid, final GuardedString password) {
         if ((password != null && config.getHeaderPassword() == null)
                 || (uid == null && config.getHeaderUid() == null)) {
             return null;
@@ -1004,7 +1003,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         if (uid == null) {
             uid = new Uid(UUID.randomUUID().toString());
-        } else if (findAccount(uid, null, options) != null) {
+        } else if (findAccount(uid, null) != null) {
             throw new AlreadyExistsException(String.format("Account %s already exists.", uid.getUidValue()));
         }
 
@@ -1045,7 +1044,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         return uid;
     }
 
-    private void doDelete(Uid uid, OperationOptions options) {
+    private void doDelete(Uid uid) {
         if (uid == null) {
             throw new IllegalArgumentException("Uid cannot be null");
         }
@@ -1114,7 +1113,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
     }
 
-    private Uid doUpdate(UpdateType type, Uid uid, Set<Attribute> attributes, OperationOptions options) {
+    private Uid doUpdate(UpdateType type, Uid uid, Set<Attribute> attributes) {
         Uid updated = null;
         if (uid == null) {
             throw new IllegalArgumentException("Uid may not be null");

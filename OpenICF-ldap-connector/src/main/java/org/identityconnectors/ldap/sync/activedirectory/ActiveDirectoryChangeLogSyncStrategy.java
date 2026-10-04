@@ -109,7 +109,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
     @Override
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         if (oclass.is(DIRSYNC_EVENTS_OBJCLASS)) {
-            handleEvents(token, handler, options);
+            handleEvents(token, handler);
         } else {
             // ldapsearch -h host -p 389 -b "ou=test,dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xxx "(uSNChanged>=52410)" 
             // We use the uSNchanged attribute to detect changes on entries and newly created entries.
@@ -416,7 +416,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         return null;
     }
 
-    private void handleEvents(SyncToken token, SyncResultsHandler handler, OperationOptions options) {
+    private void handleEvents(SyncToken token, SyncResultsHandler handler) {
         ArrayList<SearchResult> changes = new ArrayList<SearchResult>();
         String searchFilter = "(|(objectClass=group)(objectclass=user))";
         Control[] rspCtls;
