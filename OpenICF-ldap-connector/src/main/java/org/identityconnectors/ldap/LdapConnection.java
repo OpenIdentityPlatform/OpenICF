@@ -160,7 +160,6 @@ public class LdapConnection {
     }
     
     private LdapContext getAnonymousContext() throws NamingException {
-        InitialLdapContext ctx = null;
         return new InitialLdapContext(getDefaultContextEnv(), null);
     }
     

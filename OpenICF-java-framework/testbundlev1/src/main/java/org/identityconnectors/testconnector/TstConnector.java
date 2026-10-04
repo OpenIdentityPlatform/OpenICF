@@ -391,7 +391,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         return ret;
     }
 
-    private class BatchUseCase2Processor extends Thread {
+    private static class BatchUseCase2Processor extends Thread {
         private OperationOptions options;
         private String token;
 
