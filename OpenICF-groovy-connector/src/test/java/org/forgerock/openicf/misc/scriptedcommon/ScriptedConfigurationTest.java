@@ -26,14 +26,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.codehaus.groovy.reflection.ClassInfo;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import groovy.lang.Binding;
+import groovy.lang.ExpandoMetaClass;
+import groovy.lang.GroovySystem;
+import groovy.lang.Script;
 import groovy.util.GroovyScriptEngine;
 
 /**
@@ -96,6 +100,38 @@ public class ScriptedConfigurationTest {
         assertThat(calls.get()).isEqualTo(2);
     }
 
+    @Test
+    public void testFailedCustomizerClassIsUnregistered() {
+        customizer = () -> {
+            throw new IllegalStateException("customizer failed");
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        // Registers a metaclass on the customizer class, as the REST, CREST and SSH
+        // configurations do; a registered metaclass keeps the class's loader alive.
+        configuration = new ScriptedConfiguration() {
+            @Override
+            protected Script createCustomizerScript(Class clazz, Binding binding) {
+                customizerClass.set(clazz);
+                ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
+                metaClass.initialize();
+                GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
+                return super.createCustomizerScript(clazz, binding);
+            }
+        };
+        configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        configuration.setCustomizerScriptFileName("Customizer.groovy");
+
+        try {
+            configuration.getGroovyScriptEngine();
+            fail("The customizer failure must reach the caller");
+        } catch (IllegalStateException e) {
+            assertThat(e).hasMessage("customizer failed");
+        }
+
+        assertThat(customizerClass.get()).isNotNull();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
     @Test(timeOut = 30000)
     public void testEngineIsHiddenFromOtherThreadsUntilCustomized() throws Exception {
         final CountDownLatch customizing = new CountDownLatch(1);
@@ -111,13 +147,17 @@ public class ScriptedConfigurationTest {
 
         Future<GroovyScriptEngine> first = executor.submit(configuration::getGroovyScriptEngine);
         customizing.await();
-        Future<GroovyScriptEngine> second = executor.submit(configuration::getGroovyScriptEngine);
-        try {
-            GroovyScriptEngine early = second.get(500, TimeUnit.MILLISECONDS);
-            fail("Got " + early + " while the customizer was still running");
-        } catch (TimeoutException expected) {
-            // the second caller waits for the customization to finish
+        final AtomicReference<Thread> secondThread = new AtomicReference<>();
+        Future<GroovyScriptEngine> second = executor.submit(() -> {
+            secondThread.set(Thread.currentThread());
+            return configuration.getGroovyScriptEngine();
+        });
+        // The second caller either returns early or blocks on the configuration's monitor.
+        while (!second.isDone() && (secondThread.get() == null
+                || secondThread.get().getState() != Thread.State.BLOCKED)) {
+            Thread.sleep(10);
         }
+        assertThat(second.isDone()).as("second caller returned while the customizer ran").isFalse();
 
         finishCustomizing.countDown();
         assertThat(first.get()).isNotNull();

@@ -827,11 +827,14 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     /*
      * This must be called once from thread-safe location and inside the
-     * synchronized to avoid deadlock.
+     * synchronized to avoid deadlock. The customizer runs while this
+     * configuration's monitor is held: it must not wait for another thread
+     * that calls getGroovyScriptEngine(), evaluate() or loadScript().
      */
     private void initializeCustomizer() {
+        Class customizerClass = null;
         try {
-            Class customizerClass = getCustomizerClass();
+            customizerClass = getCustomizerClass();
 
             if (null != customizerClass) {
                 Binding binding = new Binding();
@@ -839,6 +842,11 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 createCustomizerScript(customizerClass, binding).run();
             }
         } catch (Throwable t) {
+            if (null != customizerClass) {
+                // The retry compiles a new class; unregister this one, together with any
+                // metaclass createCustomizerScript() put on it, so its loader can be collected.
+                InvokerHelper.removeClass(customizerClass);
+            }
             logger.error(t, "Failed to customize the connector");
             throw ConnectorException.wrap(t);
         }
