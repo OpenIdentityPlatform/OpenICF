@@ -25,13 +25,21 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
+import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.SearchResultsHandler;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -49,12 +57,15 @@ public class RewriteSafetyTest {
     private static final String MALFORMED = "\"too\",\"few\"\n";
     private static final String MISO = "\"michal\",\"miso\",\"kovac\",\"Z29vZA==\"\n";
 
+    private File dir;
     private File csv;
     private CSVFileConnector connector;
 
     @BeforeMethod
     public void before() throws Exception {
-        csv = File.createTempFile("rewrite", ".csv");
+        // a directory of its own, so that the copy can be shown to be made next to the CSV
+        dir = Files.createTempDirectory("rewrite").toFile();
+        csv = new File(dir, "accounts.csv");
         write(HEADER + VILO + MISO);
 
         CSVFileConfiguration config = new CSVFileConfiguration();
@@ -70,7 +81,10 @@ public class RewriteSafetyTest {
     public void after() {
         connector.dispose();
         connector = null;
-        csv.delete();
+        for (File file : dir.listFiles()) {
+            file.delete();
+        }
+        dir.delete();
     }
 
     @Test
@@ -80,6 +94,7 @@ public class RewriteSafetyTest {
         connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
 
         assertEquals(Files.getPosixFilePermissions(csv.toPath()), mode);
+        assertNoRewriteFileLeft();
     }
 
     @Test
@@ -89,6 +104,21 @@ public class RewriteSafetyTest {
         connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
 
         assertEquals(Files.getPosixFilePermissions(csv.toPath()), mode);
+        assertNoRewriteFileLeft();
+    }
+
+    @Test
+    public void rewriteCopyIsPrivateAndNextToTheFile() throws Exception {
+        setDistinctMode(); // skips where POSIX permissions are not supported
+
+        File tmp = connector.createRewriteFile();
+        try {
+            assertEquals(tmp.getParentFile(), csv.getAbsoluteFile().getParentFile());
+            assertEquals(Files.getPosixFilePermissions(tmp.toPath()),
+                    PosixFilePermissions.fromString("rw-------"));
+        } finally {
+            tmp.delete();
+        }
     }
 
     @Test
@@ -117,6 +147,38 @@ public class RewriteSafetyTest {
         }
     }
 
+    @Test
+    public void failedDeleteKeepsRowCount() throws Exception {
+        assertEquals(pagedTotal(), 2);
+
+        try {
+            connector.delete(ObjectClass.ACCOUNT, new Uid("nobody"), null);
+            fail("Expected an unknown uid to fail the delete");
+        } catch (UnknownUidException expected) {
+            assertEquals(pagedTotal(), 2, "a failed delete changed the row count");
+        }
+
+        connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
+        assertEquals(pagedTotal(), 1);
+    }
+
+    @Test
+    public void deleteBeforeFirstSearchKeepsRowCountUncounted() throws Exception {
+        connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
+
+        assertEquals(pagedTotal(), 1);
+    }
+
+    @Test
+    public void createBeforeFirstSearchKeepsRowCountUncounted() throws Exception {
+        Set<Attribute> jano = new HashSet<Attribute>();
+        jano.add(new Uid("jano"));
+        jano.add(AttributeBuilder.build("firstName", "jan"));
+        connector.create(ObjectClass.ACCOUNT, jano, null);
+
+        assertEquals(pagedTotal(), 3);
+    }
+
     private Set<PosixFilePermission> setDistinctMode() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("POSIX file permissions are not supported here");
@@ -129,10 +191,28 @@ public class RewriteSafetyTest {
     }
 
     private void assertNoRewriteFileLeft() {
-        for (String name : csv.getAbsoluteFile().getParentFile().list()) {
+        for (String name : dir.list()) {
             assertFalse(name.startsWith(csv.getName() + ".") && name.endsWith(".tmp"),
-                    "the copy of the failed rewrite was left behind: " + name);
+                    "a copy of the rewrite was left behind: " + name);
         }
+    }
+
+    /** The total row count a paged search reports. */
+    private int pagedTotal() {
+        final List<SearchResult> results = new ArrayList<SearchResult>();
+        connector.executeQuery(ObjectClass.ACCOUNT, null, new SearchResultsHandler() {
+            @Override
+            public boolean handle(ConnectorObject object) {
+                return true;
+            }
+
+            @Override
+            public void handleResult(SearchResult result) {
+                results.add(result);
+            }
+        }, OperationOptionsBuilder.create().setPageSize(10).build());
+        assertEquals(results.size(), 1, "the paged search reported no row count");
+        return results.get(0).getTotalPagedResults();
     }
 
     private static Set<Attribute> lastName(String value) {

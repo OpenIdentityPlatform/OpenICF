@@ -22,19 +22,23 @@ import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -1032,7 +1036,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             mapWriter = new CsvMapWriter(new FileWriter(config.getCsvFile(), true), csvPreference);
             final CellProcessor[] processors = getProcessors(header);
             mapWriter.write(colMap, header, processors);
-            totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) + 1);
+            adjustRowCount(1);
         } catch (IOException e) {
             throw new ConnectorException("Failed to create object", e);
         } finally {
@@ -1059,6 +1063,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         ICsvMapReader reader = null;
         ICsvMapWriter writer = null;
         File tmp = null;
+        FileOutputStream copy = null;
         boolean rewritten = false;
 
         final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
@@ -1066,7 +1071,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         try {
             reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
             tmp = createRewriteFile();
-            writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+            // the stream is closed on its own: a FileWriter whose final flush fails
+            // leaves it open (JDK 8-21), and Windows can not delete an open file
+            copy = new FileOutputStream(tmp);
+            writer = new CsvMapWriter(new OutputStreamWriter(copy), csvPreference);
 
             final CellProcessor[] processors = getProcessors(header);
 
@@ -1096,9 +1104,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             try {
                 closeQuietly(reader, "reader");
                 closeQuietly(writer, "writer");
+                closeQuietly(copy, "copy");
                 finishRewrite(tmp, rewritten);
                 if (rewritten) {
-                    totalRowCount.put(csvFilePath, totalRowCount.get(csvFilePath) - 1);
+                    adjustRowCount(-1);
                 }
             } finally {
                 lock.unlock();
@@ -1119,6 +1128,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         ICsvMapReader reader = null;
         ICsvMapWriter writer = null;
         File tmp = null;
+        FileOutputStream copy = null;
         boolean rewritten = false;
 
         final WriteLock lock = fileNameToLockMap.get(csvFilePath).writeLock();
@@ -1126,7 +1136,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         try {
             reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
             tmp = createRewriteFile();
-            writer = new CsvMapWriter(new FileWriter(tmp), csvPreference);
+            // the stream is closed on its own: a FileWriter whose final flush fails
+            // leaves it open (JDK 8-21), and Windows can not delete an open file
+            copy = new FileOutputStream(tmp);
+            writer = new CsvMapWriter(new OutputStreamWriter(copy), csvPreference);
 
             writer.writeHeader(header);
 
@@ -1164,6 +1177,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             try {
                 closeQuietly(reader, "reader");
                 closeQuietly(writer, "writer");
+                closeQuietly(copy, "copy");
                 finishRewrite(tmp, rewritten);
             } finally {
                 lock.unlock();
@@ -1178,20 +1192,39 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      * the CSV, so that the copy can take its place with a rename on the same
      * file system, and readable by its owner only, so that the data is not
      * exposed to other local users while it is being written.
+     * <p>
+     * A copy left behind by a process that died while writing it is not
+     * removed automatically - another JVM may be rewriting the same CSV, and
+     * the write lock is per JVM: delete {@code <csv>.<digits>.tmp} files by
+     * hand while no connector is running against the CSV.
      */
-    private File createRewriteFile() throws IOException {
+    File createRewriteFile() throws IOException {
         File csv = config.getCsvFile().getAbsoluteFile();
         return Files.createTempFile(csv.getParentFile().toPath(), csv.getName() + ".", ".tmp")
                 .toFile();
     }
 
     /**
+     * Keeps the cached row count in step with a create or a delete. A count
+     * that has not been taken yet (-1) stays so: the next paged search takes it.
+     */
+    private void adjustRowCount(int delta) {
+        Integer count = totalRowCount.get(csvFilePath);
+        if (count != null && count > -1) {
+            totalRowCount.put(csvFilePath, count + delta);
+        }
+    }
+
+    /**
      * Puts the rewritten copy in place of the CSV when the rewrite completed:
-     * the copy is synced to disk, takes over the CSV's mode bits and, if the
-     * process may set it, its group (the owner becomes the process's user),
-     * and is renamed over the CSV. A copy that is not put in place - of a
-     * rewrite that failed half-way, or one whose replacement failed - is
-     * discarded so that the CSV stays as it was.
+     * the copy is synced to disk, takes over the CSV's group if the process
+     * may set it and the CSV's mode bits (the owner becomes the process's
+     * user), and is renamed over the CSV. When the group can not be set, the
+     * copy keeps the process's group and gets no group permissions. When the
+     * mode bits can not be set (a file system whose modes are fixed by the
+     * mount), the copy keeps the mode it was created with. A copy that is not
+     * put in place - of a rewrite that failed half-way, or one whose
+     * replacement failed - is discarded so that the CSV stays as it was.
      */
     private void finishRewrite(File tmp, boolean rewritten) {
         if (tmp == null) {
@@ -1209,13 +1242,26 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 channel.force(true);
             }
             try {
+                // EnumSet.copyOf would reject the empty mode of a 000 file
+                Set<PosixFilePermission> mode = EnumSet.noneOf(PosixFilePermission.class);
+                mode.addAll(Files.getPosixFilePermissions(csv));
                 try {
                     Files.setAttribute(tmp.toPath(), "posix:group",
                             Files.getAttribute(csv, "posix:group"));
                 } catch (IOException e) {
-                    // not a member of the CSV's group: the copy keeps the process's group
+                    // not a member of the CSV's group: the copy keeps the process's group,
+                    // which must not get the access the CSV grants to its own group
+                    mode.removeAll(EnumSet.of(PosixFilePermission.GROUP_READ,
+                            PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE));
                 }
-                Files.setPosixFilePermissions(tmp.toPath(), Files.getPosixFilePermissions(csv));
+                try {
+                    Files.setPosixFilePermissions(tmp.toPath(), mode);
+                } catch (IOException e) {
+                    // the owner of the copy can always chmod it on a POSIX file system;
+                    // this fails only where the mount fixes the modes of every file
+                    log.warn(e, "Could not copy the permissions of {0}: the rewritten file keeps"
+                            + " the mode it was created with", csv);
+                }
             } catch (UnsupportedOperationException e) {
                 // not a POSIX file system: the copy inherits the directory's ACL
             }
