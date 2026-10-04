@@ -189,6 +189,10 @@ public class ObjectNormalizerFacadeTests {
                 .getRight());
         assertNull(((OrFilter) normalizer.normalizeFilter(new OrFilter(contains, null)))
                 .getRight());
+        assertNull(((AndFilter) normalizer.normalizeFilter(new AndFilter(null, contains)))
+                .getLeft());
+        assertNull(((OrFilter) normalizer.normalizeFilter(new OrFilter(null, contains)))
+                .getLeft());
         // a one-element AndFilter has a null right-hand side
         assertNull(((AndFilter) normalizer.normalizeFilter(new AndFilter(Collections
                 .singletonList(contains)))).getRight());
