@@ -41,6 +41,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -293,14 +294,16 @@ public final class IOUtil {
     public static String getResourceAsString(final Class<?> clazz, final String res,
             final Charset charset) {
         assert clazz != null && StringUtil.isNotBlank(res);
+        // checked before the stream opens: the reader would throw with the stream open
+        Assertions.nullCheck(charset, "charset");
         String ret = null;
         final InputStream ins = getResourceAsStream(clazz, res);
         if (ins != null) {
+            final InputStreamReader rdr = new InputStreamReader(ins, charset);
             try {
-                final InputStreamReader rdr = new InputStreamReader(ins, charset);
                 ret = readerToString(rdr);
             } finally {
-                quietClose(ins);
+                quietClose(rdr);
             }
         }
         return ret;
@@ -713,11 +716,9 @@ public final class IOUtil {
      *             if the file parameter is null.
      */
     public static void writeFileUTF8(final File file, final String contents) throws IOException {
-        final Writer writer = new OutputStreamWriter(new FileOutputStream(file), UTF8);
-        try {
+        try (Writer writer = new OutputStreamWriter(new FileOutputStream(file),
+                StandardCharsets.UTF_8)) {
             writer.write(contents);
-        } finally {
-            writer.close();
         }
     }
 

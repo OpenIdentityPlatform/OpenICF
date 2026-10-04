@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -68,7 +69,7 @@ public class SyncImpl extends ConnectorAPIOperationRunner implements SyncApiOp {
 
         final SyncResultsHandler handlerChain = handler;
         final AtomicReference<SyncToken> result = new AtomicReference<SyncToken>(null);
-        final Boolean doAll = ObjectClass.ALL.equals(objectClass);
+        final boolean doAll = ObjectClass.ALL.equals(objectClass);
         // SyncTokenResultsHandler handlerChain =
         ((SyncOp) getConnector()).sync(objectClass, token, new SyncTokenResultsHandler() {
 

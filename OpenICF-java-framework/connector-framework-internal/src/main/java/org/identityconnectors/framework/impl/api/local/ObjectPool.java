@@ -247,15 +247,13 @@ public class ObjectPool<T> {
                 try {
                     handler.testObject(rv.getPooledObject());
                 } catch (Exception e) {
-                    if (null != rv) {
-                        dispose(rv);
-                        // if it's a new object, break out of the loop
-                        // immediately
-                        if (rv.isNew()) {
-                            throw ConnectorException.wrap(e);
-                        }
-                        rv = null;
+                    dispose(rv);
+                    // if it's a new object, break out of the loop
+                    // immediately
+                    if (rv.isNew()) {
+                        throw ConnectorException.wrap(e);
                     }
+                    rv = null;
                 }
             } while (null == rv);
             rv.setActive(true);

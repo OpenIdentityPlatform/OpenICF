@@ -496,9 +496,9 @@ public class DocBookResourceMojo extends AbstractMojo implements ConnectorMojoBr
 
                     FileUtils.mkdir(f.getParentFile().getAbsolutePath());
 
-                    Writer writer = new FileWriter(f);
-
-                    w.write(writer, remoteResourcesBundle);
+                    try (Writer writer = new FileWriter(f)) {
+                        w.write(writer, remoteResourcesBundle);
+                    }
                 } catch (IOException e) {
                     throw new MojoExecutionException("Error creating remote resources manifest.", e);
                 }

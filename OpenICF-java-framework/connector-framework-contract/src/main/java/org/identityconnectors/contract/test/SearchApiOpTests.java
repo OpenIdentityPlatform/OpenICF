@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.identityconnectors.contract.test;
@@ -416,7 +417,7 @@ public class SearchApiOpTests extends ObjectClassRunner {
      */
     protected static boolean canSearchCaseInsensitive() {
         // by default it's supposed that case insensitive search is disabled.
-        Boolean canSearchCIns = true;
+        boolean canSearchCIns = true;
         try {
             canSearchCIns = !(Boolean) getDataProvider().getTestSuiteAttribute(
                     DISABLE + "." + CASE_INSENSITIVE_PREFIX,

@@ -21,6 +21,7 @@
  * ====================
  *
  * Portions Copyrighted 2012 ForgeRock AS
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.identityconnectors.contract.test;
@@ -314,7 +315,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
      */
     protected static boolean canSyncAfterOp(Class<? extends APIOperation> operation) {
         // by default it's supposed that sync works for all change types
-        Boolean canSync = true;
+        boolean canSync = true;
         try {
             if (operation.equals(CreateApiOp.class)) {
                 canSync = !(Boolean) getDataProvider().getTestSuiteAttribute(

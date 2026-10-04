@@ -19,9 +19,11 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.dbcommon;
 
+import java.util.Objects;
 import java.sql.Types;
 
 /**
@@ -109,8 +111,7 @@ public final class SQLParam {
             return false;
         }
         SQLParam other = (SQLParam) obj;
-        return (name == other.name || (name != null && name.equals(other.name)))
-                && (value == other.value || (value != null && value.equals(other.value)))
+        return Objects.equals(name, other.name) && Objects.equals(value, other.value)
                 && sqlType == other.sqlType;
     }
 

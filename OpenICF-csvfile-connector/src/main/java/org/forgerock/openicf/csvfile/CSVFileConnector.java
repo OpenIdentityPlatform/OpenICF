@@ -14,6 +14,7 @@
  * Copyright 2015-2016 ForgeRock AS
  * Portions Copyright 2011 Viliam Repan
  * Portions Copyright 2011 Radovan Semancik
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 package org.forgerock.openicf.csvfile;
 
@@ -881,6 +882,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     private SyncDelta generateSyncDelta(ConnectorObject origin, ConnectorObject current, SyncToken token) {
+        if (origin == null && current == null) {
+            throw new IllegalArgumentException("Either the original or the current object is required");
+        }
         SyncDeltaBuilder builder = new SyncDeltaBuilder();
         builder.setUid(origin == null ? current.getUid() : origin.getUid());
         builder.setToken(token);

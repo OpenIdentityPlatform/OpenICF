@@ -162,7 +162,7 @@ public final class RemoteWrappedException extends ConnectorException {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public RemoteWrappedException getCause() {
+    public synchronized RemoteWrappedException getCause() {
         Object o = exception.get(FIELD_CAUSE);
         if (o instanceof Map) {
             return new RemoteWrappedException((Map<String, Object>) o);
