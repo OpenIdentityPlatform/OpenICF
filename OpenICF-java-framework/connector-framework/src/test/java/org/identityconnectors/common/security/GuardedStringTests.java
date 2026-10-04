@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyrighted 2026 3A Systems LLC.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
 
@@ -129,6 +129,7 @@ public class GuardedStringTests {
         GuardedString second = new GuardedString("other".toCharArray());
         assertEquals(first.toString(), second.toString(),
                 "toString() must not carry anything derived from the clear text");
+        assertEquals(first.toString(), "GuardedString(...)");
     }
 
     @Test

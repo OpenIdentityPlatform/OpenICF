@@ -20,7 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  *
- * Portions Copyright 2026 3A Systems, LLC.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
 
@@ -130,6 +130,7 @@ public class GuardedByteArrayTests {
         GuardedByteArray second = new GuardedByteArray(new byte[] { 0x03, 0x04 });
         assertEquals(first.toString(), second.toString(),
                 "toString() must not carry anything derived from the clear bytes");
+        assertEquals(first.toString(), "GuardedByteArray(...)");
     }
 
     @Test
