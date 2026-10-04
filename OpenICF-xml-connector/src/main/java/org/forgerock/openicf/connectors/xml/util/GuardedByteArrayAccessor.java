@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -34,6 +35,7 @@ public class GuardedByteArrayAccessor implements GuardedByteArray.Accessor {
     public static final String code_id = "$Id$";
     private byte[] array;
     
+    @Override
     public void access(byte[] clearBytes) {
         array = new byte[clearBytes.length];
         System.arraycopy(clearBytes, 0, array, 0, array.length);

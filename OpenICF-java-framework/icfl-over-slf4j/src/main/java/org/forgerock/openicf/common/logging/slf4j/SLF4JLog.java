@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.common.logging.slf4j;
@@ -47,6 +48,7 @@ public class SLF4JLog implements LogSpi {
      * @see LogSpi#log(Class, String,
      *      org.identityconnectors.common.logging.Log.Level, String, Throwable)
      */
+    @Override
     public void log(final Class<?> clazz, final String methodName, final Level level,
             final String message, final Throwable ex) {
         final String clazzName = clazz.getName();
@@ -101,6 +103,7 @@ public class SLF4JLog implements LogSpi {
         }
     }
 
+    @Override
     public void log(final Class<?> clazz, final StackTraceElement method, final Level level,
             final String message, final Throwable ex) {
         log(clazz, null != method ? method.getMethodName() : null, level, message, ex);
@@ -110,6 +113,7 @@ public class SLF4JLog implements LogSpi {
      * Use the internal SLF4J logger to determine if the level is worthy of
      * logging.
      */
+    @Override
     public boolean isLoggable(Class<?> clazz, Level level) {
         final Logger logger = LoggerFactory.getLogger(clazz);
         boolean ret = true;
@@ -128,6 +132,7 @@ public class SLF4JLog implements LogSpi {
     /**
      * The caller is extracted only if the Level is OK (Debug).
      */
+    @Override
     public boolean needToInferCaller(Class<?> clazz, Level level) {
         return LoggerFactory.getLogger(clazz).isDebugEnabled();
     }

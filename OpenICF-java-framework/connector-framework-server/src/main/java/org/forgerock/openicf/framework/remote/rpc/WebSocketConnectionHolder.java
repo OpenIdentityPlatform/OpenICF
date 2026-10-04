@@ -129,6 +129,7 @@ public abstract class WebSocketConnectionHolder
         return null != getRemoteConnectionContext();
     }
 
+    @Override
     public final void close() {
         tryClose();
         CloseListener<WebSocketConnectionHolder> listener;

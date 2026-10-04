@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.ldap.sync.ibm;
@@ -51,6 +52,7 @@ public class IBMDSChangeLogSyncStrategy extends SunDSChangeLogSyncStrategy {
         super(conn, oclass);
     }
 
+    @Override
     protected boolean filterOutByModifiersNames(Map<String, List<Object>> changes) {
         Set<LdapName> filter = conn.getConfiguration().getModifiersNamesToFilterOutAsLdapNames();
         if (filter.isEmpty()) {

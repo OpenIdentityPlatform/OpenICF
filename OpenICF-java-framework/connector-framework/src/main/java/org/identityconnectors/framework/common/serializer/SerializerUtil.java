@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.serializer;
 
@@ -135,6 +136,7 @@ public final class SerializerUtil {
         final List<Object> rv = new ArrayList<Object>();
         fact.deserializeXmlStream(source, new XmlObjectResultsHandler() {
 
+            @Override
             public boolean handle(Object o) {
                 rv.add(o);
                 return false;

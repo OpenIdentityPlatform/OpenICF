@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.misc.crest;
@@ -54,6 +55,7 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
 
     public static final CRESTFilterVisitor VISITOR = new CRESTFilterVisitor();
 
+    @Override
     public QueryFilter visitAndFilter(VisitorParameter parameter, AndFilter subFilters) {
         final Collection<QueryFilter<String>> filters =
                 new ArrayList<QueryFilter<String>>(subFilters.getFilters().size());
@@ -63,6 +65,7 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
         return QueryFilter.and(filters);
     }
 
+    @Override
     public QueryFilter visitOrFilter(VisitorParameter parameter, OrFilter subFilters) {
         final Collection<QueryFilter<String>> filters =
                 new ArrayList<QueryFilter<String>>(subFilters.getFilters().size());
@@ -72,6 +75,7 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
         return QueryFilter.or(filters);
     }
 
+    @Override
     public QueryFilter visitNotFilter(VisitorParameter parameter, NotFilter subFilter) {
         return QueryFilter.not(subFilter.getFilter().accept(this, parameter));
     }
@@ -88,12 +92,14 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
 
     // AttributeFilter
 
+    @Override
     public QueryFilter visitEqualsFilter(VisitorParameter parameter, EqualsFilter filter) {
         // TODO: Support other then Single values
         return QueryFilter.equalTo(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitContainsAllValuesFilter(VisitorParameter parameter,
             ContainsAllValuesFilter filter) {
         // TODO: Support other then Single values
@@ -103,16 +109,19 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
 
     // StringFilter
 
+    @Override
     public QueryFilter visitContainsFilter(VisitorParameter parameter, ContainsFilter filter) {
         return QueryFilter.contains(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitStartsWithFilter(VisitorParameter parameter, StartsWithFilter filter) {
         return QueryFilter.startsWith(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitEndsWithFilter(VisitorParameter parameter, EndsWithFilter filter) {
         return QueryFilter.comparisonFilter(parameter.translateName(filter.getName()), EW,
                 parameter.convertValue(filter.getAttribute()));
@@ -120,28 +129,33 @@ public class CRESTFilterVisitor implements FilterVisitor<QueryFilter<String>, Vi
 
     // ComparableAttributeFilter
 
+    @Override
     public QueryFilter visitGreaterThanFilter(VisitorParameter parameter, GreaterThanFilter filter) {
         return QueryFilter.greaterThan(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitGreaterThanOrEqualFilter(VisitorParameter parameter,
             GreaterThanOrEqualFilter filter) {
         return QueryFilter.greaterThanOrEqualTo(parameter.translateName(filter.getName()),
                 parameter.convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitLessThanFilter(VisitorParameter parameter, LessThanFilter filter) {
         return QueryFilter.lessThan(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitLessThanOrEqualFilter(VisitorParameter parameter,
             LessThanOrEqualFilter filter) {
         return QueryFilter.lessThanOrEqualTo(parameter.translateName(filter.getName()), parameter
                 .convertValue(filter.getAttribute()));
     }
 
+    @Override
     public QueryFilter visitExtendedFilter(VisitorParameter visitorParameter, Filter filter) {
         throw new UnsupportedOperationException("Filter type is not supported: "
                 + filter.getClass());

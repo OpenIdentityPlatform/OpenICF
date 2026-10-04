@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.objects.filter;
@@ -61,12 +62,14 @@ public class FilteredResultsHandlerVisitor implements
 
     public static Filter wrapFilter(final Filter nestedFilter, final boolean caseIgnore) {
         return null == nestedFilter ? null : new Filter() {
+            @Override
             public boolean accept(final ConnectorObject obj) {
                 return nestedFilter.accept(
                         caseIgnore ? DEFAULT_CASE_IGNORE_VISITOR : DEFAULT_CASE_SENSITIVE_VISITOR,
                         obj).toBoolean();
             }
 
+            @Override
             public <R, P> R accept(FilterVisitor<R, P> v, P p) {
                 return v.visitExtendedFilter(p, this);
             }
@@ -79,6 +82,7 @@ public class FilteredResultsHandlerVisitor implements
         this.caseIgnore = caseIgnore;
     }
 
+    @Override
     public FilterResult visitAndFilter(ConnectorObject connectorObject, AndFilter filter) {
         FilterResult result = FilterResult.TRUE;
         for (final Filter subFilter : filter.getFilters()) {
@@ -93,6 +97,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitContainsFilter(ConnectorObject connectorObject, ContainsFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
         String valueAssertion = expectSingleValue(connectorObject, filter.getName(), String.class);
@@ -108,6 +113,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitContainsAllValuesFilter(ConnectorObject connectorObject,
             ContainsAllValuesFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
@@ -157,6 +163,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitEqualsFilter(ConnectorObject connectorObject, EqualsFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
         Attribute attribute = connectorObject.getAttributeByName(filter.getName());
@@ -170,6 +177,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitExtendedFilter(ConnectorObject connectorObject, Filter filter) {
         FilterResult result = FilterResult.UNDEFINED;
         if (filter instanceof PresenceFilter) {
@@ -180,6 +188,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitGreaterThanFilter(ConnectorObject connectorObject,
             GreaterThanFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
@@ -212,6 +221,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitGreaterThanOrEqualFilter(ConnectorObject connectorObject,
             GreaterThanOrEqualFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
@@ -244,6 +254,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitLessThanFilter(ConnectorObject connectorObject, LessThanFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
         final Object valueAssertion = expectSingleValue(connectorObject, filter.getName());
@@ -275,6 +286,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitLessThanOrEqualFilter(ConnectorObject connectorObject,
             LessThanOrEqualFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
@@ -307,6 +319,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitNotFilter(ConnectorObject connectorObject, NotFilter filter) {
         switch (filter.getFilter().accept(this, connectorObject)) {
         case FALSE:
@@ -318,6 +331,7 @@ public class FilteredResultsHandlerVisitor implements
         }
     }
 
+    @Override
     public FilterResult visitOrFilter(ConnectorObject connectorObject, OrFilter filter) {
         FilterResult result = FilterResult.FALSE;
         for (final Filter subFilter : filter.getFilters()) {
@@ -332,6 +346,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitStartsWithFilter(ConnectorObject connectorObject,
             StartsWithFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
@@ -348,6 +363,7 @@ public class FilteredResultsHandlerVisitor implements
         return result;
     }
 
+    @Override
     public FilterResult visitEndsWithFilter(ConnectorObject connectorObject, EndsWithFilter filter) {
         FilterResult result = FilterResult.UNDEFINED;
         String valueAssertion = expectSingleValue(connectorObject, filter.getName(), String.class);

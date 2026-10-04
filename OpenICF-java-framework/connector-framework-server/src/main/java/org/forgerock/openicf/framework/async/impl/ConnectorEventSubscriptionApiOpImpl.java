@@ -72,31 +72,37 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
         super(remoteConnection, connectorKey, facadeKeyFunction,timeout);
     }
 
+    @Override
     public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter,
             final Observer<ConnectorObject> handler, final OperationOptions operationOptions) {
         final Promise<Void, RuntimeException> promise =
                 trySubscribe(objectClass, eventFilter, handler, operationOptions).thenOnException(
                         new ExceptionHandler<RuntimeException>() {
+                            @Override
                             public void handleException(RuntimeException error) {
                                 if (!(error instanceof CancellationException)) {
                                     handler.onError(error);
                                 }
                             }
                         }).thenOnResult(new ResultHandler<Void>() {
+                    @Override
                     public void handleResult(Void result) {
                         handler.onCompleted();
                     }
                 });
 
         return new Subscription() {
+            @Override
             public void close() {
                 promise.cancel(true);
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return promise.isDone();
             }
 
+            @Override
             public Object getReturnValue() {
                 try {
                     return promise.get();
@@ -143,6 +149,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             this.handler = handler;
         }
 
+        @Override
         public InternalRequest createRemoteRequest(
                 final RemoteOperationContext context,
                 final long requestId,
@@ -156,6 +163,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             }
         }
 
+        @Override
         protected OperationRequest.Builder createOperationRequest(
                 final RemoteOperationContext remoteContext) {
             return operationRequest;
@@ -191,6 +199,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             }
         }
 
+        @Override
         protected void handleOperationResponseMessages(WebSocketConnectionHolder sourceConnection,
                 ConnectorEventSubscriptionOpResponse message) {
             if (null != handler && message.hasConnectorObject()) {
@@ -271,11 +280,13 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             final Subscription result =
                     connectorFacade.subscribe(objectClass, token, new Observer<ConnectorObject>() {
 
+                        @Override
                         public void onCompleted() {
                             handleResult(ConnectorEventSubscriptionOpResponse.newBuilder()
                                     .setCompleted(Boolean.TRUE).build());
                         }
 
+                        @Override
                         public void onError(Throwable error) {
                             if (error instanceof RuntimeException) {
                                 handleException((RuntimeException) error);
@@ -284,6 +295,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
                             }
                         }
 
+                        @Override
                         public void onNext(ConnectorObject syncDelta) {
                             if (null != syncDelta) {
                                 tryHandleResult(ConnectorEventSubscriptionOpResponse
@@ -320,6 +332,7 @@ public class ConnectorEventSubscriptionApiOpImpl extends AbstractAPIOperation im
             }
         }
 
+        @Override
         protected boolean tryCancel() {
             final Subscription current;
             synchronized (this) {

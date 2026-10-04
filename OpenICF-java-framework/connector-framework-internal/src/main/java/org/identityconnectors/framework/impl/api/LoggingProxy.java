@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -51,6 +52,7 @@ public class LoggingProxy implements InvocationHandler {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object invoke(final Object proxy, final Method method, final Object[] args)
             throws Throwable {
         // do not log equals, hashCode, toString

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -52,6 +53,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         proxy = new XMLHandlerImpl(config, connSchema, xsdSchemas);
     }
 
+    @Override
     public Uid create(ObjectClass objClass, Set<Attribute> attributes) {
         Uid uid = null;
         lock.writeLock().lock();
@@ -64,6 +66,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return uid;
     }
 
+    @Override
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes) {
         Uid newUid = null;
         lock.writeLock().lock();
@@ -76,6 +79,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return newUid;
     }
 
+    @Override
     public void delete(ObjectClass objClass, Uid uid) {
         lock.writeLock().lock();
         try {
@@ -86,6 +90,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         }
     }
 
+    @Override
     public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
         Collection<ConnectorObject> result = null;
         lock.readLock().lock();
@@ -98,6 +103,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return result;
     }
 
+    @Override
     public Uid authenticate(String username, GuardedString password) {
         Uid result = null;
         lock.readLock().lock();
@@ -110,6 +116,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return result;
     }    
 
+    @Override
     public XMLHandler init() {
         // Use the write lock so the invokers counter and proxy.init()
         // are not racing against a concurrent dispose() (or another init())
@@ -127,6 +134,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return this;
     }
 
+    @Override
     public void dispose() {
         // Use the write lock so that proxy.dispose() (which serializes the
         // shared DOM through Saxon) cannot run concurrently with itself or
@@ -144,6 +152,7 @@ public class ConcurrentXMLHandler implements XMLHandler {
         }
     }
 
+    @Override
     public boolean isSupportUid(ObjectClass objectClass) {
         return proxy.isSupportUid(objectClass);
     }

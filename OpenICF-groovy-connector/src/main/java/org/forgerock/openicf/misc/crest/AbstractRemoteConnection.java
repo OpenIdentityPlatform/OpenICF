@@ -657,6 +657,7 @@ public abstract class AbstractRemoteConnection implements Connection {
          * If the response was unsuccessful (&gt;= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
+        @Override
         public QueryResponse buildResult(HttpContext context) throws Exception {
 
             return parseQueryResponse(response, handler);
@@ -684,6 +685,7 @@ public abstract class AbstractRemoteConnection implements Connection {
          * If the response was unsuccessful (&gt;= 300 status code), throws an
          * {@link org.apache.http.client.HttpResponseException}.
          */
+        @Override
         public ResourceResponse buildResult(HttpContext context) throws Exception {
 
             return getAsResource(parseResponse(response));

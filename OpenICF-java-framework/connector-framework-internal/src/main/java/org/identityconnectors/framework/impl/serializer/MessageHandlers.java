@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.impl.serializer;
@@ -52,11 +53,13 @@ class MessageHandlers {
 
         HANDLERS.add(new AbstractObjectSerializationHandler(HelloRequest.class, "HelloRequest") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new HelloRequest(decoder.readIntField("infoLevel",
                         HelloRequest.CONNECTOR_INFO));
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 HelloRequest val = (HelloRequest) object;
                 encoder.writeIntField("infoLevel", val.getInfoLevel());
@@ -65,6 +68,7 @@ class MessageHandlers {
 
         HANDLERS.add(new AbstractObjectSerializationHandler(HelloResponse.class, "HelloResponse") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final Throwable exception =
                         (Throwable) decoder.readObjectField("exception", null, null);
@@ -81,6 +85,7 @@ class MessageHandlers {
                 return new HelloResponse(exception, serverInfo, connectorKeys, connectorInfos);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final HelloResponse val = (HelloResponse) object;
                 encoder.writeObjectField("exception", val.getException(), false);
@@ -93,6 +98,7 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationRequest.class,
                 "OperationRequest") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final ConnectorKey connectorKey =
                         (ConnectorKey) decoder.readObjectField("ConnectorKey", ConnectorKey.class,
@@ -111,6 +117,7 @@ class MessageHandlers {
                         operationMethodName, arguments);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 OperationRequest val = (OperationRequest) object;
                 encoder.writeClassField("operation", val.getOperation());
@@ -124,10 +131,12 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationResponseEnd.class,
                 "OperationResponseEnd") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new OperationResponseEnd();
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
             }
         });
@@ -135,6 +144,7 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationResponsePart.class,
                 "OperationResponsePart") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 final Throwable exception =
                         (Throwable) decoder.readObjectField("exception", null, null);
@@ -143,6 +153,7 @@ class MessageHandlers {
                 return new OperationResponsePart(exception, result);
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final OperationResponsePart val = (OperationResponsePart) object;
                 encoder.writeObjectField("exception", val.getException(), false);
@@ -153,10 +164,12 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationRequestMoreData.class,
                 "OperationRequestMoreData") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new OperationRequestMoreData();
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
             }
         });
@@ -164,10 +177,12 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationRequestStopData.class,
                 "OperationRequestStopData") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new OperationRequestStopData();
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
             }
         });
@@ -175,21 +190,25 @@ class MessageHandlers {
         HANDLERS.add(new AbstractObjectSerializationHandler(OperationResponsePause.class,
                 "OperationResponsePause") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new OperationResponsePause();
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
             }
         });
 
         HANDLERS.add(new AbstractObjectSerializationHandler(EchoMessage.class, "EchoMessage") {
 
+            @Override
             public Object deserialize(final ObjectDecoder decoder) {
                 return new EchoMessage(decoder.readObjectField("value", null, null),
                         (String) decoder.readObjectField("objectXml", String.class, null));
             }
 
+            @Override
             public void serialize(final Object object, final ObjectEncoder encoder) {
                 final EchoMessage val = (EchoMessage) object;
                 encoder.writeObjectField("value", val.getObject(), false);

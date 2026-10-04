@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -162,6 +163,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isConnectorPoolingSupported() {
         return isConnectorPoolingSupported;
     }
@@ -169,6 +171,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ObjectPoolConfiguration getConnectorPoolConfiguration() {
         if (connectorPoolConfiguration == null) {
             connectorPoolConfiguration = new ObjectPoolConfiguration();
@@ -179,6 +182,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConfigurationPropertiesImpl getConfigurationProperties() {
         return configurationProperties;
     }
@@ -186,6 +190,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getTimeout(Class<? extends APIOperation> operation) {
         Integer ret = this.timeoutMap.get(operation);
         if (ret == null || ret < APIOperation.NO_TIMEOUT) {
@@ -198,6 +203,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Set<Class<? extends APIOperation>> getSupportedOperations() {
         return CollectionUtil.newReadOnlySet(supportedOperations);
     }
@@ -205,6 +211,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setTimeout(Class<? extends APIOperation> operation, int timeout) {
         this.timeoutMap.put(operation, timeout);
     }
@@ -212,6 +219,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProducerBufferSize(int size) {
         this.bufferSize = size;
     }
@@ -219,6 +227,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getProducerBufferSize() {
         return this.bufferSize;
     }
@@ -226,6 +235,7 @@ public class APIConfigurationImpl implements APIConfiguration {
     /**
      * {@inheritDoc}
      */
+    @Override
     public ResultsHandlerConfiguration getResultsHandlerConfiguration() {
         if (null == resultsHandlerConfiguration) {
             resultsHandlerConfiguration = new ResultsHandlerConfiguration();
@@ -237,6 +247,7 @@ public class APIConfigurationImpl implements APIConfiguration {
         this.resultsHandlerConfiguration = config;
     }
 
+    @Override
     public void setChangeListener(ConfigurationPropertyChangeListener changeListener) {
         configurationChangeListener = changeListener;
     }

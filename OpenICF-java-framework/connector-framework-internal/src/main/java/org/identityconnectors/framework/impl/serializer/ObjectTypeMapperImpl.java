@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.serializer;
 
@@ -32,14 +33,17 @@ public class ObjectTypeMapperImpl implements ObjectTypeMapper {
         this.handledType = handledType;
     }
 
+    @Override
     public final Class<?> getHandledObjectType() {
         return handledClass;
     }
 
+    @Override
     public final String getHandledSerialType() {
         return handledType;
     }
 
+    @Override
     public boolean isMatchSubclasses() {
         return false;
     }

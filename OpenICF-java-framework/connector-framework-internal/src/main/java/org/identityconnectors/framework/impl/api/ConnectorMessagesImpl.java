@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -46,6 +47,7 @@ public class ConnectorMessagesImpl implements ConnectorMessages {
     public ConnectorMessagesImpl() {
     }
 
+    @Override
     public String format(String key, String dflt, Object... args) {
         if (key == null) {
             return dflt;

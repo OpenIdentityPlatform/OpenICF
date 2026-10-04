@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.sync.timestamps;
 
@@ -91,10 +92,12 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
         this.server = conn.getServerType();
     }
 
+    @Override
     public SyncToken getLatestSyncToken() {
         return new SyncToken(getNowTime());
     }
 
+    @Override
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         // ldapsearch -h host -p 389 -b "dc=example,dc=com" -D "cn=administrator,cn=users,dc=example,dc=com" -w xxx "whenchanged>=20130214130642.0Z"
         // on AD
@@ -133,6 +136,7 @@ public class TimestampsSyncStrategy implements LdapSyncStrategy {
 
         try {
             search.execute(new LdapSearchResultsHandler() {
+                @Override
                 public boolean handle(String baseDN, SearchResult result) throws NamingException {
                     LdapEntry entry = LdapEntry.create(baseDN, result);
                     Attributes attrs = result.getAttributes();

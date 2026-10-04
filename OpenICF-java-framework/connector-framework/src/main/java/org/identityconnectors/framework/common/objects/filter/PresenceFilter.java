@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.framework.common.objects.filter;
@@ -55,10 +56,12 @@ public class PresenceFilter implements Filter {
      * Determines if the attribute provided is present in the
      * {@link ConnectorObject}.
      */
+    @Override
     public boolean accept(ConnectorObject obj) {
         return obj.getAttributeByName(name) != null;
     }
 
+    @Override
     public <R, P> R accept(FilterVisitor<R, P> v, P p) {
         return v.visitExtendedFilter(p, this);
     }

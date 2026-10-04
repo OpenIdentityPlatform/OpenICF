@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -70,6 +71,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         this.globalConnectionGroups = globalConnectionGroups;
     }
 
+    @Override
     public String getName() {
         return DEFAULT_NAME;
     }
@@ -105,6 +107,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         return listener;
     }
 
+    @Override
     public <R extends RemoteRequest<V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext>, V, E extends Exception> R trySubmitRequest(
             RemoteRequestFactory<R, V, E, WebSocketConnectionGroup, WebSocketConnectionHolder, RemoteOperationContext> requestFactory) {
         for (WebSocketConnectionGroup e : connectionGroups.values()) {
@@ -118,6 +121,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
         return null;
     }
 
+    @Override
     public boolean isOperational() {
         if (isRunning.get()) {
             for (WebSocketConnectionGroup e : connectionGroups.values()) {
@@ -136,6 +140,7 @@ public abstract class ConnectionPrincipal<T extends ConnectionPrincipal<T>>
      */
     protected abstract void doClose();
 
+    @Override
     public final void close() {
         if (isRunning.compareAndSet(Boolean.TRUE, Boolean.FALSE)) {
             doClose();

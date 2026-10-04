@@ -259,6 +259,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 final LinkedList<SyncDelta> deltas = new LinkedList<SyncDelta>();
                 getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
+                    @Override
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
                         return true;
@@ -278,6 +279,7 @@ public class SyncApiOpTests extends ObjectClassRunner {
                 // should return one change this time
                 getConnectorFacade().sync(objectClass, latestToken, new SyncResultsHandler() {
 
+                    @Override
                     public boolean handle(SyncDelta delta) {
                         deltas.add(delta);
                         return true;

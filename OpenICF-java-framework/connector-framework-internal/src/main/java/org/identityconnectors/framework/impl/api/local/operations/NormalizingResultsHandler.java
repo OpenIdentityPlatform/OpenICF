@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -38,6 +39,7 @@ public class NormalizingResultsHandler implements ResultsHandler {
         this.normalizer = normalizer;
     }
 
+    @Override
     public boolean handle(ConnectorObject obj) {
         ConnectorObject normalized = normalizer.normalizeObject(obj);
         return target.handle(normalized);

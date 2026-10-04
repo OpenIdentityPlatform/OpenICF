@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
 
@@ -216,6 +217,7 @@ public final class SecurityUtil {
 
         GuardedString.Accessor accessor = new GuardedString.Accessor() {
 
+            @Override
             public void access(char[] clearChars) {
                 clearText[0] = new String(clearChars);
             }
@@ -237,6 +239,7 @@ public final class SecurityUtil {
         final byte[][] clearByte = new byte[1][];
 
         GuardedByteArray.Accessor accessor = new GuardedByteArray.Accessor() {
+            @Override
             public void access(byte[] clearBytes) {
                 clearByte[0] = clearBytes;
             }

@@ -98,6 +98,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         this.oclass = oclass;
     }
 
+    @Override
     public SyncToken getLatestSyncToken() {
         if (oclass.is(DIRSYNC_EVENTS_OBJCLASS)) {
             return new SyncToken(getDirSyncCookie());
@@ -105,6 +106,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         return new SyncToken(gethighestCommittedUSN());
     }
 
+    @Override
     public void sync(SyncToken token, final SyncResultsHandler handler, final OperationOptions options) {
         if (oclass.is(DIRSYNC_EVENTS_OBJCLASS)) {
             handleEvents(token, handler, options);
@@ -138,6 +140,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                     controls);
             try {
                 search.execute(new LdapSearchResultsHandler() {
+                    @Override
                     public boolean handle(String baseDN, SearchResult result) throws NamingException {
                         Attributes attrs = result.getAttributes();
                         Uid uid = conn.getSchemaMapping().createUid(conn.getConfiguration().getUidAttribute(), attrs);

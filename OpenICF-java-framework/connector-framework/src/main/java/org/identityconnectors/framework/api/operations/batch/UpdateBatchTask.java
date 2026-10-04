@@ -80,6 +80,7 @@ public class UpdateBatchTask implements BatchTask<Uid> {
      *            the executor that will perform the actual update operation.
      * @return the {@link Uid} of the updated object.
      */
+    @Override
     public Uid execute(BatchTaskExecutor executor) {
         return executor.execute(this);
     }
@@ -93,6 +94,7 @@ public class UpdateBatchTask implements BatchTask<Uid> {
      *
      * @return the object class specified when this task was constructed.
      */
+    @Override
     public ObjectClass getObjectClass() {
         return objectClass;
     }

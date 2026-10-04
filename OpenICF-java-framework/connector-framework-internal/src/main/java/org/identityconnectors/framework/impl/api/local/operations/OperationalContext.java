@@ -126,6 +126,7 @@ public class OperationalContext implements AbstractConfiguration.ConfigurationCh
         }
     }
 
+    @Override
     public void notifyUpdate() {
         try {
             final ConfigurationPropertyChangeListener listener =

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.contract.test;
@@ -49,6 +50,7 @@ public class FrameworkModule extends AbstractModule {
         this.dataProvider = dataProvider;
     }
 
+    @Override
     protected void configure() {
         bind(DataProvider.class).annotatedWith(Names.named("DataProvider")).toInstance(dataProvider);
     }

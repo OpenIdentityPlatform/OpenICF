@@ -72,6 +72,7 @@ public class CreateBatchTask implements BatchTask<Uid> {
      *            the executor that will perform the actual create operation.
      * @return the {@link Uid} of the newly created object.
      */
+    @Override
     public Uid execute(BatchTaskExecutor executor) {
         return executor.execute(this);
     }
@@ -81,6 +82,7 @@ public class CreateBatchTask implements BatchTask<Uid> {
      *
      * @return the object class specified when this task was constructed.
      */
+    @Override
     public ObjectClass getObjectClass() {
         return objectClass;
     }

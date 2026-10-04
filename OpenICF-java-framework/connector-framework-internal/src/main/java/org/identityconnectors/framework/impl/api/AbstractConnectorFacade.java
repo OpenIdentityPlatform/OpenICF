@@ -20,6 +20,7 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api;
 
@@ -149,6 +150,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
      *         return an instance of the operation.
      * @see org.identityconnectors.framework.api.ConnectorFacade#getOperation(java.lang.Class)
      */
+    @Override
     public final APIOperation getOperation(Class<? extends APIOperation> api) {
         if (!configuration.isSupportedOperation(api)) {
             return null;
@@ -165,6 +167,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
      *
      * @return identifier of this ConnectorFacade instance.
      */
+    @Override
     public final String getConnectorFacadeKey() {
         return connectorFacadeKey;
     }
@@ -172,6 +175,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Set<Class<? extends APIOperation>> getSupportedOperations() {
         return configuration.getSupportedOperations();
     }
@@ -182,6 +186,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Subscription executeBatch(List<BatchTask> tasks, Observer<BatchResult> observer, OperationOptions options) {
         return ((BatchApiOp) getOperationCheckSupported(BatchApiOp.class))
                 .executeBatch(tasks, observer, options);
@@ -190,6 +195,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Subscription queryBatch(BatchToken token, Observer<BatchResult> observer, OperationOptions options) {
         return ((BatchApiOp) getOperationCheckSupported(BatchApiOp.class))
                 .queryBatch(token, observer, options);
@@ -198,6 +204,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Schema schema() {
         return ((SchemaApiOp) this.getOperationCheckSupported(SchemaApiOp.class)).schema();
     }
@@ -205,6 +212,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             final OperationOptions options) {
         return ((CreateApiOp) getOperationCheckSupported(CreateApiOp.class)).create(objectClass,
@@ -214,6 +222,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void delete(final ObjectClass objectClass, final Uid uid,
             final OperationOptions options) {
         ((DeleteApiOp) this.getOperationCheckSupported(DeleteApiOp.class)).delete(objectClass, uid,
@@ -223,6 +232,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final SearchResult search(final ObjectClass objectClass, final Filter filter,
             final ResultsHandler handler, final OperationOptions options) {
         return ((SearchApiOp) this.getOperationCheckSupported(SearchApiOp.class)).search(
@@ -232,6 +242,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription subscribe(final ObjectClass objectClass, final Filter eventFilter, final Observer<ConnectorObject> handler,
                                          final OperationOptions operationOptions) {
         return ((ConnectorEventSubscriptionApiOp) this.getOperationCheckSupported(ConnectorEventSubscriptionApiOp.class)).subscribe(
@@ -241,6 +252,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Subscription subscribe(final ObjectClass objectClass,final SyncToken token,final Observer<SyncDelta> handler,
                                          final OperationOptions operationOptions) {
         return ((SyncEventSubscriptionApiOp) this.getOperationCheckSupported(SyncEventSubscriptionApiOp.class)).subscribe(
@@ -250,6 +262,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid update(final ObjectClass objectClass, final Uid uid,
             final Set<Attribute> attrs, final OperationOptions options) {
         return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class)).update(
@@ -259,6 +272,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid addAttributeValues(final ObjectClass objclass, final Uid uid,
             final Set<Attribute> attrs, final OperationOptions options) {
         return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class))
@@ -268,6 +282,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid removeAttributeValues(final ObjectClass objclass, final Uid uid,
             final Set<Attribute> attrs, final OperationOptions options) {
         return ((UpdateApiOp) this.getOperationCheckSupported(UpdateApiOp.class))
@@ -277,6 +292,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid authenticate(final ObjectClass objectClass, final String username,
             final GuardedString password, final OperationOptions options) {
         return ((AuthenticationApiOp) this.getOperationCheckSupported(AuthenticationApiOp.class))
@@ -286,6 +302,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Uid resolveUsername(final ObjectClass objectClass, final String username,
             final OperationOptions options) {
         return ((ResolveUsernameApiOp) this.getOperationCheckSupported(ResolveUsernameApiOp.class))
@@ -295,6 +312,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Object runScriptOnConnector(ScriptContext request, OperationOptions options) {
         return ((ScriptOnConnectorApiOp) this
                 .getOperationCheckSupported(ScriptOnConnectorApiOp.class)).runScriptOnConnector(
@@ -304,6 +322,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final Object runScriptOnResource(ScriptContext request, OperationOptions options) {
         return ((ScriptOnResourceApiOp) this
                 .getOperationCheckSupported(ScriptOnResourceApiOp.class)).runScriptOnResource(
@@ -313,6 +332,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final ConnectorObject getObject(ObjectClass objectClass, Uid uid,
             OperationOptions options) {
         return ((GetApiOp) this.getOperationCheckSupported(GetApiOp.class)).getObject(objectClass,
@@ -322,6 +342,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void test() {
         ((TestApiOp) this.getOperationCheckSupported(TestApiOp.class)).test();
     }
@@ -329,6 +350,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final void validate() {
         ((ValidateApiOp) this.getOperationCheckSupported(ValidateApiOp.class)).validate();
     }
@@ -336,6 +358,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final SyncToken sync(ObjectClass objectClass, SyncToken token,
             SyncResultsHandler handler, OperationOptions options) {
         return ((SyncApiOp) this.getOperationCheckSupported(SyncApiOp.class)).sync(objectClass,
@@ -345,6 +368,7 @@ public abstract class AbstractConnectorFacade implements ConnectorFacade {
     /**
      * {@inheritDoc}
      */
+    @Override
     public final SyncToken getLatestSyncToken(ObjectClass objectClass) {
         return ((SyncApiOp) this.getOperationCheckSupported(SyncApiOp.class))
                 .getLatestSyncToken(objectClass);

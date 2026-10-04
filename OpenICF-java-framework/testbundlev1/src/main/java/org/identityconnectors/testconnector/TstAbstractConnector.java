@@ -116,6 +116,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             this.sortKeys = Arrays.asList(sortKeys);
         }
 
+        @Override
         public int compare(final ConnectorObject r1, final ConnectorObject r2) {
             for (final SortKey sortKey : sortKeys) {
                 final int result = compare(r1, r2, sortKey);
@@ -162,6 +163,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
     private static final Comparator<Object> VALUE_COMPARATOR = new Comparator<Object>() {
 
+        @Override
         public int compare(final Object o1, final Object o2) {
             return CollectionUtil.forceCompare(o1, o2);
         }
@@ -178,6 +180,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         config.updateTest();
     }
     
+    @Override
     public Uid authenticate(ObjectClass objectClass, String username, GuardedString password,
             OperationOptions options) {
         if (config.isReturnNullTest()) {
@@ -187,6 +190,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public Subscription subscribe(final ObjectClass objectClass,final Filter eventFilter,final Observer<ConnectorObject> handler,
                                   final OperationOptions operationOptions) {
         final ConnectorObjectBuilder builder =
@@ -201,6 +205,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         final boolean doComplete = operationOptions.getOptions().containsKey("doComplete");
         
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
+            @Override
             protected boolean doAction(int runCount) {
 
                 if (TstAbstractConnector.this.config == null){
@@ -230,20 +235,24 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         
         return new Subscription() {
             // Remotely request stop processing subscription
+            @Override
             public void close() {
                 runnable.cancel();
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return !runnable.getRunning();
             }
 
+            @Override
             public Object getReturnValue() {
                 return null;
             }
         };
     }
 
+    @Override
     public Subscription subscribe(final ObjectClass objectClass,final SyncToken token,final Observer<SyncDelta> handler,
                                   final OperationOptions operationOptions) {
         final SyncDeltaBuilder builder =
@@ -261,6 +270,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         final boolean doComplete = operationOptions.getOptions().containsKey("doComplete");
         
         final SelfAwareExecutionRunnable runnable = new SelfAwareExecutionRunnable() {
+            @Override
             protected boolean doAction(int runCount) {
 
                 if (TstAbstractConnector.this.config == null){
@@ -289,20 +299,24 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
         return new Subscription() {
             // Remotely request stop processing subscription
+            @Override
             public void close() {
                 runnable.cancel();
             }
 
+            @Override
             public boolean isUnsubscribed() {
                 return !runnable.getRunning();
             }
 
+            @Override
             public Object getReturnValue() {
                 return null;
             }
         };
     }
 
+    @Override
     public Uid create(ObjectClass objectClass, Set<Attribute> createAttributes,
             OperationOptions options) {
         AttributesAccessor accessor = new AttributesAccessor(createAttributes);
@@ -327,6 +341,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public void delete(ObjectClass objectClass, Uid uid, OperationOptions options) {
         if (config.isReturnNullTest()) {
             return;
@@ -344,6 +359,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public Uid resolveUsername(ObjectClass objectClass, String username, OperationOptions options) {
         if (config.isReturnNullTest()) {
             return null;
@@ -353,6 +369,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
     }
 
     @SuppressWarnings("unchecked")
+    @Override
     public Schema schema() {
         if (config.isReturnNullTest()) {
             return null;
@@ -367,6 +384,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public Object runScriptOnResource(ScriptContext request, OperationOptions options) {
         if (config.isReturnNullTest()) {
             return null;
@@ -381,16 +399,19 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public FilterTranslator<Filter> createFilterTranslator(ObjectClass objectClass,
             OperationOptions options) {
         return new FilterTranslator<Filter>() {
 
+            @Override
             public List<Filter> translate(Filter filter) {
                 return Collections.singletonList(filter);
             }
         };
     }
 
+    @Override
     public void executeQuery(ObjectClass objectClass, Filter query, ResultsHandler handler,
             OperationOptions options) {
 
@@ -484,6 +505,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
 
     }
 
+    @Override
     public void sync(ObjectClass objectClass, SyncToken token, SyncResultsHandler handler,
             OperationOptions options) {
         if (config.isReturnNullTest()) {
@@ -505,6 +527,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         if (config.isReturnNullTest()) {
             return null;
@@ -515,12 +538,14 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public void test() {
         if (config.getFailValidation()) {
             throw new ConnectorException("test failed " + CurrentLocale.get().getLanguage());
         }
     }
 
+    @Override
     public Uid update(ObjectClass objectClass, Uid uid, Set<Attribute> replaceAttributes,
             OperationOptions options) {
         if (config.isReturnNullTest()) {
@@ -558,6 +583,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         private volatile ScheduledFuture<?> self;
         private AtomicBoolean running = new AtomicBoolean(Boolean.TRUE);
 
+        @Override
         public void run() {
             if (!doAction(runCount.incrementAndGet())) {
                 cancel();
@@ -585,6 +611,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
     BatchUseCase2Processor processorUseCase2 = null;
     BatchUseCase3Processor processorUseCase3 = null;
 
+    @Override
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
                                    final OperationOptions options) {
         if (config.isReturnNullTest()) {
@@ -596,12 +623,15 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             final BatchToken token = processorUseCase2.executeBatch(tasks, options);
             observer.onCompleted();
             return new Subscription() {
+                @Override
                 public void close() {}
 
+                @Override
                 public boolean isUnsubscribed() {
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return token;
                 }
@@ -611,12 +641,15 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             final BatchToken token = processorUseCase3.executeBatch(tasks, options, observer);
 
             return new Subscription() {
+                @Override
                 public void close() {}
 
+                @Override
                 public boolean isUnsubscribed() {
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return token;
                 }
@@ -650,12 +683,15 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             }
             observer.onCompleted();
             return new Subscription() {
+                @Override
                 public void close() {}
 
+                @Override
                 public boolean isUnsubscribed() {
                     return true;
                 }
 
+                @Override
                 public Object getReturnValue() {
                     return new BatchToken();
                 }
@@ -663,6 +699,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
     }
 
+    @Override
     public Subscription queryBatch(final BatchToken batchToken, final Observer<BatchResult> observer,
                                  final OperationOptions options) {
         final AtomicBoolean opComplete = new AtomicBoolean(false);
@@ -672,12 +709,15 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
         }
 
         Subscription ret = new Subscription() {
+            @Override
             public void close() {}
 
+            @Override
             public boolean isUnsubscribed() {
                 return true;
             }
 
+            @Override
             public Object getReturnValue() {
                 return opComplete.get() ? new BatchToken() : batchToken;
             }
@@ -754,6 +794,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             return tok;
         }
 
+        @Override
         public void run() {
             List<BatchTask> tasks = BatchRemoteCache.getTasks(token);
             int failId = options.getOptions().containsKey("FAIL_TEST_ITERATION")
@@ -827,6 +868,7 @@ public abstract class TstAbstractConnector implements AuthenticateOp, ConnectorE
             return token;
         }
 
+        @Override
         public void run() {
             try {
                 List<BatchTask> tasks = BatchRemoteCache.getTasks(token.getTokens().get(0));

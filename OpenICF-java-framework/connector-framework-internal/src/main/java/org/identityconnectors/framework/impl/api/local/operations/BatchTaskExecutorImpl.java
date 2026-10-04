@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
@@ -44,17 +45,20 @@ public class BatchTaskExecutorImpl implements BatchTaskExecutor {
         this.context = context;
     }
 
+    @Override
     public Uid execute(CreateBatchTask task) {
         return new CreateImpl(context, connector).create(
                 task.getObjectClass(), task.getCreateAttributes(), task.getOptions());
     }
 
+    @Override
     public BatchEmptyResult execute(DeleteBatchTask task) {
         new DeleteImpl(context, connector).delete(
                 task.getObjectClass(), task.getUid(), task.getOptions());
         return new BatchEmptyResult("Delete of " + task.getObjectClass() + " " + task.getUid() + " successful");
     }
 
+    @Override
     public Uid execute(UpdateBatchTask task) {
         UpdateImpl runner = new UpdateImpl(context, connector);
         switch (task.getUpdateType()) {

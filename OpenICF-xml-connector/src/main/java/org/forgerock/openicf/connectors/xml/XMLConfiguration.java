@@ -96,6 +96,7 @@ public class XMLConfiguration extends AbstractConfiguration {
         this.createFileIfNotExists = createFileIfNotExists;
     }
 
+    @Override
     public void validate() {
         if (null == xsdFilePath) {
             throw new IllegalArgumentException("Missing xsdFilePath property");

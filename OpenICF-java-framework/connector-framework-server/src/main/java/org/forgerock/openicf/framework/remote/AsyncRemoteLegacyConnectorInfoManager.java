@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.remote;
@@ -50,6 +51,7 @@ public class AsyncRemoteLegacyConnectorInfoManager
     private static final Log logger = Log.getLog(AsyncRemoteLegacyConnectorInfoManager.class);
 
     protected final ConnectorEventHandler handler = new ConnectorEventHandler() {
+        @Override
         public void handleEvent(final ConnectorEvent event) {
             if (ConnectorEvent.CONNECTOR_REGISTERED.equals(event.getTopic())) {
                 ConnectorInfo connectorInfo =
@@ -79,16 +81,19 @@ public class AsyncRemoteLegacyConnectorInfoManager
         }
     }
 
+    @Override
     protected void doClose() {
         future.cancel(true);
         delegate.deleteConnectorEventHandler(handler);
         super.doClose();
     }
 
+    @Override
     public List<ConnectorInfo> getConnectorInfos() {
         return delegate.getConnectorInfos();
     }
 
+    @Override
     public ConnectorInfo findConnectorInfo(final ConnectorKey key) {
         return delegate.findConnectorInfo(key);
     }
