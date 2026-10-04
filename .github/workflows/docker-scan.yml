@@ -14,8 +14,9 @@
 
 # Scans the published Docker images for known vulnerabilities: new CVEs surface in
 # already-released images (mostly via the base image), without any change in this repository.
-# Its trivy-image-* categories exist only on master, so once it has run, every PR's
-# "Trivy" code-scanning check concludes neutral with "2 configurations not found".
+# Its trivy-image-* categories exist only on master, so once it has run, every PR that
+# uploads both trivy-build-* categories gets a "Trivy" check that concludes neutral
+# with "2 configurations not found".
 name: Docker Scan
 
 on:
@@ -40,13 +41,21 @@ jobs:
         tag: [ 'latest', 'alpine' ]
     steps:
       - uses: actions/checkout@v7
+      - name: Install Trivy
+        # cached, unlike the DBs: trivy-action's `cache: false` would also skip the binary
+        # cache and leave an anonymous github.com release lookup in every run
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          version: v0.70.0
+          cache: true
       - name: Scan openidentityplatform/openicf:${{ matrix.tag }} (Trivy)
         # unlike the build.yml scan, unfixed CVEs are reported too: surfacing them in
         # already-released images is the point of this workflow. Trivy pulls only the
-        # runner's linux/amd64 manifest; the other published platforms are not scanned
-        # (alpine on linux/386 ships openjdk11-jre instead of openjdk25-jre)
+        # linux/amd64 manifest (no --platform is passed); the other published platforms
+        # are not scanned (alpine on linux/386 ships openjdk11-jre instead of openjdk25-jre)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: openidentityplatform/openicf:${{ matrix.tag }}
           format: sarif
           output: trivy-${{ matrix.tag }}.sarif

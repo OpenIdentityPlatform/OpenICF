@@ -110,6 +110,8 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v7
         with:
+          # build-docker and build-docker-alpine download ubuntu-latest-11; a docker-job
+          # re-run after retention-days needs "Re-run all jobs"
           name: ${{ matrix.os }}-${{ matrix.java }}
           retention-days: 5
           path:  |
@@ -124,6 +126,9 @@ jobs:
             !**/*-sources.jar
   build-docker:
     needs: build-maven
+    # run even when an unrelated matrix leg failed; the download below still
+    # fails if the ubuntu-latest-11 leg itself did
+    if: ${{ !cancelled() }}
     runs-on: 'ubuntu-latest'
     permissions:
       contents: read
@@ -150,9 +155,9 @@ jobs:
           ls -l OpenICF-java-framework/openicf-zip/target/*.zip
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
-      # The tag is what the Dockerfile's releases/download URL needs, and that
-      # URL is upstream's, so a fork build asks upstream too. `|| true` keeps a
-      # failed lookup going to the `last release:` line, and `test -n` stops it.
+      # The tag only names the locally built image; the ZIP comes from build-maven.
+      # `|| true` keeps a failed lookup going to the `last release:` line, and
+      # `test -n` stops it.
       - name: Get latest release version
         shell: bash
         env:
@@ -195,6 +200,14 @@ jobs:
           docker run --rm -it -d --memory="1g" --name=test localhost:5000/${GITHUB_REPOSITORY,,}:${{ env.release_version }}
           timeout 3m bash -c 'until docker inspect --format="{{json .State.Health.Status}}" test | grep -q \"healthy\"; do sleep 10; done'
           docker logs test
+      - name: Install Trivy
+        # cached, unlike the DBs: trivy-action's `cache: false` would also skip the binary
+        # cache and leave an anonymous github.com release lookup in every run
+        continue-on-error: true
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          version: v0.70.0
+          cache: true
       - name: Scan image for vulnerabilities (Trivy)
         # trivy resolves the image from the local Docker daemon, so only the runner's
         # linux/amd64 manifest is scanned; cache: false keeps the ~1GB trivy DBs from
@@ -204,6 +217,7 @@ jobs:
         continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: localhost:5000/${{ env.image_repository }}:${{ env.release_version }}
           format: sarif
           output: trivy-results.sarif
@@ -222,6 +236,9 @@ jobs:
           category: trivy-build-default
   build-docker-alpine:
     needs: build-maven
+    # run even when an unrelated matrix leg failed; the download below still
+    # fails if the ubuntu-latest-11 leg itself did
+    if: ${{ !cancelled() }}
     runs-on: 'ubuntu-latest'
     permissions:
       contents: read
@@ -248,9 +265,9 @@ jobs:
           ls -l OpenICF-java-framework/openicf-zip/target/*.zip
       # Authenticated: the anonymous api.github.com limit is per runner IP
       # and, once hit, the empty answer left the metadata step with no tag.
-      # The tag is what the Dockerfile's releases/download URL needs, and that
-      # URL is upstream's, so a fork build asks upstream too. `|| true` keeps a
-      # failed lookup going to the `last release:` line, and `test -n` stops it.
+      # The tag only names the locally built image; the ZIP comes from build-maven.
+      # `|| true` keeps a failed lookup going to the `last release:` line, and
+      # `test -n` stops it.
       - name: Get latest release version
         shell: bash
         env:
@@ -294,6 +311,14 @@ jobs:
           docker run --rm -it -d --memory="1g" --name=test localhost:5000/${GITHUB_REPOSITORY,,}:${{ env.release_version }}-alpine
           timeout 3m bash -c 'until docker inspect --format="{{json .State.Health.Status}}" test | grep -q \"healthy\"; do sleep 10; done'
           docker logs test
+      - name: Install Trivy
+        # cached, unlike the DBs: trivy-action's `cache: false` would also skip the binary
+        # cache and leave an anonymous github.com release lookup in every run
+        continue-on-error: true
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          version: v0.70.0
+          cache: true
       - name: Scan image for vulnerabilities (Trivy)
         # trivy resolves the image from the local Docker daemon, so only the runner's
         # linux/amd64 manifest is scanned; cache: false keeps the ~1GB trivy DBs from
@@ -303,6 +328,7 @@ jobs:
         continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
+          skip-setup-trivy: true
           image-ref: localhost:5000/${{ env.image_repository }}:${{ env.release_version }}-alpine
           format: sarif
           output: trivy-results.sarif
