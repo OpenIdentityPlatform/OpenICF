@@ -184,7 +184,7 @@ public final class IOUtil {
      */
     public static void quietClose(final Connection conn) {
         try {
-            if (conn != null) {
+            if (conn != null && !conn.isClosed()) {
                 conn.close();
             }
         } catch (SQLException e) {

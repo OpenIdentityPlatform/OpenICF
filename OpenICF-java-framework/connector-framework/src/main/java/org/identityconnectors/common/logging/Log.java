@@ -20,12 +20,14 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.logging;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Properties;
@@ -143,7 +145,7 @@ public final class Log {
                 throw new IllegalArgumentException();
             }
             // attempt to get an instance..
-            final LogSpi logImpl = (LogSpi) getSpiClass().newInstance();
+            final LogSpi logImpl = (LogSpi) ReflectionUtil.newInstance(MethodHandles.lookup(), getSpiClass());
             return new Log(clazz, logImpl);
         } catch (RuntimeException e) {
             throw e;

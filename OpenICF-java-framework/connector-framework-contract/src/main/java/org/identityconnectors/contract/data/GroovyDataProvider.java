@@ -238,8 +238,8 @@ public class GroovyDataProvider implements DataProvider {
         if (StringUtil.isNotBlank(pOut)) {
             try {
                 _queriedPropsOutFile = new File(pOut);
-                if (!_queriedPropsOutFile.exists()) {
-                    _queriedPropsOutFile.createNewFile();
+                if (!_queriedPropsOutFile.createNewFile() && !_queriedPropsOutFile.isFile()) {
+                    throw new IOException("Could not create " + _queriedPropsOutFile);
                 }
                 if (!_queriedPropsOutFile.canWrite()) {
                     _queriedPropsOutFile = null;
@@ -248,6 +248,7 @@ public class GroovyDataProvider implements DataProvider {
                     LOG.info("Storing parameter values to ''{0}'', you can rerun the test with the same parameters later", pOut);
                 }
             } catch (IOException iOException) {
+                _queriedPropsOutFile = null;
                 LOG.warn("Unable to create ''{0}'' file, the test parameters will not be stored", pOut);
             }
         }
@@ -263,8 +264,8 @@ public class GroovyDataProvider implements DataProvider {
         if (StringUtil.isNotBlank(pOut)) {
             try {
                 _propertyOutFile = new File(pOut);
-                if (!_propertyOutFile.exists()) {
-                    _propertyOutFile.createNewFile();
+                if (!_propertyOutFile.createNewFile() && !_propertyOutFile.isFile()) {
+                    throw new IOException("Could not create " + _propertyOutFile);
                 }
                 if (!_propertyOutFile.canWrite()) {
                     _propertyOutFile = null;
@@ -273,6 +274,7 @@ public class GroovyDataProvider implements DataProvider {
                     LOG.info("Storing parameter values to ''{0}'', you can rerun the test with the same parameters later", pOut);
                 }
             } catch (IOException iOException) {
+                _propertyOutFile = null;
                 LOG.warn("Unable to create ''{0}'' file, the test parameters will not be stored", pOut);
             }
         }

@@ -144,15 +144,11 @@ public class ReducePomMojo extends AbstractMojo {
                     f.delete();
                 }
 
-                Writer w = null;
-                try {
-                    w = WriterFactory.newXmlWriter(f);
+                try (Writer w = WriterFactory.newXmlWriter(f)) {
                     MavenXpp3Writer pomWriter = new MavenXpp3Writer();
                     pomWriter.write(w, model);
                 } catch (IOException exception) {
                     throw new MojoExecutionException("Cannot generate reduced POM", exception);
-                } finally {
-                    IOUtil.close(w);
                 }
 
                 /*

@@ -20,9 +20,13 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2013 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.api;
 
+import java.lang.invoke.MethodHandles;
+
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 
 /**
@@ -51,7 +55,7 @@ public abstract class ConnectorFacadeFactory {
         if (instance == null) {
             try {
                 final Class<?> clazz = Class.forName(IMPL_NAME);
-                final Object object = clazz.newInstance();
+                final Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 instance = ConnectorFacadeFactory.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);
@@ -70,7 +74,7 @@ public abstract class ConnectorFacadeFactory {
         if (managedInstance == null) {
             try {
                 final Class<?> clazz = Class.forName(IMPL_NAME_MANAGED);
-                final Object object = clazz.newInstance();
+                final Object object = ReflectionUtil.newInstance(MethodHandles.lookup(), clazz);
                 managedInstance = ConnectorFacadeFactory.class.cast(object);
             } catch (Exception e) {
                 throw ConnectorException.wrap(e);

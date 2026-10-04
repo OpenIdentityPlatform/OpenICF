@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.identityconnectors.common.StringUtil;
+import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.databasetable.mapping.AttributeConvertor;
@@ -289,7 +290,7 @@ public class DatabaseTableConnection extends DatabaseConnection {
                 // nothing to do, just invalidate the connection
                 throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, sql), ex);
             } finally {
-                SQLUtil.closeQuietly(stmt);
+                IOUtil.quietClose(stmt);
             }
         }        
     }

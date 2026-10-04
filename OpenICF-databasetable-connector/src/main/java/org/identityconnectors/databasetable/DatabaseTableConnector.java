@@ -58,6 +58,7 @@ import java.util.Set;
 
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.common.IOUtil;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
@@ -323,7 +324,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             }            
         } finally {
             // clean up...
-            SQLUtil.closeQuietly(pstmt);            
+            IOUtil.quietClose(pstmt);            
             closeConnection();
         }
         log.ok("Account {0} created", accountName);
@@ -404,7 +405,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_DELETE, accountUid), e);
         } finally {
             // clean up..
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(stmt);
             closeConnection();
         }
         log.ok("Account Uid {0} deleted", accountUid);
@@ -489,7 +490,7 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             }
         } finally {
             // clean up..
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(stmt);
             
             closeConnection();
         }
@@ -562,8 +563,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
                 throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);
             }             
         } finally {
-            SQLUtil.closeQuietly(result);
-            SQLUtil.closeQuietly(statement);
+            IOUtil.quietClose(result);
+            IOUtil.quietClose(statement);
             closeConnection();
         }
         log.ok("Query Account commited");        
@@ -643,8 +644,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);              
         } finally {
-            SQLUtil.closeQuietly(result);
-            SQLUtil.closeQuietly(statement);
+            IOUtil.quietClose(result);
+            IOUtil.quietClose(statement);
             
             closeConnection();
         }      
@@ -701,8 +702,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, tblname), e);                            
         } finally {
             // clean up..
-            SQLUtil.closeQuietly(rset);
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(rset);
+            IOUtil.quietClose(stmt);
             
             closeConnection();
         }
@@ -840,8 +841,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), e);
         } finally {
-            SQLUtil.closeQuietly(result);
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(result);
+            IOUtil.quietClose(stmt);
             
             closeConnection();
         }
@@ -904,8 +905,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), e);
         } finally {
-            SQLUtil.closeQuietly(result);
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(result);
+            IOUtil.quietClose(stmt);
             
             closeConnection();
         }
@@ -1059,8 +1060,8 @@ public class DatabaseTableConnector implements PoolableConnector, CreateOp, Sear
             SQLUtil.rollbackQuietly(getConn());
             throw new ConnectorException(config.getMessage(MSG_CAN_NOT_READ, config.getTable()), ex);
         } finally {
-            SQLUtil.closeQuietly(rset);
-            SQLUtil.closeQuietly(stmt);
+            IOUtil.quietClose(rset);
+            IOUtil.quietClose(stmt);
         }     
         log.ok("schema created");
         return attrInfo;

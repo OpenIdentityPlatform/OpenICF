@@ -20,15 +20,18 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2010-2015 ForgeRock AS.
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.impl.api.local.operations;
 
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.identityconnectors.common.ReflectionUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.impl.api.local.ObjectPool;
@@ -95,7 +98,7 @@ public class ConnectorAPIOperationRunnerProxy implements InvocationHandler {
             }
             else {
                 // get a new instance of the connector..
-                connector = connectorClazz.newInstance();
+                connector = ReflectionUtil.newInstance(MethodHandles.lookup(), connectorClazz);
                 // initialize the connector..
                 connector.init(context.getConfiguration());
             }

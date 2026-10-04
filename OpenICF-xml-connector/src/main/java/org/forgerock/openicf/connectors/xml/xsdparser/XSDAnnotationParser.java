@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -71,7 +72,7 @@ public class XSDAnnotationParser extends AnnotationParser{
                     if(parse){
                         StringBuilder sb = new StringBuilder();
                         sb.append(chars, start, length);
-                        if(!sb.toString().replace(" ", "").trim().equals("")){
+                        if(!sb.toString().replace(" ", "").trim().isEmpty()){
                             String stringToAppend = addValue + " " + sb.toString().trim();
                             stringBuilder.append(stringToAppend);
                             stringBuilder.append("\n");

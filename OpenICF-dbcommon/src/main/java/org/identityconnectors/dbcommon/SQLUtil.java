@@ -320,7 +320,7 @@ public final class SQLUtil {
      */
     public static void closeQuietly(final DatabaseConnection conn) {
         if (conn != null) {
-            closeQuietly(conn.getConnection());
+            IOUtil.quietClose(conn.getConnection());
         }
     }
 
@@ -434,7 +434,7 @@ public final class SQLUtil {
         } catch (IllegalArgumentException e) {
             // Wrong string, cloud be a string number
             try {
-                parsedDate = new java.sql.Date(new Long(param));
+                parsedDate = new java.sql.Date(Long.parseLong(param));
             } catch (NumberFormatException expected) {
                 // Locale parsed date, possible lost of precision
                 try {
@@ -462,7 +462,7 @@ public final class SQLUtil {
         } catch (IllegalArgumentException e) {
             // Wrong string, cloud be a number
             try {
-                parsedTms = new java.sql.Timestamp(new Long(param));
+                parsedTms = new java.sql.Timestamp(Long.parseLong(param));
             } catch (NumberFormatException expected) {
                 // Locale parsed date, possible lost of precision
                 try {
@@ -1051,8 +1051,8 @@ public final class SQLUtil {
             }
             return null;
         } finally {
-            closeQuietly(rs);
-            closeQuietly(st);
+            IOUtil.quietClose(rs);
+            IOUtil.quietClose(st);
         }
     }
 
@@ -1096,8 +1096,8 @@ public final class SQLUtil {
             }
             return rows;
         } finally {
-            closeQuietly(rs);
-            closeQuietly(st);
+            IOUtil.quietClose(rs);
+            IOUtil.quietClose(st);
         }
     }
 
@@ -1128,7 +1128,7 @@ public final class SQLUtil {
             setParams(st, Arrays.asList(params));
             return st.executeUpdate();
         } finally {
-            closeQuietly(st);
+            IOUtil.quietClose(st);
         }
     }
 }

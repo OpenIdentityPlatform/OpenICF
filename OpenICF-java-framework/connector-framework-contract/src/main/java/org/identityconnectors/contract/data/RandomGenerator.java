@@ -19,6 +19,7 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.contract.data;
 
@@ -154,11 +155,11 @@ public class RandomGenerator {
         alpha_mixed.addAll(alpha_upper);
 
         // setup the mappings
-        characterSetMap.put(new Character('#'), numeric);
-        characterSetMap.put(new Character('a'), alpha_lower);
-        characterSetMap.put(new Character('A'), alpha_upper);
-        characterSetMap.put(new Character('?'), alpha_mixed);
-        characterSetMap.put(new Character('.'), alpha_numeric);
+        characterSetMap.put(Character.valueOf('#'), numeric);
+        characterSetMap.put(Character.valueOf('a'), alpha_lower);
+        characterSetMap.put(Character.valueOf('A'), alpha_upper);
+        characterSetMap.put(Character.valueOf('?'), alpha_mixed);
+        characterSetMap.put(Character.valueOf('.'), alpha_numeric);
 
         return characterSetMap;
     }
@@ -179,7 +180,7 @@ public class RandomGenerator {
         }
 
         for (char i = min; i <= max; i++) {
-            s.add(new Character(i));
+            s.add(Character.valueOf(i));
         }
     }
 
@@ -212,7 +213,7 @@ public class RandomGenerator {
             Map<Character, Set<Character>> characterSetMap) {
         StringBuffer replacement = new StringBuffer();
         for (int i = 0; i < pattern.length(); i++) {
-            Set<Character> characterSet = characterSetMap.get(new Character(
+            Set<Character> characterSet = characterSetMap.get(Character.valueOf(
                     pattern.charAt(i)));
             if (pattern.charAt(i) == '\\') {
                 // do escape, and print the next character

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -106,7 +107,10 @@ public class XMLConfiguration extends AbstractConfiguration {
         } else if (!xmlFilePath.exists()) {
             if (createFileIfNotExists) {
                 try {
-                    xmlFilePath.getParentFile().mkdir();
+                    File parentFile = xmlFilePath.getParentFile();
+                    if (parentFile != null && !parentFile.isDirectory() && !parentFile.mkdir()) {
+                        throw new IOException("Could not create " + parentFile);
+                    }
                     if (xmlFilePath.createNewFile()) {
                         xmlFilePath.delete();
                     }
