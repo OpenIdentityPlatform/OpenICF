@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.groovy.reflection.ClassInfo;
+import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -54,6 +55,22 @@ public class ScriptedConfigurationTest {
         customizer.run();
     }
 
+    /** How often {@link #isFirstAttempt()} was called; reset by {@link #setUp()}. */
+    private static final AtomicInteger attempts = new AtomicInteger();
+
+    /** Whether the release closure of a customizer script ran; reset by {@link #setUp()}. */
+    private static volatile boolean releaseClosureRan;
+
+    /** Called from a customizer script to behave differently on its first attempt. */
+    public static boolean isFirstAttempt() {
+        return attempts.incrementAndGet() == 1;
+    }
+
+    /** Called from the release closure of a customizer script. */
+    public static void releaseClosureRan() {
+        releaseClosureRan = true;
+    }
+
     private File scriptRoot;
 
     private ScriptedConfiguration configuration;
@@ -62,6 +79,8 @@ public class ScriptedConfigurationTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
+        attempts.set(0);
+        releaseClosureRan = false;
         scriptRoot = Files.createTempDirectory("scripted-configuration").toFile();
         Files.write(new File(scriptRoot, "Customizer.groovy").toPath(),
                 (ScriptedConfigurationTest.class.getName() + ".customize()\n")
@@ -130,6 +149,34 @@ public class ScriptedConfigurationTest {
 
         assertThat(customizerClass.get()).isNotNull();
         assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
+    @Test
+    public void testRetriedCRESTCustomizerDropsTheReleaseClosureOfTheFailedAttempt() throws Exception {
+        final String test = ScriptedConfigurationTest.class.getName();
+        Files.write(new File(scriptRoot, "Customizer.groovy").toPath(),
+                ("if (" + test + ".isFirstAttempt()) {\n"
+                        + "    customize {\n"
+                        + "        release { " + test + ".releaseClosureRan() }\n"
+                        + "    }\n"
+                        + "    throw new IllegalStateException('customizer failed')\n"
+                        + "}\n"
+                        + "customize {\n"
+                        + "}\n").getBytes(StandardCharsets.UTF_8));
+        configuration = new ScriptedCRESTConfiguration();
+        configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        configuration.setCustomizerScriptFileName("Customizer.groovy");
+
+        try {
+            configuration.getGroovyScriptEngine();
+            fail("The customizer failure must reach the caller");
+        } catch (IllegalStateException e) {
+            assertThat(e).hasMessage("customizer failed");
+        }
+        assertThat(configuration.getGroovyScriptEngine()).isNotNull();
+
+        configuration.release();
+        assertThat(releaseClosureRan).as("release closure of the failed attempt ran").isFalse();
     }
 
     @Test(timeOut = 30000)

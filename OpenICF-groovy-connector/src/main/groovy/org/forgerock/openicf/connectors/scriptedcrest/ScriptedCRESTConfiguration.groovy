@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.scriptedcrest
@@ -198,7 +200,6 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     }
 
     private Closure init = null;
-    private Closure release = null;
     private Closure beforeRequest = null;
     private Closure onComplete = null;
     private Closure onFail = null;
@@ -223,7 +224,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
         customizerClass.metaClass.customize << { Closure cl ->
             init = null
-            release = null
+            setReleaseClosure(null)
             beforeRequest = null
             onComplete = null
             onFail = null

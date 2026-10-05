@@ -12,6 +12,7 @@
  * information: "Portions copyright [year] [name of copyright owner]".
  *
  * Copyright 2016 ForgeRock AS.
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.ssh
@@ -388,6 +389,7 @@ public class SSHConfiguration extends ScriptedConfiguration {
             init = null
             onCreateConnection = null
             onCloseConnection = null
+            setReleaseClosure(null)
 
             def delegate = [
                     init              : { Closure paramClosure ->
