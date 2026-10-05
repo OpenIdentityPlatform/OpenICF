@@ -22,11 +22,13 @@ ARG VERSION
 
 WORKDIR /opt
 
+# build.yml uncomments the COPY to build the image from the ZIP of the commit under test;
+# without it the openicf-$VERSION.zip of the release is downloaded
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends curl unzip \
- && bash -c  'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
+ && bash -c  'if [ ! -z "$VERSION" ] && ! ls ./openicf-*.zip >/dev/null 2>&1 ; then curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
  && unzip openicf-*.zip && rm -rf *.zip \
  && apt-get remove -y --purge unzip \
  && rm -rf /var/lib/apt/lists/* \
