@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.framework.client;
@@ -39,6 +40,7 @@ import org.forgerock.openicf.framework.remote.ConnectionPrincipal;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.api.RemoteFrameworkConnectionInfo;
 
 public class RemoteWSFrameworkConnectionInfo {
@@ -136,7 +138,13 @@ public class RemoteWSFrameworkConnectionInfo {
         String host = System.getProperty(PROXY_HOST);
         if (host != null) {
             proxyHost = host;
-            proxyPort = Integer.valueOf(System.getProperty(PROXY_PORT, "80"));
+            String port = System.getProperty(PROXY_PORT, "80");
+            try {
+                proxyPort = Integer.valueOf(port);
+            } catch (NumberFormatException e) {
+                throw new ConnectorException("System property " + PROXY_PORT
+                        + " is not a valid port number: '" + port + "'", e);
+            }
         }
     }
 
