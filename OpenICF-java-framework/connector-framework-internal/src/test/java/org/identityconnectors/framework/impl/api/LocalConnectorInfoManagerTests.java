@@ -418,20 +418,29 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
         };
 
         final List<BatchTask> batchTasks = batch.build();
-        Subscription sub = facade.executeBatch(batchTasks, observer, options);
-        assertNotNull(sub.getReturnValue());
+        final Subscription sub = facade.executeBatch(batchTasks, observer, options);
+        try {
+            assertNotNull(sub.getReturnValue());
 
-        final long timeout = System.currentTimeMillis() + 3000;
-        while (!isComplete.get() && System.currentTimeMillis() < timeout) {
-            Thread.sleep(100);
+            final long timeout = System.currentTimeMillis() + 3000;
+            while (!isComplete.get() && System.currentTimeMillis() < timeout) {
+                Thread.sleep(100);
+            }
+
+            assertEquals(results.size(), batchTasks.size());
+            assertTrue(isComplete.get());
+            assertFalse(hasError.get());
+
+            final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+            try {
+                assertNull(query.getReturnValue());
+            } finally {
+                query.close();
+            }
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
         }
-
-        assertEquals(results.size(), batchTasks.size());
-        assertTrue(isComplete.get());
-        assertFalse(hasError.get());
-
-        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
-        assertNull(sub.getReturnValue());
     }
 
     @Test
@@ -479,17 +488,22 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), 0);
-        assertFalse(isComplete.get());
-        assertFalse(hasError.get());
-        assertNotNull(sub.getReturnValue());
+        final Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        try {
+            assertNotNull(sub.getReturnValue());
 
-        Thread.sleep(500);
+            final long timeout = System.currentTimeMillis() + 3000;
+            while (!hasError.get() && System.currentTimeMillis() < timeout) {
+                Thread.sleep(100);
+            }
 
-        assertEquals(results.size(), 2);
-        assertFalse(isComplete.get());
-        assertTrue(hasError.get());
+            assertEquals(results.size(), 2);
+            assertFalse(isComplete.get());
+            assertTrue(hasError.get());
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
+        }
     }
     
     @Test
