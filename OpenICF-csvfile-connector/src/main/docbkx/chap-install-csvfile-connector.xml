@@ -21,6 +21,7 @@
   ! CCPL HEADER END
   !
   !      Copyright 2011-2014 ForgeRock AS
+  !      Portions Copyright 2026 3A Systems, LLC.
   !
 -->
 <chapter xml:id="install-org.forgerock.openicf.connectors-csvfile-connector-${project.version}"
@@ -68,6 +69,27 @@
    xlink:href="CURRENT.DOCID#chap-config-org-forgerock-openicf-csvfile-CSVFileConnector-${project.version}"
    xlink:role="http://docbook.org/xlink/role/olink"><citetitle>Configuration
    chapter</citetitle></link>.
+  </para>
+ </section>
+
+ <section xml:id="rewrite-org.forgerock.openicf.connectors-csvfile-connector-${project.version}">
+  <title>How Updates and Deletes Rewrite the CSV File</title>
+  <para>
+   An update or a delete writes the whole CSV file to a copy named
+   <filename><replaceable>file</replaceable>.<replaceable>digits</replaceable>.tmp</filename>
+   in the directory of the CSV file, readable by its owner only, and then
+   renames the copy over the CSV file. The CSV file keeps its mode bits and,
+   if the connector's user is a member of it, its group; when that user is not
+   a member, the file gets the user's group and no group permissions. The
+   owner of the file becomes the connector's user.
+  </para>
+  <para>
+   If the connector's process dies while it writes the copy, the copy stays in
+   the directory. It holds every account of the CSV file, password hashes
+   included, and the connector does not remove it, because another connector
+   server may be rewriting the same file at that moment. Delete such
+   <filename>.tmp</filename> files by hand while no connector is running
+   against the CSV file.
   </para>
  </section>
 
