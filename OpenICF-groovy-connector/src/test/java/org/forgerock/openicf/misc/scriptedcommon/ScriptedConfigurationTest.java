@@ -125,20 +125,7 @@ public class ScriptedConfigurationTest {
             throw new IllegalStateException("customizer failed");
         };
         final AtomicReference<Class> customizerClass = new AtomicReference<>();
-        // Registers a metaclass on the customizer class, as the REST, CREST and SSH
-        // configurations do; a registered metaclass keeps the class's loader alive.
-        configuration = new ScriptedConfiguration() {
-            @Override
-            protected Script createCustomizerScript(Class clazz, Binding binding) {
-                customizerClass.set(clazz);
-                ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
-                metaClass.initialize();
-                GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
-                return super.createCustomizerScript(clazz, binding);
-            }
-        };
-        configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
-        configuration.setCustomizerScriptFileName("Customizer.groovy");
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
 
         try {
             configuration.getGroovyScriptEngine();
@@ -149,6 +136,43 @@ public class ScriptedConfigurationTest {
 
         assertThat(customizerClass.get()).isNotNull();
         assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
+    @Test
+    public void testReleaseUnregistersThePublishedCustomizerClass() {
+        customizer = () -> {
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
+
+        assertThat(configuration.getGroovyScriptEngine()).isNotNull();
+        assertThat(customizerClass.get()).isNotNull();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                .as("metaclass of the published customizer before release()").isNotNull();
+
+        configuration.release();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
+    /**
+     * A configuration that registers a metaclass on its customizer class, as the REST, CREST and
+     * SSH configurations do; a registered metaclass keeps the class's loader alive.
+     */
+    private ScriptedConfiguration registeringMetaClassOnCustomizer(
+            final AtomicReference<Class> customizerClass) {
+        ScriptedConfiguration result = new ScriptedConfiguration() {
+            @Override
+            protected Script createCustomizerScript(Class clazz, Binding binding) {
+                customizerClass.set(clazz);
+                ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
+                metaClass.initialize();
+                GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
+                return super.createCustomizerScript(clazz, binding);
+            }
+        };
+        result.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        result.setCustomizerScriptFileName("Customizer.groovy");
+        return result;
     }
 
     @Test
