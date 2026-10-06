@@ -367,7 +367,9 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
             opComplete.set(batchToken.getTokens().size() == 0);
             for (String token : batchToken.getTokens()) {
                 List<BatchRemoteCache.CachedBatchResult> results = BatchRemoteCache.getAndResetResults(token);
-                boolean tokenComplete = results.size() <= 0;
+                // the batch ends with its last result; a fetch made before the processor has
+                // cached it returns the token, so the caller can query again
+                boolean tokenComplete = false;
                 for (BatchRemoteCache.CachedBatchResult result : results) {
                     observer.onNext(new BatchResult(result.result, batchToken, result.resultId,
                             result.complete, result.error));
