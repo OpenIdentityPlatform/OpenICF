@@ -660,19 +660,24 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     public void release() {
         synchronized (this) {
             Closure c = getReleaseClosure();
-            if (null != c) {
-                Closure clone = c.rehydrate(this, this, this);
-                clone.setResolveStrategy(Closure.DELEGATE_FIRST);
-                clone.call();
-                releaseClosure = null;
+            try {
+                if (null != c) {
+                    Closure clone = c.rehydrate(this, this, this);
+                    clone.setResolveStrategy(Closure.DELEGATE_FIRST);
+                    clone.call();
+                    releaseClosure = null;
+                }
+            } finally {
+                // Runs even when the release closure throws: the caller logs the failure and
+                // never calls release() again.
+                if (null != publishedCustomizerClass) {
+                    // Drops the metaclass createCustomizerScript() may have put on the class,
+                    // which would otherwise keep this engine's loader alive.
+                    InvokerHelper.removeClass(publishedCustomizerClass);
+                    publishedCustomizerClass = null;
+                }
+                groovyScriptEngine = null;
             }
-            if (null != publishedCustomizerClass) {
-                // Drops the metaclass createCustomizerScript() may have put on the class,
-                // which would otherwise keep this engine's loader alive.
-                InvokerHelper.removeClass(publishedCustomizerClass);
-                publishedCustomizerClass = null;
-            }
-            groovyScriptEngine = null;
             propertyBag.clear();
             loggerCache.clear();
             logger.ok("Shared state ScriptedConfiguration is successfully released");
