@@ -20,11 +20,11 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.identityconnectors.contract.test;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -32,12 +32,8 @@ import java.util.List;
 
 import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.contract.data.DataProvider;
-import org.identityconnectors.framework.api.ConnectorFacade;
-import org.identityconnectors.framework.common.objects.Schema;
-import org.testng.IObjectFactory;
 import org.testng.ITestContext;
 import org.testng.annotations.Factory;
-import org.testng.internal.ObjectFactoryImpl;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -70,17 +66,16 @@ public class ContractITCase {
 
         Injector injector = getInjector(context);
         List<Object> result = new ArrayList<Object>();
-        IObjectFactory objectFactory = null;
 
         for (Class<?> testClass: getContractTestClasses(context)) {
-            Constructor constructor = null;
             try {
-                constructor = testClass.getConstructor(String.class);
-                Object test = objectFactory.newInstance(constructor, "");
+                Object test = testClass.getConstructor(String.class).newInstance("");
                 injector.injectMembers(test);
                 result.add(test);
             } catch (NoSuchMethodException e) {
                 result.add(injector.getInstance(testClass));
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException("Cannot instantiate " + testClass.getName(), e);
             }
         }
         return result.toArray();
@@ -110,15 +105,5 @@ public class ContractITCase {
 
     public DataProvider getDataProvider(ITestContext context) {
         return ConnectorHelper.createDataProvider();
-    }
-
-    private static class ContractTestFactory {
-
-        private ConnectorFacade connectorFacade = null;
-
-        private Schema schema = null;
-
-        private IObjectFactory objectFactory = new ObjectFactoryImpl();
-
     }
 }

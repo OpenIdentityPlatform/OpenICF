@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.testconnector;
 
@@ -61,7 +62,7 @@ public class BatchRemoteCache {
     private final Map<String,List<BatchTask>> tasks = new HashMap<String, List<BatchTask>>();
     private final Map<String,List<CachedBatchResult>> results = new HashMap<String, List<CachedBatchResult>>();
     private final Map<String, Boolean> complete = new HashMap<String, Boolean>();
-    private final String resultLock = "resultLock";
+    private final Object resultLock = new Object();
 
     public static void addTasks(String token, List<BatchTask> tasklist) {
         singleton.tasks.put(token, new ArrayList<BatchTask>(tasklist));
