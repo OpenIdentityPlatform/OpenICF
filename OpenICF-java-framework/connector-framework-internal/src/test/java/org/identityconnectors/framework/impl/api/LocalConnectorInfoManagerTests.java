@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -405,7 +406,7 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
         api.setProducerBufferSize(0);
 
         ConnectorFacadeFactory facf = ConnectorFacadeFactory.getInstance();
-        ConnectorFacade facade = facf.newInstance(api);
+        final ConnectorFacade facade = facf.newInstance(api);
 
         OperationOptionsBuilder builder = new OperationOptionsBuilder();
         builder.setOption(OperationOptions.OP_FAIL_ON_ERROR, true);
@@ -420,10 +421,37 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
         final List<Object> results = new ArrayList<Object>();
         final AtomicBoolean isComplete = new AtomicBoolean(false);
         final AtomicBoolean hasError = new AtomicBoolean(false);
+        final AtomicReference<BatchToken> lastToken = new AtomicReference<BatchToken>();
+        final AtomicReference<Object> queryOnCompleted = new AtomicReference<Object>("not called");
+        final AtomicReference<Throwable> queryOnCompletedError = new AtomicReference<Throwable>();
 
         Observer<BatchResult> observer = new Observer<BatchResult>() {
             public void onCompleted() {
-                isComplete.set(true);
+                // runs on the processor thread inside its onCompleted() call: if the connector
+                // marked the token complete only after that call, queryBatch() would see it incomplete
+                try {
+                    final Subscription query = facade.queryBatch(lastToken.get(), new Observer<BatchResult>() {
+                        public void onCompleted() {
+                        }
+
+                        public void onError(Throwable e) {
+                        }
+
+                        public void onNext(BatchResult batchResult) {
+                        }
+                    }, options);
+                    try {
+                        queryOnCompleted.set(query.getReturnValue());
+                    } finally {
+                        query.close();
+                    }
+                } catch (Throwable t) {
+                    // an exception here would reach the processor's catch, whose onError is dropped
+                    // once the observer is released, so record it for the test thread instead
+                    queryOnCompletedError.set(t);
+                } finally {
+                    isComplete.set(true);
+                }
             }
 
             public void onError(Throwable e) {
@@ -431,6 +459,7 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
 
             public void onNext(BatchResult batchResult) {
+                lastToken.set(batchResult.getToken());
                 results.add(batchResult);
                 if (batchResult.getError()) {
                     hasError.set(true);
@@ -451,6 +480,9 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             assertEquals(results.size(), batchTasks.size());
             assertTrue(isComplete.get());
             assertFalse(hasError.get());
+            assertNull(queryOnCompletedError.get());
+            // a queryBatch() made from onCompleted() finds the batch complete
+            assertNull(queryOnCompleted.get());
 
             final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
             try {
