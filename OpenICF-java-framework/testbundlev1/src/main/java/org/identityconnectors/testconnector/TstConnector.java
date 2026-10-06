@@ -488,8 +488,10 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                         }
                     }
                     if (complete) {
-                        observer.onCompleted();
+                        // mark the token complete first: an observer that saw onCompleted() may
+                        // call queryBatch() at once and must find the batch complete
                         BatchRemoteCache.setComplete(token);
+                        observer.onCompleted();
                     }
                 } catch (Exception e) {
                     // interrupted

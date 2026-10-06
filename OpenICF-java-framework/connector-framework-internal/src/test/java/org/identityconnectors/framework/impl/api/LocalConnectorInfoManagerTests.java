@@ -247,11 +247,16 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), batch.build().size());
-        assertTrue(isComplete.get());
-        assertFalse(hasError.get());
-        assertNull(sub.getReturnValue());
+        final Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        try {
+            assertEquals(results.size(), batch.build().size());
+            assertTrue(isComplete.get());
+            assertFalse(hasError.get());
+            assertNull(sub.getReturnValue());
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
+        }
     }
 
     @Test
@@ -298,19 +303,27 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), 0);
-        assertFalse(isComplete.get());
-        assertFalse(hasError.get());
-        assertNotNull(sub.getReturnValue());
+        final Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        try {
+            assertEquals(results.size(), 0);
+            assertFalse(isComplete.get());
+            assertFalse(hasError.get());
+            assertNotNull(sub.getReturnValue());
 
-        Thread.sleep(500);
-        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
-
-        assertEquals(results.size(), batch.build().size());
-        assertTrue(isComplete.get());
-        assertFalse(hasError.get());
-        assertNull(sub.getReturnValue());
+            Thread.sleep(500);
+            final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+            try {
+                assertEquals(results.size(), batch.build().size());
+                assertTrue(isComplete.get());
+                assertFalse(hasError.get());
+                assertNull(query.getReturnValue());
+            } finally {
+                query.close();
+            }
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
+        }
     }
 
     @Test
@@ -358,19 +371,27 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), 0);
-        assertFalse(isComplete.get());
-        assertFalse(hasError.get());
-        assertNotNull(sub.getReturnValue());
+        final Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        try {
+            assertEquals(results.size(), 0);
+            assertFalse(isComplete.get());
+            assertFalse(hasError.get());
+            assertNotNull(sub.getReturnValue());
 
-        Thread.sleep(500);
-        sub = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
-
-        assertEquals(results.size(), 2);
-        assertFalse(isComplete.get());
-        assertTrue(hasError.get());
-        assertNull(sub.getReturnValue());
+            Thread.sleep(500);
+            final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
+            try {
+                assertEquals(results.size(), 2);
+                assertFalse(isComplete.get());
+                assertTrue(hasError.get());
+                assertNull(query.getReturnValue());
+            } finally {
+                query.close();
+            }
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
+        }
     }
 
     @Test
@@ -437,6 +458,9 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             } finally {
                 query.close();
             }
+            // the connector returned no subscription for the completed batch, and close()
+            // released the observer, so this checks the wrapper's null-subscription path
+            assertTrue(query.isUnsubscribed());
         } finally {
             // the subscription holds a pooled connector until it is closed
             sub.close();
@@ -553,11 +577,16 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         };
 
-        Subscription sub = facade.executeBatch(batch.build(), observer, options);
-        assertEquals(results.size(), 2);
-        //Batch process is complete but handler failed to receive all
-        assertTrue(hasError.get() ^ isComplete.get());
-        assertNull(sub.getReturnValue());
-        assertTrue(sub.isUnsubscribed());
+        final Subscription sub = facade.executeBatch(batch.build(), observer, options);
+        try {
+            assertEquals(results.size(), 2);
+            //Batch process is complete but handler failed to receive all
+            assertTrue(hasError.get() ^ isComplete.get());
+            assertNull(sub.getReturnValue());
+            assertTrue(sub.isUnsubscribed());
+        } finally {
+            // the subscription holds a pooled connector until it is closed
+            sub.close();
+        }
     }
 }
