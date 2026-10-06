@@ -191,6 +191,49 @@ public class ScriptedConfigurationTest {
             assertThat(e).hasMessage("release failed");
         }
         assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+
+        // The failed release() must still forget the class it published.
+        configuration.setReleaseClosure(null);
+        ExpandoMetaClass again = new ExpandoMetaClass(customizerClass.get(), false, true);
+        again.initialize();
+        GroovySystem.getMetaClassRegistry().setMetaClass(customizerClass.get(), again);
+        try {
+            configuration.release();
+            assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                    .as("metaclass registered after the failed release()").isNotNull();
+        } finally {
+            InvokerHelper.removeClass(customizerClass.get());
+        }
+    }
+
+    @Test
+    public void testThrowingReleaseClosureStillDropsThePublishedEngine() {
+        customizer = () -> {
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
+        final GroovyScriptEngine engineBefore = configuration.getGroovyScriptEngine();
+        assertThat(engineBefore).isNotNull();
+        configuration.setReleaseClosure(new Closure<Void>(this) {
+            public Void doCall() {
+                throw new IllegalStateException("release failed");
+            }
+        });
+
+        try {
+            configuration.release();
+            fail("The release closure failure must reach the caller");
+        } catch (IllegalStateException e) {
+            assertThat(e).hasMessage("release failed");
+        }
+        configuration.setReleaseClosure(null);
+        try {
+            assertThat(configuration.getGroovyScriptEngine())
+                    .as("engine after the failed release()").isNotSameAs(engineBefore);
+        } finally {
+            // Unregisters the class of the engine built above.
+            configuration.release();
+        }
     }
 
     @Test
