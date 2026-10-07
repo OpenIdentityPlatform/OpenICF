@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Batch operations are reformatted and sent off to remote resources for processing. Those
@@ -59,9 +60,9 @@ public class BatchRemoteCache {
     }
 
     private static final BatchRemoteCache singleton = new BatchRemoteCache();
-    private final Map<String,List<BatchTask>> tasks = new HashMap<String, List<BatchTask>>();
+    private final Map<String,List<BatchTask>> tasks = new ConcurrentHashMap<String, List<BatchTask>>();
     private final Map<String,List<CachedBatchResult>> results = new HashMap<String, List<CachedBatchResult>>();
-    private final Map<String, Boolean> complete = new HashMap<String, Boolean>();
+    private final Map<String, Boolean> complete = new ConcurrentHashMap<String, Boolean>();
     private final Object resultLock = new Object();
 
     public static void addTasks(String token, List<BatchTask> tasklist) {
