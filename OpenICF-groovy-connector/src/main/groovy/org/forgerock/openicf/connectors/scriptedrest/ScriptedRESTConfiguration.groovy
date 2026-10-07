@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.scriptedrest
@@ -31,6 +33,7 @@ import org.codehaus.groovy.runtime.InvokerHelper
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
 import org.identityconnectors.common.StringUtil
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.common.exceptions.ConfigurationException
 import org.identityconnectors.framework.spi.AbstractConfiguration
@@ -178,6 +181,8 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
         }
     }
 
+    private static final Log log = Log.getLog(ScriptedRESTConfiguration.class);
+
     private CloseableHttpClient httpClient = null;
 
     Closure initClosure = null;
@@ -238,10 +243,20 @@ public class ScriptedRESTConfiguration extends ScriptedConfiguration {
     @Override
     void release() {
         synchronized (this) {
-            super.release()
-            if (null != httpClient) {
-                httpClient.close();
-                httpClient = null;
+            try {
+                super.release()
+            } finally {
+                // Closed even when the release closure throws: the caller does not retry release().
+                if (null != httpClient) {
+                    try {
+                        httpClient.close();
+                    } catch (Exception e) {
+                        // Logged, not thrown, so that it cannot replace the release closure's exception.
+                        log.warn(e, "Failed to close the HTTP client");
+                    } finally {
+                        httpClient = null;
+                    }
+                }
             }
         }
     }
