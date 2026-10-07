@@ -311,16 +311,12 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             assertFalse(hasError.get());
             assertNotNull(sub.getReturnValue());
 
-            Thread.sleep(500);
-            final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
-            try {
-                assertEquals(results.size(), batch.build().size());
-                assertTrue(isComplete.get());
-                assertFalse(hasError.get());
-                assertNull(query.getReturnValue());
-            } finally {
-                query.close();
-            }
+            final Object token = queryBatchUntilDone(facade, (BatchToken) sub.getReturnValue(), observer, options);
+
+            assertEquals(results.size(), batch.build().size());
+            assertTrue(isComplete.get());
+            assertFalse(hasError.get());
+            assertNull(token);
         } finally {
             // the subscription holds a pooled connector until it is closed
             sub.close();
@@ -379,19 +375,44 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             assertFalse(hasError.get());
             assertNotNull(sub.getReturnValue());
 
-            Thread.sleep(500);
-            final Subscription query = facade.queryBatch((BatchToken) sub.getReturnValue(), observer, options);
-            try {
-                assertEquals(results.size(), 2);
-                assertFalse(isComplete.get());
-                assertTrue(hasError.get());
-                assertNull(query.getReturnValue());
-            } finally {
-                query.close();
-            }
+            final Object token = queryBatchUntilDone(facade, (BatchToken) sub.getReturnValue(), observer, options);
+
+            assertEquals(results.size(), 2);
+            assertFalse(isComplete.get());
+            assertTrue(hasError.get());
+            assertNull(token);
         } finally {
             // the subscription holds a pooled connector until it is closed
             sub.close();
+        }
+    }
+
+    /**
+     * Calls {@code queryBatch()} until it reports the batch finished, for up to 3 s.
+     * <p>
+     * The UseCase2 test connector caches the results on its own thread, and they reach the
+     * observer only through {@code queryBatch()}. A fetch of an unfinished batch returns the
+     * token again, so the test polls instead of fetching once after a fixed sleep.
+     *
+     * @return the return value of the last {@code queryBatch()}: {@code null} once the batch
+     *         has finished, the token if it was still running at the deadline
+     */
+    private static Object queryBatchUntilDone(final ConnectorFacade facade, final BatchToken token,
+            final Observer<BatchResult> observer, final OperationOptions options) throws InterruptedException {
+        final long deadline = System.currentTimeMillis() + 3000;
+        while (true) {
+            final Subscription query = facade.queryBatch(token, observer, options);
+            final Object returnValue;
+            try {
+                returnValue = query.getReturnValue();
+            } finally {
+                // the subscription holds a pooled connector until it is closed
+                query.close();
+            }
+            if (returnValue == null || System.currentTimeMillis() >= deadline) {
+                return returnValue;
+            }
+            Thread.sleep(50);
         }
     }
 
