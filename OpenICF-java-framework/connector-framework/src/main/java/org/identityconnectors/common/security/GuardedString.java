@@ -291,4 +291,14 @@ public final class GuardedString {
     public int hashCode() {
         return base64SHA1Hash.hashCode();
     }
+
+    /**
+     * Never prints the clear text, nor anything derived from it: the inherited
+     * {@link Object#toString()} would print {@link #hashCode()}, which is computed
+     * from the SHA-1 hash of the clear text.
+     */
+    @Override
+    public String toString() {
+        return "GuardedString(...)";
+    }
 }

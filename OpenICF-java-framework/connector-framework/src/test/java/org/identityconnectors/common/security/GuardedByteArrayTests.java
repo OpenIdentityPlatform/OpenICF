@@ -19,6 +19,8 @@
  * enclosed by brackets [] replaced by your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.common.security;
 
@@ -120,6 +122,15 @@ public class GuardedByteArrayTests {
         } catch (IllegalStateException e) {
            /* ignore */
         }
+    }
+
+    @Test
+    public void testToStringDoesNotDependOnTheSecret() {
+        GuardedByteArray first = new GuardedByteArray(new byte[] { 0x00, 0x01, 0x02 });
+        GuardedByteArray second = new GuardedByteArray(new byte[] { 0x03, 0x04 });
+        assertEquals(first.toString(), second.toString(),
+                "toString() must not carry anything derived from the clear bytes");
+        assertEquals(first.toString(), "GuardedByteArray(...)");
     }
 
     @Test

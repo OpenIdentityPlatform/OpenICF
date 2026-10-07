@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.scriptedcrest
@@ -39,6 +41,7 @@ import org.forgerock.services.context.Context
 import org.forgerock.json.resource.ResourcePath
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration
 import org.identityconnectors.common.Assertions
+import org.identityconnectors.common.logging.Log
 import org.identityconnectors.common.security.GuardedString
 import org.identityconnectors.framework.spi.ConfigurationClass
 import org.identityconnectors.framework.spi.ConfigurationProperty
@@ -141,10 +144,21 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     @Override
     void release() {
         synchronized (this) {
-            super.release()
-            if (null != httpClient) {
-                httpClient.close();
-                httpClient = null;
+            try {
+                super.release()
+            } finally {
+                // Closed even when the release closure throws: the caller does not retry release(),
+                // and the started I/O reactor threads would keep the client alive for good.
+                if (null != httpClient) {
+                    try {
+                        httpClient.close();
+                    } catch (Exception e) {
+                        // Logged, not thrown, so that it cannot replace the release closure's exception.
+                        log.warn(e, "Failed to close the HTTP client");
+                    } finally {
+                        httpClient = null;
+                    }
+                }
             }
         }
     }
@@ -172,6 +186,8 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     }
 
 
+    private static final Log log = Log.getLog(ScriptedCRESTConfiguration.class);
+
     private CloseableHttpAsyncClient httpClient = null;
 
     boolean isClosed() {
@@ -198,7 +214,6 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
     }
 
     private Closure init = null;
-    private Closure release = null;
     private Closure beforeRequest = null;
     private Closure onComplete = null;
     private Closure onFail = null;
@@ -223,7 +238,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
         customizerClass.metaClass.customize << { Closure cl ->
             init = null
-            release = null
+            setReleaseClosure(null)
             beforeRequest = null
             onComplete = null
             onFail = null

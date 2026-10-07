@@ -24,13 +24,15 @@ ARG TARGETARCH
 
 WORKDIR /opt
 
+# build.yml uncomments the COPY to build the image from the ZIP of the commit under test;
+# without it the openicf-$VERSION.zip of the release is downloaded
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
 RUN apk add --update --no-cache --virtual builddeps curl unzip \
  && apk upgrade --update --no-cache \
  && if [ "$TARGETARCH" = "386" ]; then JDK=openjdk11-jre; else JDK=openjdk25-jre; fi \
  && apk add bash "$JDK" \
- && bash -c 'if [ ! -z "$VERSION" ] ; then rm -rf ./*.zip ; curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
+ && bash -c 'if [ ! -z "$VERSION" ] && ! ls ./openicf-*.zip >/dev/null 2>&1 ; then curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
  && unzip openicf-*.zip && rm -rf *.zip \
  && apk del unzip \
  && addgroup -S $USER \

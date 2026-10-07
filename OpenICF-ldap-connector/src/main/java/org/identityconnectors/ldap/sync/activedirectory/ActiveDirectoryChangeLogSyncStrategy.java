@@ -116,12 +116,12 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
             // We have to detect deleted entries as well. To do so, we use the filter (isDeleted==TRUE) to detect
             // the tombstones in the cn=delete objects,<defaultNamingContext> container.
 
-            final TreeMap<Integer, SyncDelta> changes = new TreeMap<Integer, SyncDelta>();
+            final TreeMap<Long, SyncDelta> changes = new TreeMap<Long, SyncDelta>();
             final String[] usnChanged = {""};
             String waterMark = gethighestCommittedUSN();
             
             if (token != null && logger.isWarning()) {
-                if (Integer.parseInt(token.getValue().toString()) > Integer.parseInt(waterMark)) {
+                if (ADLdapUtil.parseADLong(token.getValue().toString()) > ADLdapUtil.parseADLong(waterMark)) {
                     //[OPENICF-402] The current SyncToken should never be greater than the highestCommittedUSN on the DC
                     // We log the issue and let the process go
                     logger.warn("The current SyncToken value ({0}) is greater than the highestCommittedUSN value ({1})", token.getValue().toString(), waterMark);
@@ -256,7 +256,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                         syncDeltaBuilder.setUid(uid);
                         syncDeltaBuilder.setObject(cob.build());
 
-                        changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                        changes.put(ADLdapUtil.parseADLong(usnChanged[0]), syncDeltaBuilder.build());
                         return true;
                     }
                 });
@@ -295,7 +295,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                             } else {
                                 syncDeltaBuilder.setObjectClass(oclass);
                             }
-                            changes.put(Integer.parseInt(usnChanged[0]), syncDeltaBuilder.build());
+                            changes.put(ADLdapUtil.parseADLong(usnChanged[0]), syncDeltaBuilder.build());
                         }
                     } else if (LdapConstants.ServerType.MSAD_LDS.equals(conn.getServerType())) {
                         logger.error("Active Directory Lightweight Directory Services is used but defaultNamingContext has not been set - impossible to detect deleted objects");
@@ -307,7 +307,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
                 logger.info("The server does not support the control to search for deleted entries");
             }
             // Changes are now ordered in the TreeMap according to usnChanged.
-            for (Map.Entry<Integer, SyncDelta> entry : changes.entrySet()) {
+            for (Map.Entry<Long, SyncDelta> entry : changes.entrySet()) {
                 if (!handler.handle(entry.getValue())) {
                     break;
                 } else {
@@ -343,7 +343,7 @@ public class ActiveDirectoryChangeLogSyncStrategy implements LdapSyncStrategy {
         }
 
         filter.append("(uSNChanged>=");
-        filter.append(Integer.parseInt(token.getValue().toString()) + 1);
+        filter.append(ADLdapUtil.parseADLong(token.getValue().toString()) + 1);
         filter.append(")");
 
         if (isDeleted) {

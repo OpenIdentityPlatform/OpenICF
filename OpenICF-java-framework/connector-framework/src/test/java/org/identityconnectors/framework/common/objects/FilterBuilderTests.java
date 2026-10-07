@@ -20,16 +20,21 @@
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
  * Portions Copyrighted 2014-2015 ForgeRock AS. 
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.framework.common.objects;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import org.identityconnectors.framework.common.objects.filter.AndFilter;
+import org.identityconnectors.framework.common.objects.filter.CompositeFilter;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.identityconnectors.framework.common.objects.filter.FilterVisitor;
 import org.identityconnectors.framework.common.objects.filter.FilteredResultsHandlerVisitor;
+import org.identityconnectors.framework.common.objects.filter.OrFilter;
 import org.testng.annotations.Test;
 
 public class FilterBuilderTests {
@@ -229,6 +234,42 @@ public class FilterBuilderTests {
         assertTrue(filter.accept(null));
         filter = FilterBuilder.or(new FalseFilter(), new FalseFilter());
         assertFalse(filter.accept(null));
+    }
+
+    @Test
+    public void orFilterRightSideKeepsOrForThreeOrMoreSubFilters() {
+        final Filter f = FilterBuilder.or(new FalseFilter(), new FalseFilter(), new TrueFilter());
+        final Filter right = ((CompositeFilter) f).getRight();
+        assertTrue(right instanceof OrFilter, "getRight() of a flat OR must be an OR: " + right);
+        assertEquals(((OrFilter) right).getFilters().size(), 2);
+        // Walking getLeft()/getRight() must not change what the filter matches.
+        assertTrue(new OrFilter(((CompositeFilter) f).getLeft(), right).accept(null));
+
+        final Filter four = FilterBuilder.or(new FalseFilter(), new FalseFilter(), new FalseFilter(), new TrueFilter());
+        assertTrue(rebuild(four).accept(null));
+    }
+
+    @Test
+    public void andFilterRightSideKeepsAndForThreeOrMoreSubFilters() {
+        final Filter f = FilterBuilder.and(new TrueFilter(), new TrueFilter(), new FalseFilter());
+        final Filter right = ((CompositeFilter) f).getRight();
+        assertTrue(right instanceof AndFilter, "getRight() of a flat AND must be an AND: " + right);
+        assertFalse(rebuild(f).accept(null));
+    }
+
+    /**
+     * Rebuilds a composite filter as a binary tree through getLeft()/getRight(),
+     * the way normalizers, translators and serializers walk it.
+     */
+    private static Filter rebuild(final Filter filter) {
+        if (filter instanceof AndFilter) {
+            return new AndFilter(rebuild(((AndFilter) filter).getLeft()),
+                    rebuild(((AndFilter) filter).getRight()));
+        } else if (filter instanceof OrFilter) {
+            return new OrFilter(rebuild(((OrFilter) filter).getLeft()),
+                    rebuild(((OrFilter) filter).getRight()));
+        }
+        return filter;
     }
 
     @Test

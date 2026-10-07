@@ -21,6 +21,7 @@
  * your own identifying information:
  * " Portions Copyrighted [year] [name of copyright owner]"
  *
+ * Portions Copyright 2026 3A Systems, LLC.
  */
 
 package org.forgerock.openicf.connectors.scriptedsql
@@ -162,10 +163,20 @@ public class ScriptedSQLConfiguration extends ScriptedConfiguration {
     @Override
     public void release() {
         synchronized (this) {
-            super.release();
-            if (null != dataSource) {
-                dataSource.close();
-                dataSource = null;
+            try {
+                super.release();
+            } finally {
+                // Closed even when the release closure throws: the caller does not retry release().
+                if (null != dataSource) {
+                    try {
+                        dataSource.close();
+                    } catch (Exception e) {
+                        // Logged, not thrown, so that it cannot replace the release closure's exception.
+                        log.warn(e, "Failed to close the connection pool");
+                    } finally {
+                        dataSource = null;
+                    }
+                }
             }
         }
     }

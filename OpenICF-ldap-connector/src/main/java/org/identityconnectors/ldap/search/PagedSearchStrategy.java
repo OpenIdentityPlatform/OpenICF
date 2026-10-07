@@ -16,6 +16,7 @@
  * applicable, add the following below the CDDL Header, with the fields enclosed
  * by brackets [] replaced by your own identifying information: " Portions
  * Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  * 
 */
 package org.identityconnectors.ldap.search;
@@ -94,10 +95,13 @@ public class PagedSearchStrategy extends LdapSearchStrategy {
             if (split.length == 2) {
                 try {
                     cookie = Base64.decode(split[0]);
+                    context = Integer.parseInt(split[1]);
                 } catch (RuntimeException e) {
                     throw new ConnectorException("PagedResultsCookie is not properly encoded", e);
                 }
-                context = Integer.valueOf(split[1]);
+                if (context < 0 || context >= baseDNs.size()) {
+                    throw new ConnectorException("PagedResultsCookie is not properly encoded");
+                }
             } else {
                 throw new ConnectorException("PagedResultsCookie is not properly formatted");
             }

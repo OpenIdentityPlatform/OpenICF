@@ -660,13 +660,24 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     public void release() {
         synchronized (this) {
             Closure c = getReleaseClosure();
-            if (null != c) {
-                Closure clone = c.rehydrate(this, this, this);
-                clone.setResolveStrategy(Closure.DELEGATE_FIRST);
-                clone.call();
-                releaseClosure = null;
+            try {
+                if (null != c) {
+                    Closure clone = c.rehydrate(this, this, this);
+                    clone.setResolveStrategy(Closure.DELEGATE_FIRST);
+                    clone.call();
+                    releaseClosure = null;
+                }
+            } finally {
+                // Runs even when the release closure throws: the caller logs the failure and
+                // never calls release() again.
+                if (null != publishedCustomizerClass) {
+                    // Drops the metaclass createCustomizerScript() may have put on the class,
+                    // which would otherwise keep this engine's loader alive.
+                    InvokerHelper.removeClass(publishedCustomizerClass);
+                    publishedCustomizerClass = null;
+                }
+                groovyScriptEngine = null;
             }
-            groovyScriptEngine = null;
             propertyBag.clear();
             loggerCache.clear();
             logger.ok("Shared state ScriptedConfiguration is successfully released");
@@ -782,7 +793,17 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return logger;
     }
 
+    /** The engine, published only once its customizer has run. Guarded by {@code this}. */
     private GroovyScriptEngine groovyScriptEngine = null;
+
+    /**
+     * The engine whose customizer is running, for the calls the customizer makes back into
+     * {@link #getGroovyScriptEngine()} on the same thread. Guarded by {@code this}.
+     */
+    private GroovyScriptEngine customizingGroovyScriptEngine = null;
+
+    /** The customizer class of the published engine; {@link #release()} unregisters it. Guarded by {@code this}. */
+    private Class publishedCustomizerClass = null;
 
     /**
      * Synchronised for the whole initialisation, not double-checked: the
@@ -792,6 +813,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      */
     protected synchronized GroovyScriptEngine getGroovyScriptEngine() {
         if (null == groovyScriptEngine) {
+            if (null != customizingGroovyScriptEngine) {
+                return customizingGroovyScriptEngine;
+            }
+
             final CompilerConfiguration compilerConfiguration =
                     new CompilerConfiguration(config);
             compilerConfiguration.addCompilationCustomizers(getImportCustomizer(null));
@@ -799,28 +824,47 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             final GroovyClassLoader loader =
                     new GroovyClassLoader(getParentLoader(), compilerConfiguration, true);
 
-            groovyScriptEngine =
+            final GroovyScriptEngine engine =
                     new GroovyScriptEngine(getRoots(compilerConfiguration, loader), loader);
 
-            initializeCustomizer();
+            // If the customizer fails, the engine is dropped and the next call retries.
+            final Class customizerClass;
+            customizingGroovyScriptEngine = engine;
+            try {
+                customizerClass = initializeCustomizer();
+            } finally {
+                customizingGroovyScriptEngine = null;
+            }
+            publishedCustomizerClass = customizerClass;
+            groovyScriptEngine = engine;
         }
         return groovyScriptEngine;
     }
 
     /*
      * This must be called once from thread-safe location and inside the
-     * synchronized to avoid deadlock.
+     * synchronized to avoid deadlock. The customizer runs while this
+     * configuration's monitor is held: it must not wait for another thread
+     * that calls getGroovyScriptEngine(), evaluate() or loadScript().
+     * Returns the customizer class, or null if there is none.
      */
-    private void initializeCustomizer() {
+    private Class initializeCustomizer() {
+        Class customizerClass = null;
         try {
-            Class customizerClass = getCustomizerClass();
+            customizerClass = getCustomizerClass();
 
             if (null != customizerClass) {
                 Binding binding = new Binding();
                 binding.setVariable(LOGGER, getLogger(customizerClass));
                 createCustomizerScript(customizerClass, binding).run();
             }
+            return customizerClass;
         } catch (Throwable t) {
+            if (null != customizerClass) {
+                // The retry compiles a new class; unregister this one, together with any
+                // metaclass createCustomizerScript() put on it, so its loader can be collected.
+                InvokerHelper.removeClass(customizerClass);
+            }
             logger.error(t, "Failed to customize the connector");
             throw ConnectorException.wrap(t);
         }

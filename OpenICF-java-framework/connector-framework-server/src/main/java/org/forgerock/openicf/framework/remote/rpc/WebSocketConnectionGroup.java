@@ -71,7 +71,7 @@ public class WebSocketConnectionGroup
     
     private Encryptor encryptor = null;
 
-    private RemoteOperationContext operationContext = null;
+    private volatile RemoteOperationContext operationContext = null;
 
     private final AtomicBoolean isRunning = new AtomicBoolean(Boolean.TRUE);
     private final Set<String> principals = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);

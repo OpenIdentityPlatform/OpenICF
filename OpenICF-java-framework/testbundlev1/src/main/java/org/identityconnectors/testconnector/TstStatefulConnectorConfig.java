@@ -123,7 +123,7 @@ public class TstStatefulConnectorConfig extends TstConnectorConfig implements St
 
     private UUID guid;
 
-    private ScheduledExecutorService executorService = null;
+    private volatile ScheduledExecutorService executorService = null;
 
     public synchronized UUID getGuid() {
         if (null == guid) {

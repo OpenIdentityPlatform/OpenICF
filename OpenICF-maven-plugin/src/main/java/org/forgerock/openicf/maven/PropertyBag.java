@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.maven;
@@ -137,65 +138,70 @@ public class PropertyBag {
                     + "to " + targetType);
         }
 
-        if (targetType.equals(Long.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+        try {
+            if (targetType.equals(Long.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = Long.valueOf(sourceValue);
+                }
+            } else if (targetType.equals(Long.TYPE)) {
                 targetValue = Long.valueOf(sourceValue);
-            }
-        } else if (targetType.equals(Long.TYPE)) {
-            targetValue = Long.valueOf(sourceValue);
-        } else if (targetType.equals(Character.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+            } else if (targetType.equals(Character.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = sourceValue.charAt(0);
+                }
+            } else if (targetType.equals(Character.TYPE)) {
                 targetValue = sourceValue.charAt(0);
-            }
-        } else if (targetType.equals(Character.TYPE)) {
-            targetValue = sourceValue.charAt(0);
-        } else if (targetType.equals(Double.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+            } else if (targetType.equals(Double.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = Double.valueOf(sourceValue);
+                }
+            } else if (targetType.equals(Double.TYPE)) {
                 targetValue = Double.valueOf(sourceValue);
-            }
-        } else if (targetType.equals(Double.TYPE)) {
-            targetValue = Double.valueOf(sourceValue);
-        } else if (targetType.equals(Float.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+            } else if (targetType.equals(Float.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = Float.valueOf(sourceValue);
+                }
+            } else if (targetType.equals(Float.TYPE)) {
                 targetValue = Float.valueOf(sourceValue);
-            }
-        } else if (targetType.equals(Float.TYPE)) {
-            targetValue = Float.valueOf(sourceValue);
-        } else if (targetType.equals(Integer.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+            } else if (targetType.equals(Integer.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = Integer.valueOf(sourceValue);
+                }
+            } else if (targetType.equals(Integer.TYPE)) {
                 targetValue = Integer.valueOf(sourceValue);
-            }
-        } else if (targetType.equals(Integer.TYPE)) {
-            targetValue = Integer.valueOf(sourceValue);
-        } else if (targetType.equals(Boolean.class)) {
-            if (StringUtil.isNotBlank(sourceValue)) {
+            } else if (targetType.equals(Boolean.class)) {
+                if (StringUtil.isNotBlank(sourceValue)) {
+                    targetValue = Boolean.valueOf(sourceValue);
+                }
+            } else if (targetType.equals(Boolean.TYPE)) {
                 targetValue = Boolean.valueOf(sourceValue);
+            } else if (targetType.equals(URI.class)) {
+                try {
+                    targetValue = new URI(sourceValue);
+                } catch (URISyntaxException e) {
+                    throw new MojoExecutionException(e.getMessage(), e);
+                }
+            } else if (targetType.equals(File.class)) {
+                targetValue = new File(sourceValue);
+            } else if (targetType.equals(GuardedByteArray.class)) {
+                targetValue = new GuardedByteArray(sourceValue.getBytes());
+            } else if (targetType.equals(GuardedString.class)) {
+                targetValue = new GuardedString(sourceValue.toCharArray());
+            } else if (targetType.equals(Script.class)) {
+                String scriptLanguage = value.getAttribute("scriptLanguage");
+                if (StringUtil.isBlank(scriptLanguage)) {
+                    throw new MojoExecutionException(
+                            "Missing argument 'scriptLanguage' for Script attribute: " + name);
+                }
+                targetValue =
+                        new ScriptBuilder().setScriptLanguage(scriptLanguage)
+                                .setScriptText(sourceValue).build();
+            } else {
+                log.warn("Cast to targetType: '" + targetType + "' is not supported");
             }
-        } else if (targetType.equals(Boolean.TYPE)) {
-            targetValue = Boolean.valueOf(sourceValue);
-        } else if (targetType.equals(URI.class)) {
-            try {
-                targetValue = new URI(sourceValue);
-            } catch (URISyntaxException e) {
-                throw new MojoExecutionException(e.getMessage(), e);
-            }
-        } else if (targetType.equals(File.class)) {
-            targetValue = new File(sourceValue);
-        } else if (targetType.equals(GuardedByteArray.class)) {
-            targetValue = new GuardedByteArray(sourceValue.getBytes());
-        } else if (targetType.equals(GuardedString.class)) {
-            targetValue = new GuardedString(sourceValue.toCharArray());
-        } else if (targetType.equals(Script.class)) {
-            String scriptLanguage = value.getAttribute("scriptLanguage");
-            if (StringUtil.isBlank(scriptLanguage)) {
-                throw new MojoExecutionException(
-                        "Missing argument 'scriptLanguage' for Script attribute: " + name);
-            }
-            targetValue =
-                    new ScriptBuilder().setScriptLanguage(scriptLanguage)
-                            .setScriptText(sourceValue).build();
-        } else {
-            log.warn("Cast to targetType: '" + targetType + "' is not supported");
+        } catch (NumberFormatException e) {
+            throw new MojoExecutionException("Failed to convert value '" + sourceValue
+                    + "' of " + name + " to " + targetType, e);
         }
         return targetValue;
     }

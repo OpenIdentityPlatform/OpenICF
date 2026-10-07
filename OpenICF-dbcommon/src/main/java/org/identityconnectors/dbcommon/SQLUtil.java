@@ -822,8 +822,6 @@ public final class SQLUtil {
             stmt.setLong(idx, ((BigInteger) val).longValue());
         } else if (val instanceof Byte) {
             stmt.setByte(idx, (Byte) val);
-        } else if (val instanceof Integer) {
-            stmt.setInt(idx, (Integer) val);
         } else if (val instanceof InputStream) {
             stmt.setBinaryStream(idx, (InputStream) val, 10000);
         } else if (val instanceof Blob) {
@@ -907,6 +905,7 @@ public final class SQLUtil {
         if (value == null) {
             return null;
         }
+        try {
         switch (sqlType) {
         // Known conversions
         case Types.DECIMAL:
@@ -949,6 +948,14 @@ public final class SQLUtil {
             } else {
                 return Long.valueOf(value.toString());
             }
+        default:
+            break;
+        }
+        } catch (NumberFormatException e) {
+            throw new ConnectorException("Value '" + value + "' is not valid for SQL type "
+                    + sqlType, e);
+        }
+        switch (sqlType) {
         case Types.TIMESTAMP:
             if (value instanceof String) {
                 return string2Timestamp((String) value);
