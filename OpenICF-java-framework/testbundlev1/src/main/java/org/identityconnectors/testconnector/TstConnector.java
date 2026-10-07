@@ -239,8 +239,6 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         return builder.build();
     }
 
-    BatchUseCase3Processor processorUseCase3 = null;
-
     @Override
     public Subscription executeBatch(final List<BatchTask> tasks, final Observer<BatchResult> observer,
                                    final OperationOptions options) {
@@ -268,8 +266,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                 }
             };
         } else if (options.getOptions().containsKey("TEST_USECASE3")) {
-            processorUseCase3 = new BatchUseCase3Processor();
-            final BatchToken token = processorUseCase3.executeBatch(tasks, options, observer);
+            final BatchToken token = new BatchUseCase3Processor().executeBatch(tasks, options, observer);
 
             return new Subscription() {
                 @Override
@@ -488,8 +485,10 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                         }
                     }
                     if (complete) {
-                        observer.onCompleted();
+                        // mark the token complete first: an observer that saw onCompleted() may
+                        // call queryBatch() at once and must find the batch complete
                         BatchRemoteCache.setComplete(token);
+                        observer.onCompleted();
                     }
                 } catch (Exception e) {
                     // interrupted
@@ -498,7 +497,6 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
                 }
             }
             BatchRemoteCache.flushTasks(token);
-            processorUseCase3 = null;
         }
     }
 }

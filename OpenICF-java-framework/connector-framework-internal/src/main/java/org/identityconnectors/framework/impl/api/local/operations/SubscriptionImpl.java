@@ -163,19 +163,20 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
             return new Subscription() {
                 @Override
                 public void close() {
-                    if (internalObserver.doRelease()) {
+                    if (internalObserver.doRelease() && subscription != null) {
                         subscription.close();
                     }
                 }
 
                 @Override
                 public boolean isUnsubscribed() {
-                    return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
+                    return internalObserver.isUnsubscribed()
+                            && (subscription == null || subscription.isUnsubscribed());
                 }
 
                 @Override
                 public Object getReturnValue() {
-                    return subscription.getReturnValue();
+                    return subscription == null ? null : subscription.getReturnValue();
                 }
             };
         } catch (Throwable t) {
@@ -195,14 +196,15 @@ public class SubscriptionImpl extends ConnectorAPIOperationRunner {
             return new Subscription() {
                 @Override
                 public void close() {
-                    if (internalObserver.doRelease()) {
+                    if (internalObserver.doRelease() && subscription != null) {
                         subscription.close();
                     }
                 }
 
                 @Override
                 public boolean isUnsubscribed() {
-                    return internalObserver.isUnsubscribed() && subscription.isUnsubscribed();
+                    return internalObserver.isUnsubscribed()
+                            && (subscription == null || subscription.isUnsubscribed());
                 }
 
                 @Override
