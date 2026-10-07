@@ -23,6 +23,7 @@
  * "Portions Copyrighted 2010 [name of copyright owner]"
  *
  * Portions Copyrighted 2011 Viliam Repan (lazyman)
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  */
 package org.forgerock.openicf.csvfile;
@@ -49,7 +50,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 public class SyncOpTest {
 
@@ -127,11 +127,12 @@ public class SyncOpTest {
         }
 
         Map<String, SyncDelta> deltaMap = createSyncDeltaTestMap(token);
+        assertEquals(deltas.size(), deltaMap.size(), "unexpected deltas: " + deltas);
         for (SyncDelta delta : deltas) {
-            SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
-            deltaMap.remove(delta.getUid().getUidValue());
+            SyncDelta expected = deltaMap.remove(delta.getUid().getUidValue());
+            assertNotNull(expected, "unexpected delta: " + delta);
+            assertEquals(delta.getDeltaType(), expected.getDeltaType(), "delta type of " + delta.getUid());
         }
-        assertTrue(deltaMap.isEmpty(), "deltas didn't match");
     }
 
     @Test
@@ -226,7 +227,7 @@ public class SyncOpTest {
         map.put("vilo", builder.build());
 
         builder = new SyncDeltaBuilder();
-        builder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
+        builder.setDeltaType(SyncDeltaType.UPDATE);
         builder.setToken(token);
         builder.setUid(new Uid("miso"));
         ConnectorObjectBuilder cBuilder = new ConnectorObjectBuilder();
@@ -241,7 +242,7 @@ public class SyncOpTest {
         map.put("miso", builder.build());
 
         builder = new SyncDeltaBuilder();
-        builder.setDeltaType(SyncDeltaType.CREATE_OR_UPDATE);
+        builder.setDeltaType(SyncDeltaType.CREATE);
         builder.setToken(token);
         builder.setUid(new Uid("fanfi"));
         cBuilder = new ConnectorObjectBuilder();

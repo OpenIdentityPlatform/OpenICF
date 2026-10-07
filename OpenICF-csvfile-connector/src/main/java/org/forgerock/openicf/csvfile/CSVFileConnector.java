@@ -942,9 +942,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 return true;
             }
         }
-        return left.getUid().getUidValue().equals(right.getUid().getUidValue())
-                && left.getObjectClass().equals(right.getObjectClass())
-                && left.getName().getNameValue().equals(right.getName().getNameValue());
+        return false;
     }
 
     private void scrubSyncFiles() {
