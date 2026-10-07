@@ -45,6 +45,7 @@ import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
+import org.supercsv.exception.SuperCsvException;
 import org.testng.annotations.Test;
 
 /**
@@ -86,8 +87,9 @@ public class SyncOpDiffTest {
         }
     }
 
+    // The timeout catches a file re-scan per row, such as the old nested scan, not a quadratic in-memory lookup
     @Test(timeOut = 30000)
-    public void largeFileSyncReportsExactDeltasInLinearTime() throws Exception {
+    public void largeFileSyncReportsExactDeltasWithoutRescanningFiles() throws Exception {
         List<String> snapshot = new ArrayList<>(Collections.singletonList(HEADER));
         List<String> live = new ArrayList<>(Collections.singletonList(HEADER));
         List<String> deletes = new ArrayList<>();
@@ -175,6 +177,15 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void rowWithWrongColumnCountFailsSyncBeforeAnyDelta() throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Changed,pw1", "u2,John,Roe");
+
+        expectThrows(SuperCsvException.class, () -> sync(SNAPSHOT_TOKEN));
+        assertEquals(deltas, Collections.emptyList());
+    }
+
+    @Test
     public void duplicateUidsAreComparedWithTheFirstSnapshotRow() throws Exception {
         givenSnapshot(HEADER, "x,Jane,Doe,pw1", "x,Jane,Other,pw1", "y,John,Roe,pw2", "y,John,Roe,pw2");
         givenLive(HEADER, "x,Jane,Doe,pw1", "x,Jane,Changed,pw1");
@@ -209,12 +220,29 @@ public class SyncOpDiffTest {
         assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("UPDATE u1 [Jane, Doe, pw1]"));
     }
 
+    @DataProvider
+    public Object[][] caseOnlyColumnChanges() {
+        return new Object[][] {
+            { "u1,Jane,Doe,pw1,changed,b" },
+            { "u1,Jane,Doe,pw1,a,changed" }
+        };
+    }
+
+    @Test(dataProvider = "caseOnlyColumnChanges")
+    public void columnsDifferingOnlyInCaseAreBothCompared(String liveRow) throws Exception {
+        givenSnapshot(HEADER + ",Mail,mail", "u1,Jane,Doe,pw1,a,b");
+        givenLive(HEADER + ",Mail,mail", liveRow);
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("UPDATE u1 [Jane, Doe, pw1]"));
+    }
+
     @Test
     public void handlerStopEndsTheDeletePass() throws Exception {
         givenSnapshot(HEADER, "d1,Jane,Doe,pw1", "d2,John,Roe,pw2", "k,Ann,Poe,pw3");
         givenLive(HEADER, "k,Ann,Poe,pw3");
 
         assertEquals(sync(SNAPSHOT_TOKEN, false), Collections.singletonList("DELETE d1 [Jane, Doe, pw1]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
     }
 
     @Test
@@ -223,6 +251,7 @@ public class SyncOpDiffTest {
         givenLive(HEADER, "k,Ann,Poe,pw3", "c1,Jane,Doe,pw1", "c2,John,Roe,pw2");
 
         assertEquals(sync(SNAPSHOT_TOKEN, false), Collections.singletonList("CREATE c1 [Jane, Doe, pw1]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
     }
 
     @DataProvider
