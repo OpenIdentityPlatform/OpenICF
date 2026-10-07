@@ -28,12 +28,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,6 +59,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.identityconnectors.common.Base64;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.common.logging.Log;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.common.security.SecurityUtil;
@@ -490,27 +494,86 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         // we now have a read-lock unless the above block threw an Exception
         try {
-            // Sync deletes
+            final MessageDigest digest = newFingerprintDigest();
+            // uid of every current row -> fingerprint of the first origin row with that uid, null while there is none
+            final Map<String, byte[]> index = new HashMap<String, byte[]>();
+
+            // Compare the headers first, so a mismatch does not wait for a pass over the current file
             ICsvMapReader reader = null;
             try {
                 reader = new CsvMapReader(new FileReader(syncOrigin), csvPreference);
+                compareHeaders(readHeader(reader));
+            } catch (FileNotFoundException e) {
+                log.error(e, "File {0} does not exist!", syncOrigin.toString());
+                throw new ConnectorIOException("File " + syncOrigin.toString() + " does not exist", e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+            }
+
+            // Index current uids
+            reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+
+                final CellProcessor[] processors = getProcessors(header);
+
+                Map<String, Object> entry;
+                reader.read(header, processors); //consume header
+                while ((entry = reader.read(header, processors)) != null) {
+                    final String uid = (String) entry.get(config.getHeaderUid());
+                    if (StringUtil.isBlank(uid)) {
+                        // otherwise an origin row without a uid would match this row and never be reported
+                        throw new IllegalArgumentException(String.format("Line %d of %s has no %s value",
+                                reader.getLineNumber(), config.getCsvFile().toString(), config.getHeaderUid()));
+                    }
+                    index.put(uid, null);
+                }
+            } catch (FileNotFoundException e) {
+                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
+                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+            } finally {
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (Exception e) {
+                        log.error(e, "Error closing file reader");
+                    }
+                }
+            }
+
+            // Sync deletes
+            reader = null;
+            try {
+                reader = new CsvMapReader(new FileReader(syncOrigin), csvPreference);
                 String[] originHeader = readHeader(reader);
-                compareHeaders(originHeader);
 
                 final CellProcessor[] processors = getProcessors(originHeader);
 
                 Map<String, Object> entry;
+                boolean reportDeletes = true;
                 while ((entry = reader.read(originHeader, processors)) != null) {
-                    ConnectorObject originObject = newConnectorObject(entry);
-                    ConnectorObject currentObject = findObjectInFile(null, originObject.getUid());
-                    if (currentObject == null) {
-                        SyncDelta delta = generateSyncDelta(originObject, null, token);
-                        if (delta != null) {
-                            if (!handler.handle(delta)) {
-                                break;
+                    final String uid = (String) entry.get(config.getHeaderUid());
+                    if (!index.containsKey(uid)) {
+                        if (reportDeletes) {
+                            SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);
+                            if (handler.handle(delta)) {
+                                changesProcessed = true;
+                            } else {
+                                // keep reading: the next pass needs the fingerprints of the remaining origin rows
+                                reportDeletes = false;
                             }
-                            changesProcessed = true;
                         }
+                    } else if (index.get(uid) == null) {
+                        index.put(uid, fingerprint(entry, digest));
                     }
                 }
             } catch (FileNotFoundException e) {
@@ -539,15 +602,20 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 Map<String, Object> entry;
                 reader.read(header, processors); //consume header
                 while ((entry = reader.read(header, processors)) != null) {
-                    ConnectorObject currentObject = newConnectorObject(entry);
-                    ConnectorObject originObject = findObjectInFile(syncOrigin, currentObject.getUid());
-                    SyncDelta delta = generateSyncDelta(originObject, currentObject, token);
-                    if (delta != null) {
-                        if (!handler.handle(delta)) {
-                            break;
-                        }
-                        changesProcessed = true;
+                    final byte[] originFingerprint = index.get(entry.get(config.getHeaderUid()));
+                    final SyncDeltaType type;
+                    if (originFingerprint == null) {
+                        type = SyncDeltaType.CREATE;
+                    } else if (!Arrays.equals(originFingerprint, fingerprint(entry, digest))) {
+                        type = SyncDeltaType.UPDATE;
+                    } else {
+                        continue;
                     }
+                    SyncDelta delta = generateSyncDelta(type, newConnectorObject(entry), token);
+                    if (!handler.handle(delta)) {
+                        break;
+                    }
+                    changesProcessed = true;
                 }
             } catch (FileNotFoundException e) {
                 log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
@@ -870,90 +938,47 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         return builder.build();
     }
 
-    private ConnectorObject findObjectInFile(File file, Uid uid) {
-        ICsvMapReader reader = null;
-
-        final ReentrantReadWriteLock rwLock =
-                fileNameToLockMap.get(file == null ? csvFilePath : file.getAbsolutePath());
-        if (rwLock != null) {
-            // CSVFileConnector manages locks for the given file
-            rwLock.readLock().lock();
-        }
-        try {
-            reader = new CsvMapReader(new FileReader(file == null ? config.getCsvFile() : file),
-                    csvPreference);
-            final String[] header = rwLock != null ? getHeader() : readHeader(reader);
-
-            final CellProcessor[] processors = getProcessors(header);
-
-            Map<String, Object> entry;
-            while ((entry = reader.read(header, processors)) != null) {
-                ConnectorObject object = newConnectorObject(entry);
-                if (object.getUid().getUidValue().equals(uid.getUidValue())) {
-                    return object;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
-            throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-        } catch (IOException e) {
-            log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
-            throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                    log.error(e, "Error closing file reader");
-                }
-            }
-            if (rwLock != null) {
-                rwLock.readLock().unlock();
-            }
-        }
-        return null;
-    }
-
-    private SyncDelta generateSyncDelta(ConnectorObject origin, ConnectorObject current, SyncToken token) {
-        if (origin == null && current == null) {
-            throw new IllegalArgumentException("Either the original or the current object is required");
-        }
+    private SyncDelta generateSyncDelta(SyncDeltaType type, ConnectorObject object, SyncToken token) {
         SyncDeltaBuilder builder = new SyncDeltaBuilder();
-        builder.setUid(origin == null ? current.getUid() : origin.getUid());
+        builder.setDeltaType(type);
+        builder.setUid(object.getUid());
         builder.setToken(token);
-
-        if (current == null) {
-            builder.setDeltaType(SyncDeltaType.DELETE);
-            builder.setObject(origin);
-        } else if (origin == null) {
-            builder.setDeltaType(SyncDeltaType.CREATE);
-            builder.setObject(current);
-        } else if (objectsDiffer(origin, current)) {
-            builder.setDeltaType(SyncDeltaType.UPDATE);
-            builder.setObject(current);
-        } else {
-            return null;
-        }
-
+        builder.setObject(object);
         return builder.build();
     }
 
-    private boolean objectsDiffer(ConnectorObject left, ConnectorObject right) {
-        for (Attribute attrL : left.getAttributes()) {
-            Attribute attrR = right.getAttributeByName(attrL.getName());
-            if (attrR == null || !attrR.equals(attrL)) {
-                return true;
+    private static MessageDigest newFingerprintDigest() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new ConnectorException("SHA-256 is not available", e);
+        }
+    }
+
+    /**
+     * Hashes the values of the header columns by name, so the column order of the file does not matter. Every
+     * value is length-prefixed and a null value has its own marker, so neither shifted value boundaries nor an
+     * empty cell against a blank one produce the same fingerprint.
+     */
+    private byte[] fingerprint(Map<String, Object> entry, MessageDigest digest) {
+        for (String col : getHeader()) {
+            final Object value = entry.get(col);
+            if (value == null) {
+                updateLength(digest, -1);
+            } else {
+                final byte[] bytes = value.toString().getBytes(StandardCharsets.UTF_8);
+                updateLength(digest, bytes.length);
+                digest.update(bytes);
             }
         }
-        for (Attribute attrR : right.getAttributes()) {
-            Attribute attrL = left.getAttributeByName(attrR.getName());
-            if (attrL == null || !attrL.equals(attrR)) {
-                return true;
-            }
-        }
-        return left.getUid().getUidValue().equals(right.getUid().getUidValue())
-                && left.getObjectClass().equals(right.getObjectClass())
-                && left.getName().getNameValue().equals(right.getName().getNameValue());
+        return digest.digest();
+    }
+
+    private static void updateLength(MessageDigest digest, int length) {
+        digest.update((byte) (length >>> 24));
+        digest.update((byte) (length >>> 16));
+        digest.update((byte) (length >>> 8));
+        digest.update((byte) length);
     }
 
     private void scrubSyncFiles() {
