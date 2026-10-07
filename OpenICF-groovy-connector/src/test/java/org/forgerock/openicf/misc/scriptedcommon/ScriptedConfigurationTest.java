@@ -30,12 +30,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.groovy.reflection.ClassInfo;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConfiguration;
+import org.forgerock.openicf.connectors.scriptedrest.ScriptedRESTConfiguration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import groovy.lang.Binding;
+import groovy.lang.Closure;
 import groovy.lang.ExpandoMetaClass;
 import groovy.lang.GroovySystem;
 import groovy.lang.Script;
@@ -125,20 +128,7 @@ public class ScriptedConfigurationTest {
             throw new IllegalStateException("customizer failed");
         };
         final AtomicReference<Class> customizerClass = new AtomicReference<>();
-        // Registers a metaclass on the customizer class, as the REST, CREST and SSH
-        // configurations do; a registered metaclass keeps the class's loader alive.
-        configuration = new ScriptedConfiguration() {
-            @Override
-            protected Script createCustomizerScript(Class clazz, Binding binding) {
-                customizerClass.set(clazz);
-                ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
-                metaClass.initialize();
-                GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
-                return super.createCustomizerScript(clazz, binding);
-            }
-        };
-        configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
-        configuration.setCustomizerScriptFileName("Customizer.groovy");
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
 
         try {
             configuration.getGroovyScriptEngine();
@@ -149,6 +139,167 @@ public class ScriptedConfigurationTest {
 
         assertThat(customizerClass.get()).isNotNull();
         assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
+    @Test
+    public void testReleaseUnregistersThePublishedCustomizerClass() {
+        customizer = () -> {
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
+
+        assertThat(configuration.getGroovyScriptEngine()).isNotNull();
+        assertThat(customizerClass.get()).isNotNull();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                .as("metaclass of the published customizer before release()").isNotNull();
+
+        configuration.release();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+
+        // A released configuration must not touch a class it no longer publishes.
+        ExpandoMetaClass again = new ExpandoMetaClass(customizerClass.get(), false, true);
+        again.initialize();
+        GroovySystem.getMetaClassRegistry().setMetaClass(customizerClass.get(), again);
+        try {
+            configuration.release();
+            assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                    .as("metaclass registered after the first release()").isNotNull();
+        } finally {
+            InvokerHelper.removeClass(customizerClass.get());
+        }
+    }
+
+    @Test
+    public void testThrowingReleaseClosureStillUnregistersTheCustomizerClass() {
+        customizer = () -> {
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
+        assertThat(configuration.getGroovyScriptEngine()).isNotNull();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                .as("metaclass of the published customizer before release()").isNotNull();
+        configuration.setReleaseClosure(new Closure<Void>(this) {
+            public Void doCall() {
+                throw new IllegalStateException("release failed");
+            }
+        });
+
+        try {
+            configuration.release();
+            fail("The release closure failure must reach the caller");
+        } catch (IllegalStateException e) {
+            assertThat(e).hasMessage("release failed");
+        }
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+
+        // The failed release() must still forget the class it published.
+        configuration.setReleaseClosure(null);
+        ExpandoMetaClass again = new ExpandoMetaClass(customizerClass.get(), false, true);
+        again.initialize();
+        GroovySystem.getMetaClassRegistry().setMetaClass(customizerClass.get(), again);
+        try {
+            configuration.release();
+            assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                    .as("metaclass registered after the failed release()").isNotNull();
+        } finally {
+            InvokerHelper.removeClass(customizerClass.get());
+        }
+    }
+
+    @Test
+    public void testThrowingReleaseClosureStillDropsThePublishedEngine() {
+        customizer = () -> {
+        };
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        configuration = registeringMetaClassOnCustomizer(customizerClass);
+        final GroovyScriptEngine engineBefore = configuration.getGroovyScriptEngine();
+        assertThat(engineBefore).isNotNull();
+        configuration.setReleaseClosure(new Closure<Void>(this) {
+            public Void doCall() {
+                throw new IllegalStateException("release failed");
+            }
+        });
+
+        try {
+            configuration.release();
+            fail("The release closure failure must reach the caller");
+        } catch (IllegalStateException e) {
+            assertThat(e).hasMessage("release failed");
+        }
+        configuration.setReleaseClosure(null);
+        try {
+            assertThat(configuration.getGroovyScriptEngine())
+                    .as("engine after the failed release()").isNotSameAs(engineBefore);
+        } finally {
+            // Unregisters the class of the engine built above.
+            configuration.release();
+        }
+    }
+
+    @Test
+    public void testCRESTReleaseUnregistersTheCustomizeMetaClass() throws Exception {
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        assertReleaseUnregistersTheCustomizeMetaClass(new ScriptedCRESTConfiguration() {
+            @Override
+            protected Script createCustomizerScript(Class clazz, Binding binding) {
+                customizerClass.set(clazz);
+                return super.createCustomizerScript(clazz, binding);
+            }
+        }, customizerClass);
+    }
+
+    @Test
+    public void testRESTReleaseUnregistersTheCustomizeMetaClass() throws Exception {
+        final AtomicReference<Class> customizerClass = new AtomicReference<>();
+        assertReleaseUnregistersTheCustomizeMetaClass(new ScriptedRESTConfiguration() {
+            @Override
+            protected Script createCustomizerScript(Class clazz, Binding binding) {
+                customizerClass.set(clazz);
+                return super.createCustomizerScript(clazz, binding);
+            }
+        }, customizerClass);
+    }
+
+    /**
+     * Runs a real {@code customize {}} DSL, which registers a metaclass on the customizer class,
+     * and checks that the subclass's own {@code release()} unregisters it.
+     */
+    private void assertReleaseUnregistersTheCustomizeMetaClass(ScriptedConfiguration subject,
+            AtomicReference<Class> customizerClass) throws Exception {
+        Files.write(new File(scriptRoot, "Customizer.groovy").toPath(),
+                "customize {\n}\n".getBytes(StandardCharsets.UTF_8));
+        configuration = subject;
+        configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        configuration.setCustomizerScriptFileName("Customizer.groovy");
+
+        assertThat(configuration.getGroovyScriptEngine()).isNotNull();
+        assertThat(customizerClass.get()).isNotNull();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass())
+                .as("metaclass registered by customize {} before release()").isNotNull();
+
+        configuration.release();
+        assertThat(ClassInfo.getClassInfo(customizerClass.get()).getStrongMetaClass()).isNull();
+    }
+
+    /**
+     * A configuration that registers a metaclass on its customizer class, as the REST, CREST and
+     * SSH configurations do; a registered metaclass keeps the class's loader alive.
+     */
+    private ScriptedConfiguration registeringMetaClassOnCustomizer(
+            final AtomicReference<Class> customizerClass) {
+        ScriptedConfiguration result = new ScriptedConfiguration() {
+            @Override
+            protected Script createCustomizerScript(Class clazz, Binding binding) {
+                customizerClass.set(clazz);
+                ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
+                metaClass.initialize();
+                GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
+                return super.createCustomizerScript(clazz, binding);
+            }
+        };
+        result.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        result.setCustomizerScriptFileName("Customizer.groovy");
+        return result;
     }
 
     @Test
