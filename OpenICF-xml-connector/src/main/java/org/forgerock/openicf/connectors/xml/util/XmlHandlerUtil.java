@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -29,6 +30,7 @@ package org.forgerock.openicf.connectors.xml.util;
 import com.sun.xml.xsom.XSSchema;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.w3c.dom.Node;
 
 public class XmlHandlerUtil {
 
@@ -77,5 +79,21 @@ public class XmlHandlerUtil {
         if (!schema.getElementDecls().containsKey(objClass.getObjectClassValue())) {
             throw new IllegalArgumentException("Object type: " + objClass.getObjectClassValue() + " is not supported.");
         }
+    }
+
+    /**
+     * Returns the node that follows {@code node} and its descendants in document order without
+     * leaving {@code root}, or {@code null} at the end. {@code root} is {@code node}, one of its
+     * ancestors, or {@code null} for the whole tree. Uses sibling and parent pointers only, so a
+     * walk built on it stays linear on a Xerces DOM.
+     */
+    public static Node following(Node node, Node root) {
+        for (Node n = node; n != root; n = n.getParentNode()) {
+            Node sibling = n.getNextSibling();
+            if (sibling != null) {
+                return sibling;
+            }
+        }
+        return null;
     }
 }
