@@ -86,6 +86,7 @@ public class XMLHandlerImpl implements XMLHandler {
      * Setup logging for the {@link XMLHandlerImpl}.
      */
     private static final Log log = Log.getLog(XMLHandlerImpl.class);
+    private static final String DEFER_NODE_EXPANSION = "http://apache.org/xml/features/dom/defer-node-expansion";
     private XMLConfiguration config;
     private volatile Document document;
     private Schema connSchema;
@@ -362,18 +363,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         if (query != null && !query.isEmpty() && objClass != null) {
 
-            ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
-            Set<AttributeInfo> objAttributes = objInfo.getAttributeInfo();
-
-            // Map with the attribute-names and what class they are
-            HashMap<String, String> attributeClassMap = new HashMap<String, String>();
-            for (AttributeInfo info : objAttributes) {
-                attributeClassMap.put(info.getName(), info.getType().getSimpleName());
-            }
-
-            // Map with the AttributeInfo for each attribute
-            HashMap<String, AttributeInfo> attributeInfoMap =
-                    new HashMap<String, AttributeInfo>(AttributeInfoUtil.toMap(objInfo.getAttributeInfo()));
+            ConnectorObjectCreator conObjCreator = newConnectorObjectCreator(objClass);
 
             XQueryHandler xqHandler = null;
             try {
@@ -381,17 +371,9 @@ public class XMLHandlerImpl implements XMLHandler {
                 XQResultSequence queryResult = xqHandler.getResultSequence();
 
 
-                ConnectorObjectCreator conObjCreator =
-                        new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
-
                 while (queryResult.next()) {
 
-                    Node resultNode = queryResult.getItem().getNode();
-
-                    NodeList nodes = resultNode.getChildNodes();
-
-                    ConnectorObject conObj = conObjCreator.createConnectorObject(nodes);
-                    results.add(conObj);
+                    results.add(conObjCreator.createConnectorObject(queryResult.getItem().getNode()));
                 }
             } catch (XQException ex) {
                 log.error("Error while searching: {0}", ex);
@@ -532,12 +514,29 @@ public class XMLHandlerImpl implements XMLHandler {
         log.info("Exit {0}", method);
     }
 
+    ConnectorObjectCreator newConnectorObjectCreator(ObjectClass objClass) {
+        ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
+        HashMap<String, String> attributeClassMap = new HashMap<String, String>();
+        for (AttributeInfo info : objInfo.getAttributeInfo()) {
+            attributeClassMap.put(info.getName(), info.getType().getSimpleName());
+        }
+        HashMap<String, AttributeInfo> attributeInfoMap =
+                new HashMap<String, AttributeInfo>(AttributeInfoUtil.toMap(objInfo.getAttributeInfo()));
+        return new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
+    }
+
     private void loadDocument(File xmlFile) {
         final String method = "loadDocument";
         log.info("Entry {0}", method);
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         docBuilderFactory.setNamespaceAware(true);
+        try {
+            // Build every node now: a deferred node is built on its first read, and readers run in parallel.
+            docBuilderFactory.setAttribute(DEFER_NODE_EXPANSION, Boolean.FALSE);
+        } catch (IllegalArgumentException ex) {
+            log.warn("The XML parser {0} does not support {1}", docBuilderFactory.getClass().getName(), DEFER_NODE_EXPANSION);
+        }
 
         try {
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
