@@ -546,7 +546,7 @@ public class XMLHandlerImpl implements XMLHandler {
             CRC32 crc = new CRC32();
             crc.update(content);
             InputSource source = new InputSource(new ByteArrayInputStream(content));
-            source.setSystemId(xmlFile.toURI().toString());
+            source.setSystemId(xmlFile.toURI().toASCIIString());
             Document loaded = docBuilder.parse(source);
             // Same text shape as a saved document: CDATA and split runs become one text node, blank text goes.
             XmlDocumentWriter.normalizeText(loaded);
