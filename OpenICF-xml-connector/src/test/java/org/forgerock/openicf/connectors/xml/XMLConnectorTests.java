@@ -38,8 +38,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
@@ -365,6 +367,96 @@ public class XMLConnectorTests {
 
         AssertJUnit.assertEquals(past, Files.getLastModifiedTime(xmlFile.toPath()));
         AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+    }
+
+    @Test(timeOut = 60_000L)
+    public void initOnOneFileDoesNotWaitForAnotherFile() throws Exception {
+        File slowFile = getRandomXMLFile();
+        String key = slowFile.getCanonicalPath();
+        BlockingHandler blocking = new BlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(blocking));
+        }
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> slow = executor.submit(() -> new XMLConnector().init(configFor(slowFile)));
+            AssertJUnit.assertTrue(blocking.entered.await(10, TimeUnit.SECONDS));
+
+            Future<?> other = executor.submit(() -> {
+                XMLConnector connector = new XMLConnector();
+                connector.init(configFor(getRandomXMLFile()));
+                connector.dispose();
+            });
+            other.get(10, TimeUnit.SECONDS);
+
+            blocking.release.countDown();
+            slow.get(10, TimeUnit.SECONDS);
+        } finally {
+            blocking.release.countDown();
+            executor.shutdownNow();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
+    private static XMLConfiguration configFor(File xmlFile) {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(xmlFile);
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
+        return config;
+    }
+
+    /** A handler whose init() blocks until released. */
+    private static final class BlockingHandler implements XMLHandler {
+        final CountDownLatch entered = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+
+        @Override
+        public XMLHandler init() {
+            entered.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return this;
+        }
+
+        @Override
+        public void dispose() {
+        }
+
+        @Override
+        public Uid create(ObjectClass objClass, Set<Attribute> attributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void delete(ObjectClass objClass, Uid uid) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid authenticate(String username, GuardedString password) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isSupportUid(ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private XMLHandlerImpl newHandler() {

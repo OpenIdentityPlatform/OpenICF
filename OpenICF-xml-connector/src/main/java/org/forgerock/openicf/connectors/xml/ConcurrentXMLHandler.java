@@ -50,7 +50,11 @@ public class ConcurrentXMLHandler implements XMLHandler {
     private volatile int invokers = 0;
 
     public ConcurrentXMLHandler(XMLConfiguration config, Schema connSchema, XSSchemaSet xsdSchemas) {
-        proxy = new XMLHandlerImpl(config, connSchema, xsdSchemas);
+        this(new XMLHandlerImpl(config, connSchema, xsdSchemas));
+    }
+
+    ConcurrentXMLHandler(XMLHandler proxy) {
+        this.proxy = proxy;
     }
 
     @Override
