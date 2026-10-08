@@ -21,6 +21,8 @@
  with the fields enclosed by brackets [] replaced by
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
+
+ Portions Copyrighted 2026 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -118,6 +120,27 @@
                     <parallel>false</parallel>
                     <threadCount>10</threadCount>
                 </configuration>
+            </plugin>
+            <plugin>
+                <!-- Runs *BundleIT against the packaged bundle, loaded the way a connector server loads it -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*BundleIT.java</include>
+                    </includes>
+                    <systemPropertyVariables>
+                        <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
+                    </systemPropertyVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
