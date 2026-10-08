@@ -37,8 +37,10 @@ import org.forgerock.openicf.connectors.xml.query.XQueryHandler;
 import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.CRC32;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,6 +77,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.w3c.dom.*;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class XMLHandlerImpl implements XMLHandler {
@@ -87,8 +91,14 @@ public class XMLHandlerImpl implements XMLHandler {
     private Schema connSchema;
     private XSSchema icfSchema;
     private XSSchema riSchema;
-    private long lastModified = 0l;
-    private volatile long version = 0l;
+    /** Whether the document holds user changes that the file does not have yet. */
+    private boolean dirty;
+    /** Whether the document was created in memory because the file did not exist, and is not saved yet. */
+    private boolean unsavedNewFile;
+    /** The file as of the last load or save attempt. */
+    private FileStamp stamp = FileStamp.MISSING;
+    /** The CRC-32 of the bytes last parsed or written. */
+    private long checksum;
     public static final String XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
     public static final String ICF_NAMESPACE_PREFIX = "icf";
     public static final String RI_NAMESPACE_PREFIX = "ri";
@@ -108,8 +118,35 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public XMLHandler init() {
-        buildDocument();
+        if (document == null || (!dirty && fileHasChanged())) {
+            buildDocument();
+        }
         return this;
+    }
+
+    /** A racy stamp cannot rule out a same-size write in the same tick, so the content decides. */
+    private boolean fileHasChanged() {
+        File xmlFile = config.getXmlFilePath();
+        FileStamp current = FileStamp.read(xmlFile);
+        if (!stamp.sameState(current)) {
+            return true;
+        }
+        if (!stamp.isRacy()) {
+            return false;
+        }
+        try {
+            if (FileStamp.checksum(xmlFile) != checksum) {
+                return true;
+            }
+        } catch (IOException e) {
+            return true;
+        }
+        stamp = current; // the content is what we hold; the stamp stops being racy once it is old enough
+        return false;
+    }
+
+    private void markDirty() {
+        dirty = true;
     }
 
     @Override
@@ -211,6 +248,7 @@ public class XMLHandlerImpl implements XMLHandler {
             log.info("Creating new entry: {0}", attributes.toString());
         }
 
+        markDirty();
         getDocument().getDocumentElement().appendChild(objElement);
 
         log.info("Exit {0}", method);
@@ -266,6 +304,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
 
                 // Remove existing nodes from entry
+                markDirty();
                 removeChildrenFromElement(entry, prefixAttributeName(attributeName));
 
                 // Add updated nodes to entry
@@ -305,6 +344,7 @@ public class XMLHandlerImpl implements XMLHandler {
         if (entryExists(objClass, uid, ElementIdentifierFieldType.AUTO)) {
             Element elementToRemove = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
             getDocument().getDocumentElement().removeChild(elementToRemove);
+            markDirty();
             log.info("Deleting entry: " + elementToRemove.toString());
         } else {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
@@ -367,31 +407,31 @@ public class XMLHandlerImpl implements XMLHandler {
         return results;
     }
 
-    private boolean isExternallyModified() {
-        boolean modified = false;
-        if (config.getXmlFilePath().exists()) {
-            modified = lastModified != config.getXmlFilePath().lastModified();
-        }
-        return modified;
-    }
-
     @Override
     public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
-        if (version != lastModified && isExternallyModified()) {
-            log.error("UPDATE COLLUSION: File has been modified after read into memory and the data in memory has not been synced before.");
+        if (!dirty && !unsavedNewFile) {
+            log.info("Exit {0}: nothing to save", method);
+            return;
         }
-
+        File xmlFile = config.getXmlFilePath();
+        if (!stamp.sameState(FileStamp.read(xmlFile))) {
+            log.error("UPDATE COLLISION: {0} has changed since it was loaded or saved; overwriting it with the data in memory.", xmlFile);
+        }
         // Callers hold the handler's write lock.
         Document saved = getDocument();
         try {
             XmlDocumentWriter.normalizeText(saved);
-            XmlDocumentWriter.write(saved, config.getXmlFilePath());
+            checksum = XmlDocumentWriter.write(saved, xmlFile);
+            dirty = false;
+            unsavedNewFile = false;
             log.info("Saving changes to xml file");
         } catch (TransformerException | SAXException | IOException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
+        } finally {
+            stamp = FileStamp.read(xmlFile);
         }
 
         log.info("Exit {0}", method);
@@ -486,6 +526,9 @@ public class XMLHandlerImpl implements XMLHandler {
                             + icfSchema.getTargetNamespace() + " " + config.getXsdIcfFilePath());
         }
 
+        // Not a user change: if the first save fails, a file that appears afterwards is loaded instead.
+        stamp = FileStamp.read(config.getXmlFilePath());
+        unsavedNewFile = true;
         log.info("Exit {0}", method);
     }
 
@@ -495,13 +538,22 @@ public class XMLHandlerImpl implements XMLHandler {
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         docBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder docBuilder;
 
         try {
-            docBuilder = docBuilderFactory.newDocumentBuilder();
-            document = docBuilder.parse(xmlFile);
-            lastModified = xmlFile.lastModified();
-            version = lastModified;
+            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            // Taken before reading: a write during the read shows as a change at the next init().
+            FileStamp loadedStamp = FileStamp.read(xmlFile);
+            byte[] content = Files.readAllBytes(xmlFile.toPath());
+            CRC32 crc = new CRC32();
+            crc.update(content);
+            InputSource source = new InputSource(new ByteArrayInputStream(content));
+            source.setSystemId(xmlFile.toURI().toString());
+            Document loaded = docBuilder.parse(source);
+            // Nothing changes unless the parse succeeded: a malformed file keeps failing until it is fixed.
+            document = loaded;
+            stamp = loadedStamp;
+            checksum = crc.getValue();
+            unsavedNewFile = false;
             log.info("Loading XML document from: {0}", xmlFile.getPath());
         } catch (ParserConfigurationException ex) {
             throw ConnectorException.wrap(ex);

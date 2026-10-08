@@ -1,0 +1,452 @@
+/*
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
+ *
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
+ *
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
+ *
+ * Copyright 2026 3A Systems, LLC.
+ */
+
+package org.forgerock.openicf.connectors.xml;
+
+import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+
+import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
+import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
+import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
+import org.testng.SkipException;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.w3c.dom.DOMException;
+
+public class XMLHandlerReloadTests {
+
+    private static final long HOUR = 3_600_000L;
+
+    private File file;
+    private ConcurrentXMLHandler handler;
+
+    @BeforeMethod
+    public void setUp() {
+        file = getRandomXMLFile();
+        handler = new ConcurrentXMLHandler(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+    }
+
+    @Test
+    public void readOnlyCallsDoNotWriteTheFile() throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        names();
+        call(h -> h.authenticate("alice", new GuardedString("secret-alice".toCharArray())));
+
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
+    public void newFileIsCreatedByTheFirstCall() {
+        // Guards existing behaviour: with createFileIfNotExists even test() creates the file.
+        assertFalse(file.exists());
+        call(h -> null);
+        assertTrue(file.exists());
+    }
+
+    @Test
+    public void changeIsInTheFileWhenTheLastUserLeaves() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        call(h -> h.create(ObjectClass.ACCOUNT, account("bob")));
+        assertEquals(namesInFile(file), List.of("alice", "bob"));
+    }
+
+    @Test
+    public void failedUpdateLeavesTheFileInAgreementWithMemory() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        Set<Attribute> twoLastNames = Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B"));
+        List<String> inMemory;
+        handler.init(); // holds the document: no reload and no save until the last dispose()
+        try {
+            expectThrows(IllegalArgumentException.class,
+                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), twoLastNames)));
+            inMemory = lastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
+        } finally {
+            handler.dispose();
+        }
+        assertEquals(lastNamesIn(file), inMemory);
+    }
+
+    @Test
+    public void deleteIsInTheFileWhenTheLastUserLeaves() throws Exception {
+        writeAccounts(file, "alice", "bobby");
+        setModified(file, now() - HOUR);
+        call(h -> {
+            h.delete(ObjectClass.ACCOUNT, new Uid("uid-bobby"));
+            return null;
+        });
+        assertEquals(namesInFile(file), List.of("alice"));
+    }
+
+    @Test
+    public void unchangedFileIsServedFromMemory() throws Exception {
+        long past = now() - HOUR;
+        writeAccounts(file, "alice");
+        setModified(file, past);
+        assertEquals(names(), List.of("alice"));
+
+        // Same size, same mtime, same file, stamp not racy: indistinguishable from no change.
+        writeAccounts(file, "bobby");
+        setModified(file, past);
+        assertEquals(names(), List.of("alice"));
+    }
+
+    @Test
+    public void externalCopyWithAnOlderMtimeIsLoaded() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        assertEquals(names(), List.of("alice"));
+
+        writeAccounts(file, "carol");
+        setModified(file, now() - 2 * HOUR);
+        assertEquals(names(), List.of("carol"));
+    }
+
+    @Test
+    public void malformedEditFailsEveryCallUntilFixed() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - 2 * HOUR);
+        assertEquals(names(), List.of("alice"));
+
+        Files.write(file.toPath(), "<broken".getBytes(StandardCharsets.UTF_8));
+        setModified(file, now() - HOUR);
+        captureStdErr(() -> expectThrows(ConnectorException.class, () -> handler.init()));
+        captureStdErr(() -> expectThrows(ConnectorException.class, () -> handler.init()));
+
+        writeAccounts(file, "bob");
+        setModified(file, now() - HOUR / 2);
+        assertEquals(names(), List.of("bob"));
+    }
+
+    @Test
+    public void sameSizeEditInsideTheRacyWindowIsLoaded() throws Exception {
+        long future = now() + HOUR; // a stamp at or after the clock is racy
+        writeAccounts(file, "alice");
+        setModified(file, future);
+        assertEquals(names(), List.of("alice"));
+
+        writeAccounts(file, "bobby");
+        setModified(file, future);
+        assertEquals(names(), List.of("bobby"));
+    }
+
+    @Test
+    public void racyLoadIsNotParsedAgain() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() + HOUR); // racy for as long as the test runs
+        String first = captureStdOut(() -> names());
+        assertTrue(first.contains("Loading XML document from: " + file.getPath()), first);
+        String second = captureStdOut(() -> names());
+        assertFalse(second.contains("Loading XML document from"), second);
+    }
+
+    @Test
+    public void unreadableFileBehindARacyStampFails() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() + HOUR); // racy for as long as the test runs
+        assertEquals(names(), List.of("alice"));
+        makeUnreadable(file);
+        try {
+            expectThrows(ConnectorException.class, () -> handler.init());
+        } finally {
+            file.setReadable(true, false);
+        }
+    }
+
+    @Test
+    public void stampConfirmedByContentStopsBeingRacy() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - FileStamp.RACY_WINDOW_MILLIS + 1_000L); // racy for one more second
+        assertEquals(names(), List.of("alice"));
+        if (now() - Files.getLastModifiedTime(file.toPath()).toMillis() >= FileStamp.RACY_WINDOW_MILLIS) {
+            // A slow load, or a file system that truncates mtimes to seconds: the stamp taken was not racy.
+            throw new SkipException("The load of " + file + " fell outside the racy window");
+        }
+        Thread.sleep(1_500L); // the same mtime is now outside the window
+        names(); // racy stamp, same content: the stamp is taken again
+        makeUnreadable(file);
+        try {
+            assertEquals(names(), List.of("alice")); // nothing reads the file any more
+        } finally {
+            file.setReadable(true, false);
+        }
+    }
+
+    @Test
+    public void relativeDtdIsResolvedAgainstTheFile() throws Exception {
+        File dtd = new File(file.getParentFile(), file.getName() + ".dtd");
+        Files.write(dtd.toPath(), "<!ENTITY who 'alice'>".getBytes(StandardCharsets.UTF_8));
+        writeAccounts(file, "alice");
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("<icf:OpenICFContainer", "<!DOCTYPE icf:OpenICFContainer SYSTEM '" + dtd.getName() + "'>\n<icf:OpenICFContainer")
+                .replace("<icf:__NAME__>alice<", "<icf:__NAME__>&who;<");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        assertEquals(names(), List.of("alice"));
+    }
+
+    @Test
+    public void outsideEditDuringAChangeIsReportedAndOverwritten() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - 2 * HOUR);
+        handler.init();
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        writeAccounts(file, "carol");
+        setModified(file, now() - HOUR);
+        String errors = captureStdErr(handler::dispose);
+        assertTrue(errors.contains("UPDATE COLLISION: " + file + " has changed since it was loaded or saved"), errors);
+        assertEquals(namesInFile(file), List.of("alice", "bob"));
+    }
+
+    @Test
+    public void ownChangeIsSavedWithoutACollision() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        String errors = captureStdErr(() -> call(h -> h.create(ObjectClass.ACCOUNT, account("bob"))));
+        assertFalse(errors.contains("UPDATE COLLISION"), errors);
+    }
+
+    @Test
+    public void deletedFileIsRecreatedWithoutACollision() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        assertEquals(names(), List.of("alice"));
+        Files.delete(file.toPath());
+        String errors = captureStdErr(() -> assertEquals(names(), List.of()));
+        assertFalse(errors.contains("UPDATE COLLISION"), errors);
+    }
+
+    @Test
+    public void retryAfterAFailedSaveDoesNotReportItsOwnPartialWrite() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] before = Files.readAllBytes(file.toPath());
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        Set<Attribute> bob = account("bob");
+        bob.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
+        impl.create(ObjectClass.ACCOUNT, bob);
+        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
+        assertFalse(Arrays.equals(Files.readAllBytes(file.toPath()), before)); // the failed save truncated the file
+        String errors = captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
+        assertFalse(errors.contains("UPDATE COLLISION"), errors);
+    }
+
+    @Test
+    public void ownSaveIsNotParsedAgain() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        call(h -> h.create(ObjectClass.ACCOUNT, account("bob"))); // the stamp after this save is racy
+        String log = captureStdOut(() -> assertEquals(names(), List.of("alice", "bob")));
+        assertFalse(log.contains("Loading XML document from"), log);
+    }
+
+    @Test
+    public void failedSaveKeepsTheChangeInMemoryAndRetriesIt() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - 2 * HOUR);
+        handler.init();
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        Files.delete(file.toPath());
+        assertTrue(file.mkdir()); // a directory cannot be written, whoever runs the test
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
+        } finally {
+            assertTrue(file.delete());
+        }
+
+        // An outside file appears: it must not replace the unsaved change, which overwrites it and says so.
+        writeAccounts(file, "carol");
+        setModified(file, now() - HOUR);
+        String errors = captureStdErr(() -> assertEquals(names(), List.of("alice", "bob")));
+        assertTrue(errors.contains("UPDATE COLLISION"), errors);
+        assertEquals(namesInFile(file), List.of("alice", "bob"));
+    }
+
+    @Test
+    public void unsavedNewDocumentGivesWayToAFileThatAppears() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: an empty document in memory
+        assertTrue(file.mkdir());
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
+        } finally {
+            assertTrue(file.delete());
+        }
+
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] appeared = Files.readAllBytes(file.toPath());
+        assertEquals(names(), List.of("alice"));
+        assertEquals(Files.readAllBytes(file.toPath()), appeared); // loaded, not written back
+    }
+
+    @Test
+    public void savedNewFileIsNotWrittenAgain() throws Exception {
+        call(h -> null); // creates the file
+        String log = captureStdOut(() -> call(h -> null));
+        assertTrue(log.contains("Exit serialize: nothing to save"), log);
+    }
+
+    @Test
+    public void failedDeleteOfANestedEntryLeavesTheFileAlone() throws Exception {
+        writeAccounts(file, "alice");
+        // An XSD-invalid hand edit: getEntry's descendant query finds the entry, removeChild on the container rejects it.
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("  <ri:__ACCOUNT__>\n", "  <ri:wrapper>\n  <ri:__ACCOUNT__>\n")
+                .replace("  </ri:__ACCOUNT__>\n", "  </ri:__ACCOUNT__>\n  </ri:wrapper>\n");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        expectThrows(DOMException.class, () -> call(h -> {
+            h.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"));
+            return null;
+        }));
+
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
+    public void externalEditWithANewerMtimeIsLoaded() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - 2 * HOUR);
+        assertEquals(names(), List.of("alice"));
+
+        writeAccounts(file, "bob");
+        setModified(file, now() - HOUR);
+        assertEquals(names(), List.of("bob"));
+    }
+
+    /** Makes {@code file} unreadable, or skips the test where its owner can read it anyway (root, Windows). */
+    private static void makeUnreadable(File file) {
+        if (!file.setReadable(false, false) || Files.isReadable(file.toPath())) {
+            file.setReadable(true, false);
+            throw new SkipException("Cannot make " + file + " unreadable here");
+        }
+    }
+
+    /** One framework call: init, the operation, dispose. */
+    private <T> T call(Function<XMLHandler, T> operation) {
+        handler.init();
+        try {
+            return operation.apply(handler);
+        } finally {
+            handler.dispose();
+        }
+    }
+
+    private List<String> names() {
+        return call(h -> {
+            List<String> names = new ArrayList<String>();
+            for (ConnectorObject object : h.search(allAccounts(), ObjectClass.ACCOUNT)) {
+                names.add(object.getName().getNameValue());
+            }
+            return names;
+        });
+    }
+
+    private static String allAccounts() {
+        return new QueryBuilder(null, ObjectClass.ACCOUNT).toString();
+    }
+
+    private static List<String> lastNames(Collection<ConnectorObject> objects) {
+        List<String> values = new ArrayList<String>();
+        for (ConnectorObject object : objects) {
+            Attribute lastName = object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME);
+            values.add(lastName == null ? null : AttributeUtil.getStringValue(lastName));
+        }
+        return values;
+    }
+
+    private static List<String> lastNamesIn(File file) {
+        XMLHandler fresh = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema()).init();
+        return lastNames(fresh.search(allAccounts(), ObjectClass.ACCOUNT));
+    }
+
+    private static XMLConfiguration config(File file) {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(file);
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
+        return config;
+    }
+
+    private static SchemaParser schemaParser() {
+        return new SchemaParser(XMLConnector.class, XSD_SCHEMA_FILEPATH);
+    }
+
+    private static String captureStdOut(Runnable action) throws UnsupportedEncodingException {
+        PrintStream original = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
+    }
+
+    private static String captureStdErr(Runnable action) throws UnsupportedEncodingException {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+        try {
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
+    }
+
+    private static long now() {
+        return System.currentTimeMillis();
+    }
+}
