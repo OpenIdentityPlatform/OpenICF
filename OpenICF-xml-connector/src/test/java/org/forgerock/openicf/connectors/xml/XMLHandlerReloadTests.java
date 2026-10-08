@@ -245,6 +245,43 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void relativeDtdIsResolvedUnderANonAsciiDirectory() throws Exception {
+        File dir = new File(file.getParentFile(), "\u0434\u0438\u0440-\u00e9");
+        try {
+            if (!dir.mkdir()) {
+                throw new SkipException("Cannot create a directory with a non-ASCII name: " + dir);
+            }
+            File store = new File(dir, "store.xml");
+            File dtd = new File(dir, "store.dtd");
+            Files.write(dtd.toPath(), "<!ENTITY who 'alice'>".getBytes(StandardCharsets.UTF_8));
+            writeAccounts(store, "alice");
+            String xml = new String(Files.readAllBytes(store.toPath()), StandardCharsets.UTF_8)
+                    .replace("<icf:OpenICFContainer", "<!DOCTYPE icf:OpenICFContainer SYSTEM 'store.dtd'>\n<icf:OpenICFContainer")
+                    .replace("<icf:__NAME__>alice<", "<icf:__NAME__>&who;<");
+            Files.write(store.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+            XMLHandler other = new ConcurrentXMLHandler(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+            other.init();
+            try {
+                List<String> found = new ArrayList<String>();
+                for (ConnectorObject object : other.search(allAccounts(), ObjectClass.ACCOUNT)) {
+                    found.add(object.getName().getNameValue());
+                }
+                assertEquals(found, List.of("alice"));
+            } finally {
+                other.dispose();
+            }
+        } finally {
+            File[] children = dir.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    child.delete();
+                }
+            }
+            dir.delete();
+        }
+    }
+
+    @Test
     public void outsideEditDuringAChangeIsReportedAndOverwritten() throws Exception {
         writeAccounts(file, "alice");
         setModified(file, now() - 2 * HOUR);
