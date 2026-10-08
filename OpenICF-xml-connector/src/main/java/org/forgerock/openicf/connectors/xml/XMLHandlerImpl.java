@@ -38,8 +38,6 @@ import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,16 +50,7 @@ import java.util.UUID;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xquery.XQException;
 import javax.xml.xquery.XQResultSequence;
 
@@ -395,85 +384,18 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         try {
-            // Synchronize on the document so that XPath cleanup and the
-            // Saxon transform happen atomically with respect to any other
-            // thread that might still hold a reference to the same DOM.
-            // Saxon's DOMSender walks children via NodeList.item(i) after
-            // calling getLength(); a concurrent removeChild on the DOM
-            // can make item(i) return null and trigger a NullPointerException
-            // in DOMSender.walkNode.
+            // Callers hold the handler's write lock; the document monitor stays as before.
             synchronized (document) {
-                try {
-                    XPathFactory xpathFactory = new net.sf.saxon.xpath.XPathFactoryImpl();
-                    // XPath to find empty text nodes.
-                    XPathExpression xpathExp = xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
-                    NodeList emptyTextNodes = (NodeList) xpathExp.evaluate(document, XPathConstants.NODESET);
-
-                    // Snapshot the list before mutating the DOM, then remove
-                    // each empty text node (guarding against nodes whose
-                    // parent has already been detached).
-                    int len = emptyTextNodes.getLength();
-                    List<Node> toRemove = new ArrayList<Node>(len);
-                    for (int i = 0; i < len; i++) {
-                        Node n = emptyTextNodes.item(i);
-                        if (n != null) {
-                            toRemove.add(n);
-                        }
-                    }
-                    for (Node emptyTextNode : toRemove) {
-                        Node parent = emptyTextNode.getParentNode();
-                        if (parent != null) {
-                            parent.removeChild(emptyTextNode);
-                        }
-                    }
-                } catch (XPathExpressionException e) {
-                    //We don't care. It's just formatting.
-                }
-
-                TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
-                Transformer transformer = transformerFactory.newTransformer();
-                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-                transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-                DOMSource source = new DOMSource(document);
-                /* Running this code in java 5 we had to change
-                StreamResult result = new StreamResult(config.getXmlFilePath());
-                into
-                StreamResult result = new StreamResult(config.getXmlFilePath().getPath());
-                Otherwise you get the following error:
-                javax.xml.transform.TransformerException: java.io.FileNotFoundException:
-                 */
-                /*
-                 * If the safePath is not escaped then it throws
-                 * net.sf.saxon.trans.XPathException: java.net.URISyntaxException:
-                 * Illegal character in safePath at index 9: /temp/XML Connector/test.xml
-                 * String safePath = config.getXmlFilePath().getPath().replaceAll(" ", "%20");
-                 */
-                FileOutputStream fos = new FileOutputStream(config.getXmlFilePath());
-                try {
-                    StreamResult result = new StreamResult(fos);
-                    transformer.transform(source, result);
-                } finally {
-                    try {
-                        fos.close();
-                    } catch (IOException ioe) {
-                        log.warn("Failed to close XML output stream: {0}", ioe);
-                    }
-                }
+                XmlDocumentWriter.normalizeText(document);
+                XmlDocumentWriter.write(document, config.getXmlFilePath());
             }
-
             log.info("Saving changes to xml file");
-        } catch (TransformerException ex) {
-            log.error("Failed saving changes to xml file: {0}", ex);
-            throw ConnectorException.wrap(ex);
-        } catch (FileNotFoundException ex) {
+        } catch (TransformerException | SAXException | IOException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
         }
 
-        log.info("Entry {0}", method);
+        log.info("Exit {0}", method);
     }
 
     @Override
@@ -550,6 +472,8 @@ public class XMLHandlerImpl implements XMLHandler {
         document = implementation.createDocument(icfSchema.getTargetNamespace(), ICF_CONTAINER_TAG, null);
 
         Element root = document.getDocumentElement();
+        // Declared like the others so that the writer puts it first, where Saxon's DOM serializer put it.
+        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + ICF_NAMESPACE_PREFIX, icfSchema.getTargetNamespace());
         root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XSI_NAMESPACE_PREFIX, XSI_NAMESPACE);
         root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + RI_NAMESPACE_PREFIX, riSchema.getTargetNamespace());
         root.setPrefix(ICF_NAMESPACE_PREFIX);
@@ -736,7 +660,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return prefix;
     }
 
-    private Document getDocument() {
+    Document getDocument() {
         if (null == document) {
             throw new ConnectorException("Data file does not exists: " + config.getXmlFilePath().toString());
         }
