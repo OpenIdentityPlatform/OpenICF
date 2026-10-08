@@ -322,6 +322,14 @@ public class XMLConnectorTests {
         }
     }
 
+    @Test
+    public void successfulSaveLogsItsExit() throws Exception {
+        XMLHandlerImpl handler = newHandler();
+        handler.init(); // no file yet: a new document in memory
+        String out = captureStdOut(handler::dispose);
+        AssertJUnit.assertTrue(out, out.contains("Exit serialize" + System.lineSeparator()));
+    }
+
     private XMLHandlerImpl newHandler() {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(xmlFile);
@@ -329,6 +337,18 @@ public class XMLConnectorTests {
         config.setCreateFileIfNotExists(true);
         SchemaParser parser = new SchemaParser(XMLConnector.class, XSD_SCHEMA_FILEPATH);
         return new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+    }
+
+    private static String captureStdOut(Runnable action) throws UnsupportedEncodingException {
+        PrintStream original = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
     }
 
     private static String captureStdErr(Runnable action) throws UnsupportedEncodingException {
