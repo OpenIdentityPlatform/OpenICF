@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -40,7 +41,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 class ConnectorObjectCreator {
 
@@ -49,7 +49,6 @@ class ConnectorObjectCreator {
     private Map<String, String> attributeClassMap;
     private Map<String, AttributeInfo> attributeInfoMap;
     private ObjectClass objectClass;
-    private NodeList nodeList;
     private ConnectorObjectBuilder conObjBuilder;
 
     protected ConnectorObjectCreator(HashMap<String, String> attrClasses, HashMap<String, AttributeInfo> attrInfos, ObjectClass objClass) {
@@ -58,18 +57,17 @@ class ConnectorObjectCreator {
         this.objectClass = objClass;
     }
 
-    protected ConnectorObject createConnectorObject(NodeList nodes) {
-        nodeList = nodes;
+    protected ConnectorObject createConnectorObject(Node entry) {
         conObjBuilder = new ConnectorObjectBuilder();
         conObjBuilder.setObjectClass(objectClass);
 
-        addAllAttributesToBuilder();
+        addAllAttributesToBuilder(entry);
 
         return conObjBuilder.build();
     }
 
     // Add all the attributes to the connectorbuilder-object
-    private void addAllAttributesToBuilder() {
+    private void addAllAttributesToBuilder(Node entry) {
 
         boolean hasUid = false;
 
@@ -78,8 +76,7 @@ class ConnectorObjectCreator {
 
         String nameTmp = "";
 
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            Node attributeNode = nodeList.item(i);
+        for (Node attributeNode = entry.getFirstChild(); attributeNode != null; attributeNode = attributeNode.getNextSibling()) {
             if (attributeNode.getNodeType() == Node.ELEMENT_NODE) {
 
                 Node textNode = attributeNode.getFirstChild();

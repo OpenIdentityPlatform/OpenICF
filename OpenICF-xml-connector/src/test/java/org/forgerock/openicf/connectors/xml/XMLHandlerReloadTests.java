@@ -37,6 +37,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
@@ -369,6 +373,94 @@ public class XMLHandlerReloadTests {
         if (!file.setReadable(false, false) || Files.isReadable(file.toPath())) {
             file.setReadable(true, false);
             throw new SkipException("Cannot make " + file + " unreadable here");
+        }
+    }
+
+    @Test
+    public void loadedDocumentIsFullyExpanded() throws Exception {
+        writeAccounts(file, "alice");
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        assertFalse(impl.getDocument() instanceof org.apache.xerces.dom.DeferredDocumentImpl,
+                impl.getDocument().getClass().getName());
+    }
+
+    @Test
+    public void connectorObjectIsReadWithoutNodeLists() throws Exception {
+        writeAccounts(file, "alice");
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        org.w3c.dom.Element entry = (org.w3c.dom.Element) impl.getDocument()
+                .getElementsByTagNameNS(RI_NAMESPACE, ObjectClass.ACCOUNT_NAME).item(0);
+        assertFalse(XercesNodeLists.used(impl.getDocument()));
+
+        ConnectorObject object = impl.newConnectorObjectCreator(ObjectClass.ACCOUNT).createConnectorObject(entry);
+
+        assertEquals(object.getUid().getUidValue(), "uid-alice");
+        assertEquals(object.getName().getNameValue(), "alice");
+        assertEquals(AttributeUtil.getStringValue(object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)), "Last-alice");
+        assertFalse(XercesNodeLists.used(impl.getDocument()));
+    }
+
+    @Test
+    public void parserWithoutTheDeferAttributeStillLoads() throws Exception {
+        writeAccounts(file, "alice");
+        withDocumentBuilderFactory(NoDeferAttributeFactory.class, () -> assertEquals(names(), List.of("alice")));
+    }
+
+    @Test
+    public void parserWithoutTheDeferAttributeIsReported() throws Exception {
+        writeAccounts(file, "alice");
+        String log = captureStdOut(() -> withDocumentBuilderFactory(NoDeferAttributeFactory.class, () -> names()));
+        assertTrue(log.contains("The XML parser " + NoDeferAttributeFactory.class.getName()
+                + " does not support http://apache.org/xml/features/dom/defer-node-expansion"), log);
+    }
+
+    /** Runs {@code action} with {@code factory} as the JAXP DocumentBuilderFactory, the way a JVM-wide setting selects it. */
+    private static void withDocumentBuilderFactory(Class<?> factory, Runnable action) {
+        String property = "javax.xml.parsers.DocumentBuilderFactory";
+        String previous = System.getProperty(property);
+        System.setProperty(property, factory.getName());
+        try {
+            action.run();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(property);
+            } else {
+                System.setProperty(property, previous);
+            }
+        }
+    }
+
+    /** A JAXP parser that supports none of the Xerces attributes: setAttribute throws, as the JAXP contract allows. */
+    public static final class NoDeferAttributeFactory extends DocumentBuilderFactory {
+
+        private final DocumentBuilderFactory xerces = new org.apache.xerces.jaxp.DocumentBuilderFactoryImpl();
+
+        @Override
+        public DocumentBuilder newDocumentBuilder() throws ParserConfigurationException {
+            xerces.setNamespaceAware(isNamespaceAware());
+            return xerces.newDocumentBuilder();
+        }
+
+        @Override
+        public void setAttribute(String name, Object value) {
+            throw new IllegalArgumentException("Not supported: " + name);
+        }
+
+        @Override
+        public Object getAttribute(String name) {
+            throw new IllegalArgumentException("Not supported: " + name);
+        }
+
+        @Override
+        public void setFeature(String name, boolean value) throws ParserConfigurationException {
+            throw new ParserConfigurationException("Not supported: " + name);
+        }
+
+        @Override
+        public boolean getFeature(String name) throws ParserConfigurationException {
+            throw new ParserConfigurationException("Not supported: " + name);
         }
     }
 
