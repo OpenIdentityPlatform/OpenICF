@@ -96,7 +96,7 @@ public class XMLHandlerImpl implements XMLHandler {
     private boolean dirty;
     /** Whether the document was created in memory because the file did not exist, and is not saved yet. */
     private boolean unsavedNewFile;
-    /** The file as of the last load or save attempt. */
+    /** The file as last seen: at the last load, save attempt, new document, or content-confirmed check. */
     private FileStamp stamp = FileStamp.MISSING;
     /** The CRC-32 of the bytes last parsed or written. */
     private long checksum;
@@ -548,6 +548,8 @@ public class XMLHandlerImpl implements XMLHandler {
             InputSource source = new InputSource(new ByteArrayInputStream(content));
             source.setSystemId(xmlFile.toURI().toString());
             Document loaded = docBuilder.parse(source);
+            // Same text shape as a saved document: CDATA and split runs become one text node, blank text goes.
+            XmlDocumentWriter.normalizeText(loaded);
             // Nothing changes unless the parse succeeded: a malformed file keeps failing until it is fixed.
             document = loaded;
             stamp = loadedStamp;

@@ -234,6 +234,17 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void cdataValueOfALoadedFileIsRead() throws Exception {
+        writeAccounts(file, "alice");
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("<ri:lastname>Last-alice</ri:lastname>", "<ri:lastname><![CDATA[Last-alice]]></ri:lastname>");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        setModified(file, now() - HOUR);
+        assertEquals(call(h -> lastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("Last-alice"));
+        assertEquals(call(h -> lastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("Last-alice"));
+    }
+
+    @Test
     public void outsideEditDuringAChangeIsReportedAndOverwritten() throws Exception {
         writeAccounts(file, "alice");
         setModified(file, now() - 2 * HOUR);
