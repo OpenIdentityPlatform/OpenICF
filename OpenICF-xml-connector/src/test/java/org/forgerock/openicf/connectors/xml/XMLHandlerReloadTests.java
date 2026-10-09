@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -442,6 +443,16 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void fileThatAppearsAsTheNewDocumentIsCreatedIsNotOverwritten() throws Exception {
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(new AppearingFile(file)), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init(); // the check finds no file, and one appears right after it
+        byte[] appeared = Files.readAllBytes(file.toPath());
+        impl.dispose();
+        assertEquals(Files.readAllBytes(file.toPath()), appeared);
+        assertEquals(names(), List.of("alice"));
+    }
+
+    @Test
     public void changeToANewDocumentIsSavedOnceThePathIsFree() throws Exception {
         assertFalse(file.exists());
         handler.init(); // no file: a new document in memory
@@ -541,6 +552,27 @@ public class XMLHandlerReloadTests {
         writeAccounts(file, "bob");
         setModified(file, now() - HOUR);
         assertEquals(names(), List.of("bob"));
+    }
+
+    /** A store path where a file appears as soon as a check finds none there. */
+    private static final class AppearingFile extends File {
+
+        AppearingFile(File file) {
+            super(file.getPath());
+        }
+
+        @Override
+        public boolean exists() {
+            if (super.exists()) {
+                return true;
+            }
+            try {
+                writeAccounts(this, "alice");
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            return false;
+        }
     }
 
     /** Makes {@code file} unreadable, or skips the test where its owner can read it anyway (root, Windows). */
