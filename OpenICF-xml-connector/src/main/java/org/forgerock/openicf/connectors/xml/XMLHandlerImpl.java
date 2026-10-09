@@ -537,8 +537,9 @@ public class XMLHandlerImpl implements XMLHandler {
                             + icfSchema.getTargetNamespace() + " " + config.getXsdIcfFilePath());
         }
 
+        // Not read again: a file that appeared since the check found none is not the connector's to overwrite.
+        stamp = FileStamp.MISSING;
         // Not a user change: if the first save fails, a file that appears afterwards is loaded instead.
-        stamp = FileStamp.read(config.getXmlFilePath());
         unsavedNewFile = true;
         log.info("Exit {0}", method);
     }
