@@ -159,6 +159,19 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void textAfterAnEntityReferenceIsNormalized() throws Exception {
+        DocumentBuilderFactory factory = newFactory();
+        factory.setExpandEntityReferences(false);
+        Document document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(
+                "<!DOCTYPE r [<!ENTITY e 'v'>]><r>&e; <c> </c></r>")));
+        XmlDocumentWriter.normalizeText(document);
+        Node reference = document.getDocumentElement().getFirstChild();
+        assertEquals(reference.getNodeType(), Node.ENTITY_REFERENCE_NODE);
+        assertSame(reference.getNextSibling(), only(document, "c"));
+        assertNull(only(document, "c").getFirstChild());
+    }
+
+    @Test
     public void outputIsTheSameAsBefore() throws Exception {
         Document document = parse("<icf:OpenICFContainer xmlns:icf='" + ICF + "' xmlns:ri='" + RI + "'>"
                 + "<ri:__ACCOUNT__><icf:__NAME__>a</icf:__NAME__><ri:email>b</ri:email><ri:email/></ri:__ACCOUNT__>"
