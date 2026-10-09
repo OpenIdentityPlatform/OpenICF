@@ -31,8 +31,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -630,8 +632,13 @@ public class XMLHandlerReloadTests {
             } catch (IOException | UnsupportedOperationException e) {
                 throw new SkipException("Cannot create a symbolic link here: " + e);
             }
-            if (FileStamp.read(loop).isKnown()) {
-                throw new SkipException("The file system reads a link to itself as a file or as missing");
+            try {
+                Files.readAttributes(loop.toPath(), BasicFileAttributes.class);
+                throw new SkipException("The file system resolves a link to itself");
+            } catch (NoSuchFileException e) {
+                throw new SkipException("The file system reports a link to itself as missing");
+            } catch (IOException expected) {
+                // ELOOP: the path is neither readable nor known to be missing
             }
         }
 
