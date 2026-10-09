@@ -61,9 +61,9 @@ final class XmlDocumentWriter {
      * <p>
      * A run is a maximal sequence of adjacent Text and CDATA section siblings, which XPath sees as
      * one text node. A run that holds only XML whitespace (space, tab, CR, LF: what
-     * {@code normalize-space} strips) is removed, as {@code //text()[normalize-space(.) = '']}
-     * removed it before, CDATA included. Any other run becomes one Text node with the same value,
-     * which is what a reload of the written file gives.
+     * {@code normalize-space} strips), CDATA included, is removed whole; the XPath used before,
+     * {@code //text()[normalize-space(.) = '']}, removed only its first node. Any other run
+     * becomes one Text node with the same value, which is what a reload of the written file gives.
      */
     static boolean normalizeText(Node root) {
         boolean changed = false;

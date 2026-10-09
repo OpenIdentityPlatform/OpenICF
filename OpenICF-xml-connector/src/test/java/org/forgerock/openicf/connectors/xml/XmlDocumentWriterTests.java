@@ -104,6 +104,14 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void whitespaceOnlyRunOfSeveralNodesIsRemovedWhole() throws Exception {
+        // The XPath used before #157 removed only the first node of such a run.
+        Document document = parse("<r><a> <![CDATA[ ]]> </a></r>");
+        XmlDocumentWriter.normalizeText(document);
+        assertNull(only(document, "a").getFirstChild());
+    }
+
+    @Test
     public void adjacentTextAndCdataBecomeOneTextNode() throws Exception {
         Document document = parse("<r><a> <![CDATA[x<y]]> </a></r>");
         XmlDocumentWriter.normalizeText(document);
@@ -255,7 +263,10 @@ public class XmlDocumentWriterTests {
         assertFalse(XercesNodeLists.used(document));
     }
 
-    /** What XMLHandlerImpl.dispose() wrote before #157. */
+    /**
+     * What XMLHandlerImpl.dispose() wrote before #157 for a document whose text is already
+     * normalized: the serializer half only, without the XPath that removed whitespace-only text.
+     */
     private static String before(Document document) throws Exception {
         Transformer saxon = new net.sf.saxon.TransformerFactoryImpl().newTransformer();
         saxon.setOutputProperty(OutputKeys.INDENT, "yes");

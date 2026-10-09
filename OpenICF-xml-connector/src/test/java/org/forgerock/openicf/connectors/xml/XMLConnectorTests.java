@@ -310,6 +310,16 @@ public class XMLConnectorTests {
     }
 
     @Test
+    public void deletingTheLastEntryLeavesAnEmptyContainer() throws Exception {
+        // The removed entry leaves two whitespace-only Text nodes side by side; both go.
+        writeAccounts(xmlFile, "alice");
+        facade.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"), null);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        AssertJUnit.assertNull(factory.newDocumentBuilder().parse(xmlFile).getDocumentElement().getFirstChild());
+    }
+
+    @Test
     public void failedSaveIsLoggedAndThrown() throws Exception {
         XMLHandlerImpl handler = newHandler();
         handler.init(); // no file yet: a new document in memory
