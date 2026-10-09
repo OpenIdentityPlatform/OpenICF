@@ -93,7 +93,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
             log.error(ex, "Failed to get the CanonicalPath of {0}", config.getXmlFilePath());
             throw new ConnectorIOException(ex);
         }
-        // Outside the class monitor: loading or saving one file must not hold up connectors on other files.
+        // Outside the class monitor: loading one file, or waiting while another call saves it, must not hold up connectors on other files.
         xmlInstanceHandler = handler.init();
         log.info("XMLConnector initialized");
     }
