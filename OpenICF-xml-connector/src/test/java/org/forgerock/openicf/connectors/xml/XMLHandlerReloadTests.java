@@ -459,6 +459,19 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void changesDroppedForAFileThatAppearsStayDroppedWhenItGoes() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        captureStdErr(handler::dispose); // keeps the file and drops bob
+        Files.delete(file.toPath());
+        assertEquals(names(), List.of());
+        assertEquals(namesInFile(file), List.of());
+    }
+
+    @Test
     public void ownPartialWriteOfANewDocumentIsSavedAgain() throws Exception {
         XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
         impl.init(); // no file: a new document in memory
