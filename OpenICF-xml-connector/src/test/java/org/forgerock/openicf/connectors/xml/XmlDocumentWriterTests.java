@@ -211,6 +211,23 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void unprefixedDomLevel1ElementIsInNoNamespace() throws Exception {
+        // As the old serializer wrote it, whether the default namespace in scope is declared by an attribute or not.
+        for (boolean declared : new boolean[] {false, true}) {
+            Document document = newFactory().newDocumentBuilder().newDocument();
+            Element root = document.createElementNS("urn:x", "a");
+            if (declared) {
+                root.setAttributeNS(XMLNS, "xmlns", "urn:x");
+            }
+            document.appendChild(root);
+            root.appendChild(document.createElement("b"));
+            File file = XmlConnectorTestUtil.getRandomXMLFile();
+            XmlDocumentWriter.write(document, file);
+            assertEquals(new String(Files.readAllBytes(file.toPath()), "UTF-8"), before(document), "declared: " + declared);
+        }
+    }
+
+    @Test
     public void defaultNamespaceUndeclarationIsKept() throws Exception {
         assertReadsBackTheSame(parse("<r xmlns='urn:d'><a xmlns=''/></r>"));
     }

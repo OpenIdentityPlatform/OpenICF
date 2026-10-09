@@ -198,18 +198,20 @@ final class XmlDocumentWriter {
 
     /**
      * Returns the namespace to use for {@code prefix}: the node's own, declared here if it is not
-     * in scope yet, or, for a DOM level 1 node without one, the namespace in scope.
+     * in scope yet. A DOM level 1 node has none: with a prefix it takes the namespace in scope, and
+     * an element without one is in no namespace, as the old serializer wrote it.
      */
     private static String bind(String prefix, String uri, TransformerHandler out, NamespaceSupport namespaces,
             List<String> declared) throws SAXException {
         String inScope = namespaces.getURI(prefix);
-        if (uri == null) {
+        if (uri == null && !prefix.isEmpty()) {
             return inScope == null ? "" : inScope;
         }
-        if (!uri.equals(inScope == null ? "" : inScope)) {
-            declare(prefix, uri, out, namespaces, declared);
+        String own = uri == null ? "" : uri;
+        if (!own.equals(inScope == null ? "" : inScope)) {
+            declare(prefix, own, out, namespaces, declared);
         }
-        return uri;
+        return own;
     }
 
     private static void declare(String prefix, String uri, TransformerHandler out, NamespaceSupport namespaces,
