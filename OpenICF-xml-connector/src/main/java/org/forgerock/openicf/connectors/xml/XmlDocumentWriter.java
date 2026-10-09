@@ -59,8 +59,7 @@ final class XmlDocumentWriter {
     }
 
     /**
-     * Removes whitespace-only text and turns every other run of text into a single Text node;
-     * returns whether anything changed.
+     * Removes whitespace-only text and turns every other run of text into a single Text node.
      * <p>
      * A run is a maximal sequence of adjacent Text and CDATA section siblings, which XPath sees as
      * one text node. A run that holds only XML whitespace (space, tab, CR, LF: what
@@ -69,8 +68,7 @@ final class XmlDocumentWriter {
      * becomes one Text node with the same value, which is what a reload of the written file gives.
      * Text inside an entity reference is left alone: the DOM makes it read-only.
      */
-    static boolean normalizeText(Node root) {
-        boolean changed = false;
+    static void normalizeText(Node root) {
         Node node = root.getFirstChild();
         while (node != null) {
             if (!isText(node)) {
@@ -95,11 +93,9 @@ final class XmlDocumentWriter {
                 for (Node n : run) {
                     parent.removeChild(n);
                 }
-                changed = true;
             }
             node = after != null ? after : following(parent, root);
         }
-        return changed;
     }
 
     /**

@@ -73,18 +73,20 @@ public class XmlDocumentWriterTests {
     @Test
     public void normalizedDocumentIsLeftAlone() throws Exception {
         Document document = parse("<r><a>x</a><b/></r>");
-        assertFalse(XmlDocumentWriter.normalizeText(document));
+        Node text = only(document, "a").getFirstChild();
+        XmlDocumentWriter.normalizeText(document);
+        assertSingleText(only(document, "a"), "x");
+        assertSame(only(document, "a").getFirstChild(), text);
     }
 
     @Test
     public void whitespaceOnlyTextIsRemoved() throws Exception {
         Document document = parse("<r>\n  <a> \t&#13;&#10;</a>\n  <c/>\n  <b>x</b>\n</r>");
-        boolean changed = XmlDocumentWriter.normalizeText(document);
+        XmlDocumentWriter.normalizeText(document);
         assertNull(only(document, "a").getFirstChild());
         for (Node n = document.getDocumentElement().getFirstChild(); n != null; n = n.getNextSibling()) {
             assertEquals(n.getNodeType(), Node.ELEMENT_NODE);
         }
-        assertTrue(changed);
     }
 
     @Test
