@@ -453,8 +453,9 @@ public class XMLHandlerReloadTests {
             assertTrue(file.delete());
         }
 
-        // The stamp changed, but no file appeared: the change is saved.
-        captureStdErr(() -> assertEquals(names(), List.of("bob")));
+        // The stamp changed, but no file appeared: the change is saved, and no file is overwritten.
+        String errors = captureStdErr(() -> assertEquals(names(), List.of("bob")));
+        assertFalse(errors.contains("UPDATE COLLISION"), errors);
         assertEquals(namesInFile(file), List.of("bob"));
     }
 

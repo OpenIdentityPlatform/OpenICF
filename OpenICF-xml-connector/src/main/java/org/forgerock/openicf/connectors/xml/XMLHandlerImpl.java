@@ -422,7 +422,8 @@ public class XMLHandlerImpl implements XMLHandler {
             log.info("Exit {0}: {1} appeared before the new document was saved; not overwriting it", method, xmlFile);
             return;
         }
-        if (!stamp.sameState(FileStamp.read(xmlFile))) {
+        // A path that holds no file has nothing to overwrite: the save creates the file.
+        if (xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile))) {
             log.error("UPDATE COLLISION: {0} has changed since it was loaded or saved; overwriting it with the data in memory.", xmlFile);
         }
         // Callers hold the handler's write lock.
