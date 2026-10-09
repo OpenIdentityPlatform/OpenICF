@@ -197,13 +197,16 @@ final class XmlDocumentWriter {
 
     /**
      * Returns the namespace to use for {@code prefix}: the node's own, declared here if it is not
-     * in scope yet. A DOM level 1 node has none: with a prefix it takes the namespace in scope, and
-     * an element without one is in no namespace, as the old serializer wrote it.
+     * in scope yet. A prefix the element already declares, by an attribute or for its name, keeps
+     * that namespace; the old serializer did the same for the default namespace, and for any other
+     * prefix let the node's own namespace win. A DOM level 1 node has
+     * none: with a prefix it takes the namespace in scope, and an element without one is in no
+     * namespace, as the old serializer wrote it.
      */
     private static String bind(String prefix, String uri, TransformerHandler out, NamespaceSupport namespaces,
             List<String> declared) throws SAXException {
         String inScope = namespaces.getURI(prefix);
-        if (uri == null && !prefix.isEmpty()) {
+        if (declared.contains(prefix) || (uri == null && !prefix.isEmpty())) {
             return inScope == null ? "" : inScope;
         }
         String own = uri == null ? "" : uri;
@@ -213,8 +216,16 @@ final class XmlDocumentWriter {
         return own;
     }
 
+    /**
+     * Declares {@code prefix} on the current element unless it is declared there already: a
+     * second declaration of a prefix on one element makes the file unreadable. A DOM can hold two
+     * {@code xmlns} attributes, one set with {@code setAttribute} and one with {@code setAttributeNS}.
+     */
     private static void declare(String prefix, String uri, TransformerHandler out, NamespaceSupport namespaces,
             List<String> declared) throws SAXException {
+        if (declared.contains(prefix)) {
+            return;
+        }
         namespaces.declarePrefix(prefix, uri);
         out.startPrefixMapping(prefix, uri);
         declared.add(prefix);

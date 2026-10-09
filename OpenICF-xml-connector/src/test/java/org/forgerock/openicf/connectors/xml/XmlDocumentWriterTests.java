@@ -236,6 +236,43 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void aPrefixIsDeclaredOncePerElementAsBefore() throws Exception {
+        // Each child binds one prefix to two namespaces: by an xmlns attribute, by its own name or by
+        // a prefixed attribute. Declaring both made the file unreadable. The connector builds no such DOM.
+        Document document = newFactory().newDocumentBuilder().newDocument();
+        Element root = document.createElementNS("urn:x", "a");
+        document.appendChild(root);
+        Element bySetAttribute = document.createElement("b");
+        bySetAttribute.setAttribute("xmlns", "urn:y");
+        Element bySetAttributeNS = document.createElement("b");
+        bySetAttributeNS.setAttributeNS(XMLNS, "xmlns", "urn:y");
+        Element namespaced = document.createElementNS("urn:x", "b");
+        namespaced.setAttributeNS(XMLNS, "xmlns", "urn:y");
+        Element prefixed = document.createElementNS("urn:x", "p:b");
+        prefixed.setAttributeNS("urn:y", "p:c", "v");
+        for (Element child : new Element[] {bySetAttribute, bySetAttributeNS, namespaced, prefixed}) {
+            root.appendChild(child);
+        }
+        File file = XmlConnectorTestUtil.getRandomXMLFile();
+        XmlDocumentWriter.write(document, file);
+        assertEquals(new String(Files.readAllBytes(file.toPath()), "UTF-8"), before(document));
+    }
+
+    @Test
+    public void twoXmlnsAttributesDeclareTheDefaultNamespaceOnce() throws Exception {
+        // setAttributeNS does not find the attribute set with setAttribute, so Xerces keeps both and
+        // puts the new one first. The first declaration wins.
+        Document document = parse("<r/>");
+        Element root = document.getDocumentElement();
+        root.setAttribute("xmlns", "urn:y");
+        root.setAttributeNS(XMLNS, "xmlns", "urn:z");
+        assertEquals(root.getAttributes().getLength(), 2);
+        File file = XmlConnectorTestUtil.getRandomXMLFile();
+        XmlDocumentWriter.write(document, file);
+        assertEquals(parseFile(file).getDocumentElement().getNamespaceURI(), "urn:z");
+    }
+
+    @Test
     public void defaultNamespaceUndeclarationIsKept() throws Exception {
         assertReadsBackTheSame(parse("<r xmlns='urn:d'><a xmlns=''/></r>"));
     }
