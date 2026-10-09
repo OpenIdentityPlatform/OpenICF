@@ -137,6 +137,20 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void textInsideAnEntityReferenceIsLeftAlone() throws Exception {
+        // The children of an entity reference are read-only; Xerces keeps them when references are not expanded.
+        DocumentBuilderFactory factory = newFactory();
+        factory.setExpandEntityReferences(false);
+        Document document = factory.newDocumentBuilder().parse(new InputSource(new StringReader(
+                "<!DOCTYPE r [<!ENTITY e '<a/> <b/>x<![CDATA[y]]>'>]><r>&e;</r>")));
+        Node reference = document.getDocumentElement().getFirstChild();
+        assertEquals(reference.getNodeType(), Node.ENTITY_REFERENCE_NODE);
+        XmlDocumentWriter.normalizeText(document);
+        assertEquals(reference.getFirstChild().getNextSibling().getNodeValue(), " ");
+        assertEquals(reference.getLastChild().getNodeType(), Node.CDATA_SECTION_NODE);
+    }
+
+    @Test
     public void outputIsTheSameAsBefore() throws Exception {
         Document document = parse("<icf:OpenICFContainer xmlns:icf='" + ICF + "' xmlns:ri='" + RI + "'>"
                 + "<ri:__ACCOUNT__><icf:__NAME__>a</icf:__NAME__><ri:email>b</ri:email><ri:email/></ri:__ACCOUNT__>"

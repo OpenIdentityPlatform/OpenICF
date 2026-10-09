@@ -67,13 +67,14 @@ final class XmlDocumentWriter {
      * {@code normalize-space} strips), CDATA included, is removed whole; the XPath used before,
      * {@code //text()[normalize-space(.) = '']}, removed only its first node. Any other run
      * becomes one Text node with the same value, which is what a reload of the written file gives.
+     * Text inside an entity reference is left alone: the DOM makes it read-only.
      */
     static boolean normalizeText(Node root) {
         boolean changed = false;
         Node node = root.getFirstChild();
         while (node != null) {
             if (!isText(node)) {
-                Node child = node.getFirstChild();
+                Node child = node.getNodeType() == Node.ENTITY_REFERENCE_NODE ? null : node.getFirstChild();
                 node = child != null ? child : following(node, root);
                 continue;
             }
