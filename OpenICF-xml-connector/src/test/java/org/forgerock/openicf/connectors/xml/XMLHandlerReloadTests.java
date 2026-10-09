@@ -24,10 +24,12 @@ import static org.testng.Assert.expectThrows;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -259,9 +261,12 @@ public class XMLHandlerReloadTests {
     public void relativeDtdIsResolvedUnderANonAsciiDirectory() throws Exception {
         File dir = new File(file.getParentFile(), "\u0434\u0438\u0440-\u00e9");
         try {
-            if (!dir.mkdir()) {
-                throw new SkipException("Cannot create a directory with a non-ASCII name: " + dir);
-            }
+            // A path the platform encoding cannot hold (Linux under LANG=C) throws here, before anything is created.
+            Files.createDirectory(dir.toPath());
+        } catch (InvalidPathException | IOException e) {
+            throw new SkipException("Cannot create a directory with a non-ASCII name: " + dir, e);
+        }
+        try {
             File store = new File(dir, "store.xml");
             File dtd = new File(dir, "store.dtd");
             Files.write(dtd.toPath(), "<!ENTITY who 'alice'>".getBytes(StandardCharsets.UTF_8));
