@@ -127,10 +127,10 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /**
      * A file that appears where a new document is not saved yet wins over the document: the
-     * connector never loaded it, so a save would replace a whole store. Changes made to the new
-     * document are dropped, and the next load reads the file. This is the only reload of a new
-     * document: a partial write of its failed save is not such a file, because the save takes the
-     * stamp again.
+     * connector never loaded it, so a save would replace a whole store. The new document is
+     * dropped with its changes; the next init() loads the file, or starts a new document if the
+     * file is gone. This is the only reload of a new document: a partial write of its failed save
+     * is not such a file, because the save takes the stamp again.
      */
     private boolean fileAppearedOverNewDocument() {
         File xmlFile = config.getXmlFilePath();
@@ -141,6 +141,7 @@ public class XMLHandlerImpl implements XMLHandler {
             log.error("{0} appeared before the new document was saved; keeping the file and dropping the changes made to the new document", xmlFile);
             dirty = false;
         }
+        document = null;
         return true;
     }
 
