@@ -126,6 +126,17 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void mergedRunKeepsItsPlace() throws Exception {
+        Document document = parse("<r><x>a<![CDATA[b]]><!--c--></x></r>");
+        XmlDocumentWriter.normalizeText(document);
+        Node text = only(document, "x").getFirstChild();
+        assertEquals(text.getNodeType(), Node.TEXT_NODE);
+        assertEquals(text.getNodeValue(), "ab");
+        assertEquals(text.getNextSibling().getNodeType(), Node.COMMENT_NODE);
+        assertNull(text.getNextSibling().getNextSibling());
+    }
+
+    @Test
     public void outputIsTheSameAsBefore() throws Exception {
         Document document = parse("<icf:OpenICFContainer xmlns:icf='" + ICF + "' xmlns:ri='" + RI + "'>"
                 + "<ri:__ACCOUNT__><icf:__NAME__>a</icf:__NAME__><ri:email>b</ri:email><ri:email/></ri:__ACCOUNT__>"
@@ -261,6 +272,30 @@ public class XmlDocumentWriterTests {
         XmlDocumentWriter.normalizeText(document);
         XmlDocumentWriter.write(document, XmlConnectorTestUtil.getRandomXMLFile());
         assertFalse(XercesNodeLists.used(document));
+    }
+
+    @Test
+    public void normalizeAndWriteMakeALinearNumberOfDomCalls() throws Exception {
+        // The probe above sees only NodeLists; a walk that, say, counts the earlier siblings of
+        // every child is quadratic without one. Twice the entries take about twice the calls.
+        long small = domCallsToSave(1000);
+        long large = domCallsToSave(2000);
+        assertTrue(large < 3 * small, "1,000 entries: " + small + " DOM calls, 2,000 entries: " + large);
+    }
+
+    /** The DOM calls that normalizeText and write make on an indented container of {@code entries} entries. */
+    private static long domCallsToSave(int entries) throws Exception {
+        StringBuilder xml = new StringBuilder("<icf:OpenICFContainer xmlns:icf='" + ICF + "' xmlns:ri='" + RI + "'>");
+        for (int i = 0; i < entries; i++) {
+            xml.append("\n  <ri:__ACCOUNT__>\n    <icf:__NAME__>a<![CDATA[").append(i)
+                    .append("]]></icf:__NAME__>\n  </ri:__ACCOUNT__>");
+        }
+        xml.append("\n</icf:OpenICFContainer>");
+        CountingDom dom = new CountingDom();
+        Document document = dom.wrap(parse(xml.toString()));
+        XmlDocumentWriter.normalizeText(document);
+        XmlDocumentWriter.write(document, XmlConnectorTestUtil.getRandomXMLFile());
+        return dom.calls();
     }
 
     /**
