@@ -460,6 +460,19 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void loadedStoreMovedBackBeforeTheNewDocumentIsSavedIsKept() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        assertEquals(names(), List.of("alice"));
+        File moved = new File(file.getPath() + ".moved");
+        assertTrue(file.renameTo(moved));
+        handler.init(); // no file: a new document replaces the loaded one
+        assertTrue(moved.renameTo(file)); // the loaded file is back, with its file key, size and mtime
+        handler.dispose();
+        assertEquals(namesInFile(file), List.of("alice"));
+    }
+
+    @Test
     public void fileThatAppearsAsTheNewDocumentIsCreatedIsNotOverwritten() throws Exception {
         XMLHandlerImpl impl = new XMLHandlerImpl(config(new AppearingFile(file)), schemaParser().parseSchema(), schemaParser().getXsdSchema());
         impl.init(); // the check finds no file, and one appears right after it
