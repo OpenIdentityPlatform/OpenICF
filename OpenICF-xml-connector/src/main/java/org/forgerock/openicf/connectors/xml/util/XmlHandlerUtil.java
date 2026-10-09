@@ -84,11 +84,11 @@ public class XmlHandlerUtil {
     /**
      * Returns the node that follows {@code node} and its descendants in document order without
      * leaving {@code root}, or {@code null} at the end. {@code root} is {@code node}, one of its
-     * ancestors, or {@code null} for the whole tree. Uses sibling and parent pointers only, so a
-     * walk built on it stays linear on a Xerces DOM.
+     * ancestors, or {@code null} for the whole tree; any other {@code root} acts as {@code null}.
+     * Uses sibling and parent pointers only, so a walk built on it stays linear on a Xerces DOM.
      */
     public static Node following(Node node, Node root) {
-        for (Node n = node; n != root; n = n.getParentNode()) {
+        for (Node n = node; n != null && n != root; n = n.getParentNode()) {
             Node sibling = n.getNextSibling();
             if (sibling != null) {
                 return sibling;

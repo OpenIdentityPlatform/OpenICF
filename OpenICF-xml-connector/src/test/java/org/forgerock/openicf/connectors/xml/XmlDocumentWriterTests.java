@@ -71,6 +71,12 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void followingWithARootOutsideTheAncestorsEndsAtTheTop() throws Exception {
+        Document document = parse("<r><a><x/></a><b/></r>");
+        assertNull(following(only(document, "b"), only(document, "a")));
+    }
+
+    @Test
     public void normalizedDocumentIsLeftAlone() throws Exception {
         Document document = parse("<r><a>x</a><b/></r>");
         Node text = only(document, "a").getFirstChild();
