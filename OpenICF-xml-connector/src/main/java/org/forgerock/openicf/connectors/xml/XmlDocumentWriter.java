@@ -46,7 +46,10 @@ import org.xml.sax.helpers.NamespaceSupport;
  * <p>
  * Saxon's DOM wrappers walk a DOM through {@code NodeList.item(i)}, which turns quadratic on a
  * Xerces DOM once the document's node list cache gets into a bad state. Here both steps follow
- * sibling pointers, and Saxon's serializer only receives SAX events, so the output is what it was.
+ * sibling pointers, and Saxon's serializer only receives SAX events. A store the connector created
+ * is written byte for byte as before. Namespace declarations written by hand come out in the order
+ * of the element's attribute map (by name in Xerces), and a redeclaration of a binding already in
+ * scope is kept; the old serializer put the element's own namespace first and dropped those.
  */
 final class XmlDocumentWriter {
 
