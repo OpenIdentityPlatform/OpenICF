@@ -31,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -516,6 +517,32 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void ownPartialWriteBehindAnUnreadableStampIsSavedAgain() throws Exception {
+        StatFailingFile store = new StatFailingFile(file);
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init(); // no file: a new document in memory
+        impl.create(ObjectClass.ACCOUNT, account("bob"));
+        org.w3c.dom.Element root = impl.getDocument().getDocumentElement();
+        // An unpaired surrogate: no encoder can write it
+        org.w3c.dom.Node unwritable = root.appendChild(impl.getDocument().createTextNode("x\uD800y"));
+        store.statFails = true; // the stamp the failed save takes cannot be read
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
+        } finally {
+            store.statFails = false;
+        }
+        assertTrue(file.exists()); // the failed save left a partial file
+        root.removeChild(unwritable);
+
+        String errors = captureStdErr(() -> {
+            impl.init(); // not a file that appeared: neither dropped nor parsed
+            impl.dispose();
+        });
+        assertFalse(errors.contains("appeared before the new document was saved"), errors);
+        assertEquals(namesInFile(file), List.of("bob"));
+    }
+
+    @Test
     public void savedNewFileIsNotWrittenAgain() throws Exception {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));
@@ -572,6 +599,31 @@ public class XMLHandlerReloadTests {
                 throw new UncheckedIOException(e);
             }
             return false;
+        }
+    }
+
+    /** A store path whose stamp cannot be read while {@code statFails} is set: the stamp is then read through a link to itself. */
+    private static final class StatFailingFile extends File {
+
+        boolean statFails;
+        private final File loop;
+
+        StatFailingFile(File file) {
+            super(file.getPath());
+            loop = new File(file.getPath() + ".loop");
+            try {
+                Files.createSymbolicLink(loop.toPath(), loop.toPath().getFileName());
+            } catch (IOException | UnsupportedOperationException e) {
+                throw new SkipException("Cannot create a symbolic link here: " + e);
+            }
+            if (FileStamp.read(loop).isKnown()) {
+                throw new SkipException("The file system reads a link to itself as a file or as missing");
+            }
+        }
+
+        @Override
+        public Path toPath() {
+            return statFails ? loop.toPath() : super.toPath();
         }
     }
 
