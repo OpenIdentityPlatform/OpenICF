@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -186,6 +187,19 @@ public class XMLHandlerReloadTests {
     @Test
     public void racyLoadIsNotParsedAgain() throws Exception {
         writeAccounts(file, "alice");
+        setModified(file, now() + HOUR); // racy for as long as the test runs
+        String first = captureStdOut(() -> names());
+        assertTrue(first.contains("Loading XML document from: " + file.getPath()), first);
+        String second = captureStdOut(() -> names());
+        assertFalse(second.contains("Loading XML document from"), second);
+    }
+
+    @Test
+    public void racyLoadWithMarkupAfterTheRootIsNotParsedAgain() throws Exception {
+        writeAccounts(file, "alice");
+        // Far past any parser buffer: the checksum taken while parsing covers it only if the parser reads to the end.
+        String after = "<!-- " + String.join("", Collections.nCopies(100_000, "x")) + " -->\n<?after the root?>\n";
+        Files.write(file.toPath(), after.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
         setModified(file, now() + HOUR); // racy for as long as the test runs
         String first = captureStdOut(() -> names());
         assertTrue(first.contains("Loading XML document from: " + file.getPath()), first);

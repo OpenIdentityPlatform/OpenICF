@@ -37,9 +37,9 @@ import org.forgerock.openicf.connectors.xml.query.XQueryHandler;
 import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -573,12 +574,14 @@ public class XMLHandlerImpl implements XMLHandler {
             DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
             // Taken before reading: a write during the read shows as a change at the next init().
             FileStamp loadedStamp = FileStamp.read(xmlFile);
-            byte[] content = Files.readAllBytes(xmlFile.toPath());
             CRC32 crc = new CRC32();
-            crc.update(content);
-            InputSource source = new InputSource(new ByteArrayInputStream(content));
-            source.setSystemId(xmlFile.toURI().toASCIIString());
-            Document loaded = docBuilder.parse(source);
+            Document loaded;
+            // The checksum is of the bytes parsed: the parser reads on to the end, past what follows the root.
+            try (InputStream in = new CheckedInputStream(Files.newInputStream(xmlFile.toPath()), crc)) {
+                InputSource source = new InputSource(in);
+                source.setSystemId(xmlFile.toURI().toASCIIString());
+                loaded = docBuilder.parse(source);
+            }
             // Same text shape as a saved document: CDATA and split runs become one text node, blank text goes.
             XmlDocumentWriter.normalizeText(loaded);
             // Nothing changes unless the parse succeeded: a malformed file keeps failing until it is fixed.
