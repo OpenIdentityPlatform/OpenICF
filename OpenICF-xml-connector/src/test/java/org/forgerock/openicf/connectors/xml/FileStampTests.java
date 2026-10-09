@@ -111,6 +111,15 @@ public class FileStampTests {
     }
 
     @Test
+    public void stampIsRacyJustAfterAWrite() throws IOException {
+        // An outside write of the same size in the same tick right after a load or save looks like no change.
+        File file = write(getRandomXMLFile(), "abc", now() - 500);
+        assertTrue(FileStamp.read(file).isRacy());
+        setModified(file, now() - 3_000);
+        assertFalse(FileStamp.read(file).isRacy());
+    }
+
+    @Test
     public void checksumFollowsTheContent() throws IOException {
         File file = write(getRandomXMLFile(), "abc", now() - HOUR);
         CRC32 crc = new CRC32();
