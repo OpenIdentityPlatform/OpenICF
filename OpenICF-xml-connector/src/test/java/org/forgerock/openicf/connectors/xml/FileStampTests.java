@@ -95,6 +95,13 @@ public class FileStampTests {
         assertFalse(FileStamp.read(loop).sameState(FileStamp.read(loop)));
         assertFalse(FileStamp.read(loop).sameState(FileStamp.MISSING));
         assertFalse(FileStamp.MISSING.sameState(FileStamp.read(loop)));
+        assertFalse(FileStamp.read(loop).isKnown());
+    }
+
+    @Test
+    public void readableAndMissingFilesAreKnown() throws IOException {
+        assertTrue(FileStamp.read(write(getRandomXMLFile(), "abc", now() - HOUR)).isKnown());
+        assertTrue(FileStamp.read(getRandomXMLFile()).isKnown());
     }
 
     @Test

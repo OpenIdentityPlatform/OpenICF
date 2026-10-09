@@ -90,6 +90,11 @@ final class FileStamp {
         return racy;
     }
 
+    /** Whether the file could be read, or was known to be missing, when the stamp was taken. */
+    boolean isKnown() {
+        return this != UNKNOWN;
+    }
+
     boolean sameState(FileStamp other) {
         if (this == UNKNOWN || other == UNKNOWN) {
             return false;

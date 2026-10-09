@@ -132,11 +132,12 @@ public class XMLHandlerImpl implements XMLHandler {
      * Whether a file appeared where a new document is not saved yet. Such a file wins over the
      * document: the connector never loaded it, so a save would replace a whole store. This is the
      * only reload of a new document: a partial write of its failed save is not such a file,
-     * because the save takes the stamp again.
+     * because the save takes the stamp again. If that stamp could not be read, the file is still
+     * taken for the partial write: only a save leaves a new document with such a stamp.
      */
     private boolean fileAppearedOverNewDocument() {
         File xmlFile = config.getXmlFilePath();
-        return unsavedNewFile && xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile));
+        return unsavedNewFile && stamp.isKnown() && xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile));
     }
 
     /** Drops the new document with its changes: the next init() loads the file, or starts a new document if the file is gone. */
