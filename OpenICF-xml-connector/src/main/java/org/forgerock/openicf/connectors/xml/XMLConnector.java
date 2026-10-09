@@ -55,7 +55,8 @@ import org.identityconnectors.framework.common.exceptions.InvalidPasswordExcepti
 public class XMLConnector implements Connector, AuthenticateOp, CreateOp, DeleteOp, SearchOp<Query>, SchemaOp, TestOp, UpdateOp {
 
     private static final Log log = Log.getLog(XMLConnector.class);
-    private static /*volatile*/ final Map<String, ConcurrentXMLHandler> XMLHandlerCache = new HashMap<String, ConcurrentXMLHandler>(1);
+    /** Guarded by {@code XMLConnector.class}. */
+    static final Map<String, ConcurrentXMLHandler> XMLHandlerCache = new HashMap<String, ConcurrentXMLHandler>(1);
     private XMLConfiguration config;
     private XMLHandler xmlInstanceHandler = null;
 
@@ -77,23 +78,23 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     @Override
     public void init(Configuration configuration) {
         this.config = Assertions.nullChecked((XMLConfiguration) configuration, "config");
-        synchronized (XMLConnector.class) {
-            try {
-                String canonicalPath = config.getXmlFilePath().getCanonicalPath();
-                ConcurrentXMLHandler handler = XMLHandlerCache.get(canonicalPath);
-
+        ConcurrentXMLHandler handler;
+        try {
+            String canonicalPath = config.getXmlFilePath().getCanonicalPath();
+            synchronized (XMLConnector.class) {
+                handler = XMLHandlerCache.get(canonicalPath);
                 if (null == handler) {
                     SchemaParser schemaParser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
                     handler = new ConcurrentXMLHandler(config, schema(), schemaParser.getXsdSchema());
                     XMLHandlerCache.put(canonicalPath, handler);
                 }
-                xmlInstanceHandler = handler.init();
             }
-            catch (IOException ex) {
-                log.error(ex, "Failed to get the CanonicalPath of {0}", config.getXmlFilePath());
-                throw new ConnectorIOException(ex);
-            }
+        } catch (IOException ex) {
+            log.error(ex, "Failed to get the CanonicalPath of {0}", config.getXmlFilePath());
+            throw new ConnectorIOException(ex);
         }
+        // Outside the class monitor: loading one file, or waiting while another call saves it, must not hold up connectors on other files.
+        xmlInstanceHandler = handler.init();
         log.info("XMLConnector initialized");
     }
 

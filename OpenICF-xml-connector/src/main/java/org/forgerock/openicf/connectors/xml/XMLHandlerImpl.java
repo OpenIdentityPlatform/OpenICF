@@ -38,9 +38,9 @@ import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -48,20 +48,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.zip.CRC32;
+import java.util.zip.CheckedInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xquery.XQException;
 import javax.xml.xquery.XQResultSequence;
 
@@ -85,6 +78,7 @@ import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.w3c.dom.*;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class XMLHandlerImpl implements XMLHandler {
@@ -93,13 +87,20 @@ public class XMLHandlerImpl implements XMLHandler {
      * Setup logging for the {@link XMLHandlerImpl}.
      */
     private static final Log log = Log.getLog(XMLHandlerImpl.class);
+    private static final String DEFER_NODE_EXPANSION = "http://apache.org/xml/features/dom/defer-node-expansion";
     private XMLConfiguration config;
     private volatile Document document;
     private Schema connSchema;
     private XSSchema icfSchema;
     private XSSchema riSchema;
-    private long lastModified = 0l;
-    private volatile long version = 0l;
+    /** Whether the document holds user changes that the file does not have yet. */
+    private boolean dirty;
+    /** Whether the document was created in memory because the file did not exist, and is not saved yet. */
+    private boolean unsavedNewFile;
+    /** The file as last seen: at the last load, save attempt, new document, or content-confirmed check. */
+    private FileStamp stamp = FileStamp.MISSING;
+    /** The CRC-32 of the bytes last parsed or written. */
+    private long checksum;
     public static final String XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance";
     public static final String ICF_NAMESPACE_PREFIX = "icf";
     public static final String RI_NAMESPACE_PREFIX = "ri";
@@ -119,8 +120,59 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public XMLHandler init() {
-        buildDocument();
+        if (document != null && fileAppearedOverNewDocument()) {
+            dropNewDocument();
+        }
+        if (document == null || (!dirty && !unsavedNewFile && fileHasChanged())) {
+            buildDocument();
+        }
         return this;
+    }
+
+    /**
+     * Whether a file appeared where a new document is not saved yet. Such a file wins over the
+     * document: the connector never loaded it, so a save would replace a whole store. This is the
+     * only reload of a new document: a partial write of its failed save is not such a file,
+     * because the save takes the stamp again. If that stamp could not be read, the file is still
+     * taken for the partial write: only a save leaves a new document with such a stamp.
+     */
+    private boolean fileAppearedOverNewDocument() {
+        File xmlFile = config.getXmlFilePath();
+        return unsavedNewFile && stamp.isKnown() && xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile));
+    }
+
+    /** Drops the new document with its changes: the next init() loads the file, or starts a new document if the file is gone. */
+    private void dropNewDocument() {
+        if (dirty) {
+            log.error("{0} appeared before the new document was saved; keeping the file and dropping the changes made to the new document", config.getXmlFilePath());
+            dirty = false;
+        }
+        document = null;
+    }
+
+    /** A racy stamp cannot rule out a same-size write in the same tick, so the content decides. */
+    private boolean fileHasChanged() {
+        File xmlFile = config.getXmlFilePath();
+        FileStamp current = FileStamp.read(xmlFile);
+        if (!stamp.sameState(current)) {
+            return true;
+        }
+        if (!stamp.isRacy()) {
+            return false;
+        }
+        try {
+            if (FileStamp.checksum(xmlFile) != checksum) {
+                return true;
+            }
+        } catch (IOException e) {
+            return true;
+        }
+        stamp = current; // the content is what we hold; the stamp stops being racy once it is old enough
+        return false;
+    }
+
+    private void markDirty() {
+        dirty = true;
     }
 
     @Override
@@ -222,6 +274,7 @@ public class XMLHandlerImpl implements XMLHandler {
             log.info("Creating new entry: {0}", attributes.toString());
         }
 
+        markDirty();
         getDocument().getDocumentElement().appendChild(objElement);
 
         log.info("Exit {0}", method);
@@ -277,6 +330,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
 
                 // Remove existing nodes from entry
+                markDirty();
                 removeChildrenFromElement(entry, prefixAttributeName(attributeName));
 
                 // Add updated nodes to entry
@@ -316,6 +370,7 @@ public class XMLHandlerImpl implements XMLHandler {
         if (entryExists(objClass, uid, ElementIdentifierFieldType.AUTO)) {
             Element elementToRemove = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
             getDocument().getDocumentElement().removeChild(elementToRemove);
+            markDirty();
             log.info("Deleting entry: " + elementToRemove.toString());
         } else {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
@@ -333,18 +388,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         if (query != null && !query.isEmpty() && objClass != null) {
 
-            ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
-            Set<AttributeInfo> objAttributes = objInfo.getAttributeInfo();
-
-            // Map with the attribute-names and what class they are
-            HashMap<String, String> attributeClassMap = new HashMap<String, String>();
-            for (AttributeInfo info : objAttributes) {
-                attributeClassMap.put(info.getName(), info.getType().getSimpleName());
-            }
-
-            // Map with the AttributeInfo for each attribute
-            HashMap<String, AttributeInfo> attributeInfoMap =
-                    new HashMap<String, AttributeInfo>(AttributeInfoUtil.toMap(objInfo.getAttributeInfo()));
+            ConnectorObjectCreator conObjCreator = newConnectorObjectCreator(objClass);
 
             XQueryHandler xqHandler = null;
             try {
@@ -352,17 +396,9 @@ public class XMLHandlerImpl implements XMLHandler {
                 XQResultSequence queryResult = xqHandler.getResultSequence();
 
 
-                ConnectorObjectCreator conObjCreator =
-                        new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
-
                 while (queryResult.next()) {
 
-                    Node resultNode = queryResult.getItem().getNode();
-
-                    NodeList nodes = resultNode.getChildNodes();
-
-                    ConnectorObject conObj = conObjCreator.createConnectorObject(nodes);
-                    results.add(conObj);
+                    results.add(conObjCreator.createConnectorObject(queryResult.getItem().getNode()));
                 }
             } catch (XQException ex) {
                 log.error("Error while searching: {0}", ex);
@@ -378,102 +414,40 @@ public class XMLHandlerImpl implements XMLHandler {
         return results;
     }
 
-    private boolean isExternallyModified() {
-        boolean modified = false;
-        if (config.getXmlFilePath().exists()) {
-            modified = lastModified != config.getXmlFilePath().lastModified();
-        }
-        return modified;
-    }
-
     @Override
     public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
-        if (version != lastModified && isExternallyModified()) {
-            log.error("UPDATE COLLUSION: File has been modified after read into memory and the data in memory has not been synced before.");
+        if (!dirty && !unsavedNewFile) {
+            log.info("Exit {0}: nothing to save", method);
+            return;
         }
-
+        File xmlFile = config.getXmlFilePath();
+        if (fileAppearedOverNewDocument()) {
+            dropNewDocument();
+            log.info("Exit {0}: {1} appeared before the new document was saved; not overwriting it", method, xmlFile);
+            return;
+        }
+        // A path that holds no file has nothing to overwrite: the save creates the file.
+        if (xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile))) {
+            log.error("UPDATE COLLISION: {0} has changed since it was loaded or saved; overwriting it with the data in memory.", xmlFile);
+        }
+        // Callers hold the handler's write lock.
+        Document saved = getDocument();
         try {
-            // Synchronize on the document so that XPath cleanup and the
-            // Saxon transform happen atomically with respect to any other
-            // thread that might still hold a reference to the same DOM.
-            // Saxon's DOMSender walks children via NodeList.item(i) after
-            // calling getLength(); a concurrent removeChild on the DOM
-            // can make item(i) return null and trigger a NullPointerException
-            // in DOMSender.walkNode.
-            synchronized (document) {
-                try {
-                    XPathFactory xpathFactory = new net.sf.saxon.xpath.XPathFactoryImpl();
-                    // XPath to find empty text nodes.
-                    XPathExpression xpathExp = xpathFactory.newXPath().compile("//text()[normalize-space(.) = '']");
-                    NodeList emptyTextNodes = (NodeList) xpathExp.evaluate(document, XPathConstants.NODESET);
-
-                    // Snapshot the list before mutating the DOM, then remove
-                    // each empty text node (guarding against nodes whose
-                    // parent has already been detached).
-                    int len = emptyTextNodes.getLength();
-                    List<Node> toRemove = new ArrayList<Node>(len);
-                    for (int i = 0; i < len; i++) {
-                        Node n = emptyTextNodes.item(i);
-                        if (n != null) {
-                            toRemove.add(n);
-                        }
-                    }
-                    for (Node emptyTextNode : toRemove) {
-                        Node parent = emptyTextNode.getParentNode();
-                        if (parent != null) {
-                            parent.removeChild(emptyTextNode);
-                        }
-                    }
-                } catch (XPathExpressionException e) {
-                    //We don't care. It's just formatting.
-                }
-
-                TransformerFactory transformerFactory = new net.sf.saxon.TransformerFactoryImpl();
-                Transformer transformer = transformerFactory.newTransformer();
-                transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-                transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-                transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-
-                DOMSource source = new DOMSource(document);
-                /* Running this code in java 5 we had to change
-                StreamResult result = new StreamResult(config.getXmlFilePath());
-                into
-                StreamResult result = new StreamResult(config.getXmlFilePath().getPath());
-                Otherwise you get the following error:
-                javax.xml.transform.TransformerException: java.io.FileNotFoundException:
-                 */
-                /*
-                 * If the safePath is not escaped then it throws
-                 * net.sf.saxon.trans.XPathException: java.net.URISyntaxException:
-                 * Illegal character in safePath at index 9: /temp/XML Connector/test.xml
-                 * String safePath = config.getXmlFilePath().getPath().replaceAll(" ", "%20");
-                 */
-                FileOutputStream fos = new FileOutputStream(config.getXmlFilePath());
-                try {
-                    StreamResult result = new StreamResult(fos);
-                    transformer.transform(source, result);
-                } finally {
-                    try {
-                        fos.close();
-                    } catch (IOException ioe) {
-                        log.warn("Failed to close XML output stream: {0}", ioe);
-                    }
-                }
-            }
-
+            XmlDocumentWriter.normalizeText(saved);
+            checksum = XmlDocumentWriter.write(saved, xmlFile);
+            dirty = false;
+            unsavedNewFile = false;
             log.info("Saving changes to xml file");
-        } catch (TransformerException ex) {
+        } catch (TransformerException | SAXException | IOException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
-        } catch (FileNotFoundException ex) {
-            log.error("Failed saving changes to xml file: {0}", ex);
-            throw ConnectorException.wrap(ex);
+        } finally {
+            stamp = FileStamp.read(xmlFile);
         }
 
-        log.info("Entry {0}", method);
+        log.info("Exit {0}", method);
     }
 
     @Override
@@ -550,6 +524,8 @@ public class XMLHandlerImpl implements XMLHandler {
         document = implementation.createDocument(icfSchema.getTargetNamespace(), ICF_CONTAINER_TAG, null);
 
         Element root = document.getDocumentElement();
+        // Declared like the others so that the writer puts it first, where Saxon's DOM serializer put it.
+        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + ICF_NAMESPACE_PREFIX, icfSchema.getTargetNamespace());
         root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + XSI_NAMESPACE_PREFIX, XSI_NAMESPACE);
         root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + RI_NAMESPACE_PREFIX, riSchema.getTargetNamespace());
         root.setPrefix(ICF_NAMESPACE_PREFIX);
@@ -563,7 +539,22 @@ public class XMLHandlerImpl implements XMLHandler {
                             + icfSchema.getTargetNamespace() + " " + config.getXsdIcfFilePath());
         }
 
+        // Not read again: a file that appeared since the check found none is not the connector's to overwrite.
+        stamp = FileStamp.MISSING;
+        // Not a user change: if the first save fails, a file that appears afterwards is loaded instead.
+        unsavedNewFile = true;
         log.info("Exit {0}", method);
+    }
+
+    ConnectorObjectCreator newConnectorObjectCreator(ObjectClass objClass) {
+        ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
+        HashMap<String, String> attributeClassMap = new HashMap<String, String>();
+        for (AttributeInfo info : objInfo.getAttributeInfo()) {
+            attributeClassMap.put(info.getName(), info.getType().getSimpleName());
+        }
+        HashMap<String, AttributeInfo> attributeInfoMap =
+                new HashMap<String, AttributeInfo>(AttributeInfoUtil.toMap(objInfo.getAttributeInfo()));
+        return new ConnectorObjectCreator(attributeClassMap, attributeInfoMap, objClass);
     }
 
     private void loadDocument(File xmlFile) {
@@ -572,13 +563,32 @@ public class XMLHandlerImpl implements XMLHandler {
 
         DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
         docBuilderFactory.setNamespaceAware(true);
-        DocumentBuilder docBuilder;
+        try {
+            // Build every node now: a deferred node is built on its first read, and readers run in parallel.
+            docBuilderFactory.setAttribute(DEFER_NODE_EXPANSION, Boolean.FALSE);
+        } catch (IllegalArgumentException ex) {
+            log.warn("The XML parser {0} does not support {1}", docBuilderFactory.getClass().getName(), DEFER_NODE_EXPANSION);
+        }
 
         try {
-            docBuilder = docBuilderFactory.newDocumentBuilder();
-            document = docBuilder.parse(xmlFile);
-            lastModified = xmlFile.lastModified();
-            version = lastModified;
+            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            // Taken before reading: a write during the read shows as a change at the next init().
+            FileStamp loadedStamp = FileStamp.read(xmlFile);
+            CRC32 crc = new CRC32();
+            Document loaded;
+            // The checksum is of the bytes parsed: the parser reads on to the end, past what follows the root.
+            try (InputStream in = new CheckedInputStream(Files.newInputStream(xmlFile.toPath()), crc)) {
+                InputSource source = new InputSource(in);
+                source.setSystemId(xmlFile.toURI().toASCIIString());
+                loaded = docBuilder.parse(source);
+            }
+            // Same text shape as a saved document: CDATA and split runs become one text node, blank text goes.
+            XmlDocumentWriter.normalizeText(loaded);
+            // Nothing changes unless the parse succeeded: a malformed file keeps failing until it is fixed.
+            document = loaded;
+            stamp = loadedStamp;
+            checksum = crc.getValue();
+            unsavedNewFile = false;
             log.info("Loading XML document from: {0}", xmlFile.getPath());
         } catch (ParserConfigurationException ex) {
             throw ConnectorException.wrap(ex);
@@ -736,7 +746,7 @@ public class XMLHandlerImpl implements XMLHandler {
         return prefix;
     }
 
-    private Document getDocument() {
+    Document getDocument() {
         if (null == document) {
             throw new ConnectorException("Data file does not exists: " + config.getXmlFilePath().toString());
         }

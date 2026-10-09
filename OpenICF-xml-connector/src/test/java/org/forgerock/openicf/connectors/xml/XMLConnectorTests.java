@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -28,31 +29,51 @@ package org.forgerock.openicf.connectors.xml;
 import org.testng.annotations.Test;
 import org.testng.AssertJUnit;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
+import static org.testng.Assert.expectThrows;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeUtil;
+import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.test.common.TestHelpers;
 import org.testng.annotations.BeforeMethod;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 public class XMLConnectorTests {
 
     //private XMLConnector connector;
     private ConnectorFacade facade;
+    private File xmlFile;
 
     //private final static String XML_FILEPATH = "test/xml_store/test.xml";
     @BeforeMethod
     public void init() {        
         XMLConfiguration config = new XMLConfiguration();
-        config.setXmlFilePath(getRandomXMLFile());
+        xmlFile = getRandomXMLFile();
+        config.setXmlFilePath(xmlFile);
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         config.setCreateFileIfNotExists(true);
         APIConfiguration impl = TestHelpers.createTestConfiguration(XMLConnector.class, config);
@@ -234,5 +255,240 @@ public class XMLConnectorTests {
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void authenticateShouldThrowExceptionWhenUsernameIsBlank() {
         facade.authenticate(ObjectClass.ACCOUNT, "", new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
+    }
+
+    @Test
+    public void newFileDeclaresNamespacesAsBefore() throws Exception {
+        facade.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
+        String content = new String(Files.readAllBytes(xmlFile.toPath()), StandardCharsets.UTF_8);
+        int icf = content.indexOf("xmlns:icf=");
+        int ri = content.indexOf("xmlns:ri=");
+        int xsi = content.indexOf("xmlns:xsi=");
+        AssertJUnit.assertTrue(content, 0 < icf && icf < ri && ri < xsi);
+    }
+
+    @Test
+    public void valuesSurviveASaveAndAReload() throws Exception {
+        String lastName = "  a>b&c<d \"q\" 'a' \u00e9\u4e2d \r\n\ttab ]]> \ud83d\ude00  ";
+        Set<Attribute> attributes = getRequiredAccountAttributes();
+        attributes.remove(AttributeUtil.find(ATTR_ACCOUNT_LAST_NAME, attributes));
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, lastName));
+        Uid uid = facade.create(ObjectClass.ACCOUNT, attributes, null);
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        Document saved = factory.newDocumentBuilder().parse(xmlFile);
+        NodeList inFile = saved.getElementsByTagNameNS("*", ATTR_ACCOUNT_LAST_NAME);
+        AssertJUnit.assertEquals(1, inFile.getLength());
+        AssertJUnit.assertEquals(lastName, inFile.item(0).getTextContent());
+
+        ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        AssertJUnit.assertEquals(lastName,
+                AttributeUtil.getStringValue(read.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+    }
+
+    @Test
+    public void disposeNeverUsesNodeLists() throws Exception {
+        XMLHandlerImpl handler = newHandler();
+        handler.init(); // no file yet: a new document, which dispose() saves
+        Document document = handler.getDocument();
+        // Two children: Xerces allocates no node list cache for a parent with fewer.
+        document.getDocumentElement().appendChild(document.createElementNS(RI_NAMESPACE, "ri:" + ACCOUNT_TYPE));
+        document.getDocumentElement().appendChild(document.createElementNS(RI_NAMESPACE, "ri:" + ACCOUNT_TYPE));
+        handler.dispose();
+        AssertJUnit.assertTrue(xmlFile.exists());
+        AssertJUnit.assertFalse(XercesNodeLists.used(handler.getDocument()));
+    }
+
+    @Test
+    public void whitespaceOnlyValueIsEmptiedBySave() throws Exception {
+        Set<Attribute> attributes = getRequiredAccountAttributes();
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, " \t "));
+        facade.create(ObjectClass.ACCOUNT, attributes, null);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        NodeList inFile = factory.newDocumentBuilder().parse(xmlFile).getElementsByTagNameNS("*", ATTR_ACCOUNT_FIRST_NAME);
+        AssertJUnit.assertEquals(1, inFile.getLength());
+        AssertJUnit.assertNull(inFile.item(0).getFirstChild());
+    }
+
+    @Test
+    public void deletingTheLastEntryLeavesAnEmptyContainer() throws Exception {
+        // The removed entry leaves two whitespace-only Text nodes side by side; both go.
+        writeAccounts(xmlFile, "alice");
+        facade.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"), null);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        AssertJUnit.assertNull(factory.newDocumentBuilder().parse(xmlFile).getDocumentElement().getFirstChild());
+    }
+
+    @Test
+    public void failedSaveIsLoggedAndThrown() throws Exception {
+        XMLHandlerImpl handler = newHandler();
+        handler.init(); // no file yet: a new document in memory
+        AssertJUnit.assertTrue(xmlFile.mkdir()); // a directory cannot be written, whoever runs the test
+        try {
+            String errors = captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
+            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: java.io.FileNotFoundException"));
+        } finally {
+            AssertJUnit.assertTrue(xmlFile.delete());
+        }
+    }
+
+    @Test
+    public void saveWithoutADocumentSavesNothing() throws Exception {
+        XMLHandlerImpl handler = newHandler(); // init() never ran, as when it fails on the first load
+        String out = captureStdOut(handler::dispose);
+        AssertJUnit.assertTrue(out, out.contains("Exit serialize: nothing to save"));
+        AssertJUnit.assertFalse(xmlFile.exists());
+    }
+
+    @Test
+    public void successfulSaveLogsItsExit() throws Exception {
+        XMLHandlerImpl handler = newHandler();
+        handler.init(); // no file yet: a new document in memory
+        String out = captureStdOut(handler::dispose);
+        AssertJUnit.assertTrue(out, out.contains("Exit serialize" + System.lineSeparator()));
+    }
+
+    @Test
+    public void readOnlyOperationsDoNotRewriteTheFile() throws Exception {
+        Uid uid = facade.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
+        FileTime past = FileTime.fromMillis(System.currentTimeMillis() - 3_600_000L);
+        Files.setLastModifiedTime(xmlFile.toPath(), past);
+        byte[] before = Files.readAllBytes(xmlFile.toPath());
+
+        facade.search(ObjectClass.ACCOUNT, null, new TestResultsHandler(), null);
+        facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        facade.authenticate(ObjectClass.ACCOUNT, ATTR_ACCOUNT_VALUE_NAME,
+                new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
+        facade.test();
+        facade.schema();
+
+        AssertJUnit.assertEquals(past, Files.getLastModifiedTime(xmlFile.toPath()));
+        AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+    }
+
+    @Test(timeOut = 60_000L)
+    public void initOnOneFileDoesNotWaitForAnotherFile() throws Exception {
+        File slowFile = getRandomXMLFile();
+        String key = slowFile.getCanonicalPath();
+        BlockingHandler blocking = new BlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(blocking));
+        }
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> slow = executor.submit(() -> new XMLConnector().init(configFor(slowFile)));
+            AssertJUnit.assertTrue(blocking.entered.await(10, TimeUnit.SECONDS));
+
+            Future<?> other = executor.submit(() -> {
+                XMLConnector connector = new XMLConnector();
+                connector.init(configFor(getRandomXMLFile()));
+                connector.dispose();
+            });
+            other.get(10, TimeUnit.SECONDS);
+
+            blocking.release.countDown();
+            slow.get(10, TimeUnit.SECONDS);
+        } finally {
+            blocking.release.countDown();
+            executor.shutdownNow();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
+    private static XMLConfiguration configFor(File xmlFile) {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(xmlFile);
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
+        return config;
+    }
+
+    /** A handler whose init() blocks until released. */
+    private static final class BlockingHandler implements XMLHandler {
+        final CountDownLatch entered = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+
+        @Override
+        public XMLHandler init() {
+            entered.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return this;
+        }
+
+        @Override
+        public void dispose() {
+        }
+
+        @Override
+        public Uid create(ObjectClass objClass, Set<Attribute> attributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void delete(ObjectClass objClass, Uid uid) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid authenticate(String username, GuardedString password) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isSupportUid(ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private XMLHandlerImpl newHandler() {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(xmlFile);
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
+        SchemaParser parser = new SchemaParser(XMLConnector.class, XSD_SCHEMA_FILEPATH);
+        return new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+    }
+
+    private static String captureStdOut(Runnable action) throws UnsupportedEncodingException {
+        PrintStream original = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
+    }
+
+    private static String captureStdErr(Runnable action) throws UnsupportedEncodingException {
+        PrintStream original = System.err;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(buffer, true, StandardCharsets.UTF_8.name()));
+        try {
+            action.run();
+        } finally {
+            System.setErr(original);
+        }
+        return buffer.toString(StandardCharsets.UTF_8.name());
     }
 }
