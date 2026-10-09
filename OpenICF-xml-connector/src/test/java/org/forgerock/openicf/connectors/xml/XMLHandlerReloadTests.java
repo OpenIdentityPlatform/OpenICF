@@ -471,6 +471,26 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void ownPartialWriteOfAnUnchangedNewDocumentIsNotLoaded() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init(); // the checksum is now the loaded file's, which no partial write matches
+        Files.delete(file.toPath());
+        impl.init(); // no file: a new document in memory, with no change to save but the file itself
+        org.w3c.dom.Element root = impl.getDocument().getDocumentElement();
+        // An unpaired surrogate: no encoder can write it
+        org.w3c.dom.Node unwritable = root.appendChild(impl.getDocument().createTextNode("x\uD800y"));
+        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
+        assertTrue(file.exists()); // the failed save left a partial file
+        root.removeChild(unwritable);
+
+        impl.init(); // not a file that appeared: not parsed
+        impl.dispose();
+        assertEquals(namesInFile(file), List.of());
+    }
+
+    @Test
     public void savedNewFileIsNotWrittenAgain() throws Exception {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));

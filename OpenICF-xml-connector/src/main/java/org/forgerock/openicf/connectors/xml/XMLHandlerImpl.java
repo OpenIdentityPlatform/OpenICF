@@ -119,7 +119,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public XMLHandler init() {
-        if (document == null || fileAppearedOverNewDocument() || (!dirty && fileHasChanged())) {
+        if (document == null || fileAppearedOverNewDocument() || (!dirty && !unsavedNewFile && fileHasChanged())) {
             buildDocument();
         }
         return this;
@@ -128,8 +128,9 @@ public class XMLHandlerImpl implements XMLHandler {
     /**
      * A file that appears where a new document is not saved yet wins over the document: the
      * connector never loaded it, so a save would replace a whole store. Changes made to the new
-     * document are dropped, and the next load reads the file. A partial write of a failed save is
-     * not such a file: the save takes the stamp again.
+     * document are dropped, and the next load reads the file. This is the only reload of a new
+     * document: a partial write of its failed save is not such a file, because the save takes the
+     * stamp again.
      */
     private boolean fileAppearedOverNewDocument() {
         File xmlFile = config.getXmlFilePath();
