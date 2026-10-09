@@ -119,30 +119,33 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public XMLHandler init() {
-        if (document == null || fileAppearedOverNewDocument() || (!dirty && !unsavedNewFile && fileHasChanged())) {
+        if (document != null && fileAppearedOverNewDocument()) {
+            dropNewDocument();
+        }
+        if (document == null || (!dirty && !unsavedNewFile && fileHasChanged())) {
             buildDocument();
         }
         return this;
     }
 
     /**
-     * A file that appears where a new document is not saved yet wins over the document: the
-     * connector never loaded it, so a save would replace a whole store. The new document is
-     * dropped with its changes; the next init() loads the file, or starts a new document if the
-     * file is gone. This is the only reload of a new document: a partial write of its failed save
-     * is not such a file, because the save takes the stamp again.
+     * Whether a file appeared where a new document is not saved yet. Such a file wins over the
+     * document: the connector never loaded it, so a save would replace a whole store. This is the
+     * only reload of a new document: a partial write of its failed save is not such a file,
+     * because the save takes the stamp again.
      */
     private boolean fileAppearedOverNewDocument() {
         File xmlFile = config.getXmlFilePath();
-        if (!unsavedNewFile || !xmlFile.isFile() || stamp.sameState(FileStamp.read(xmlFile))) {
-            return false;
-        }
+        return unsavedNewFile && xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile));
+    }
+
+    /** Drops the new document with its changes: the next init() loads the file, or starts a new document if the file is gone. */
+    private void dropNewDocument() {
         if (dirty) {
-            log.error("{0} appeared before the new document was saved; keeping the file and dropping the changes made to the new document", xmlFile);
+            log.error("{0} appeared before the new document was saved; keeping the file and dropping the changes made to the new document", config.getXmlFilePath());
             dirty = false;
         }
         document = null;
-        return true;
     }
 
     /** A racy stamp cannot rule out a same-size write in the same tick, so the content decides. */
@@ -419,6 +422,7 @@ public class XMLHandlerImpl implements XMLHandler {
         }
         File xmlFile = config.getXmlFilePath();
         if (fileAppearedOverNewDocument()) {
+            dropNewDocument();
             log.info("Exit {0}: {1} appeared before the new document was saved; not overwriting it", method, xmlFile);
             return;
         }
