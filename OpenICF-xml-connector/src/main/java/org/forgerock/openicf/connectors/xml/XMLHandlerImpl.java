@@ -119,10 +119,28 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public XMLHandler init() {
-        if (document == null || (!dirty && fileHasChanged())) {
+        if (document == null || fileAppearedOverNewDocument() || (!dirty && fileHasChanged())) {
             buildDocument();
         }
         return this;
+    }
+
+    /**
+     * A file that appears where a new document is not saved yet wins over the document: the
+     * connector never loaded it, so a save would replace a whole store. Changes made to the new
+     * document are dropped, and the next load reads the file. A partial write of a failed save is
+     * not such a file: the save takes the stamp again.
+     */
+    private boolean fileAppearedOverNewDocument() {
+        File xmlFile = config.getXmlFilePath();
+        if (!unsavedNewFile || !xmlFile.isFile() || stamp.sameState(FileStamp.read(xmlFile))) {
+            return false;
+        }
+        if (dirty) {
+            log.error("{0} appeared before the new document was saved; keeping the file and dropping the changes made to the new document", xmlFile);
+            dirty = false;
+        }
+        return true;
     }
 
     /** A racy stamp cannot rule out a same-size write in the same tick, so the content decides. */
@@ -398,6 +416,10 @@ public class XMLHandlerImpl implements XMLHandler {
             return;
         }
         File xmlFile = config.getXmlFilePath();
+        if (fileAppearedOverNewDocument()) {
+            log.info("Exit {0}: {1} appeared before the new document was saved; not overwriting it", method, xmlFile);
+            return;
+        }
         if (!stamp.sameState(FileStamp.read(xmlFile))) {
             log.error("UPDATE COLLISION: {0} has changed since it was loaded or saved; overwriting it with the data in memory.", xmlFile);
         }

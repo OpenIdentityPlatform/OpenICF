@@ -378,6 +378,82 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void changedNewDocumentGivesWayToAFileThatAppears() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        assertTrue(file.mkdir());
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
+        } finally {
+            assertTrue(file.delete());
+        }
+
+        // A store appears (a restore, a late mount): the connector never loaded it, so a save would replace all of it.
+        writeAccounts(file, "alice", "carol");
+        setModified(file, now() - HOUR);
+        byte[] appeared = Files.readAllBytes(file.toPath());
+        String errors = captureStdErr(() -> assertEquals(names(), List.of("alice", "carol")));
+        assertEquals(Files.readAllBytes(file.toPath()), appeared);
+        assertTrue(errors.contains(file + " appeared before the new document was saved"), errors);
+    }
+
+    @Test
+    public void fileThatAppearsDuringAChangeToANewDocumentIsKept() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        writeAccounts(file, "alice", "carol");
+        setModified(file, now() - HOUR);
+        byte[] appeared = Files.readAllBytes(file.toPath());
+        String errors = captureStdErr(handler::dispose);
+        assertEquals(Files.readAllBytes(file.toPath()), appeared);
+        assertTrue(errors.contains(file + " appeared before the new document was saved"), errors);
+        assertEquals(names(), List.of("alice", "carol"));
+    }
+
+    @Test
+    public void fileThatAppearsDuringTheFirstCallIsNotOverwritten() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: an empty new document
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] appeared = Files.readAllBytes(file.toPath());
+        captureStdErr(handler::dispose);
+        assertEquals(Files.readAllBytes(file.toPath()), appeared);
+        assertEquals(names(), List.of("alice"));
+    }
+
+    @Test
+    public void changeToANewDocumentIsSavedOnceThePathIsFree() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        handler.create(ObjectClass.ACCOUNT, account("bob"));
+        assertTrue(file.mkdir());
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
+        } finally {
+            assertTrue(file.delete());
+        }
+
+        // The stamp changed, but no file appeared: the change is saved.
+        captureStdErr(() -> assertEquals(names(), List.of("bob")));
+        assertEquals(namesInFile(file), List.of("bob"));
+    }
+
+    @Test
+    public void ownPartialWriteOfANewDocumentIsSavedAgain() throws Exception {
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init(); // no file: a new document in memory
+        Set<Attribute> bob = account("bob");
+        bob.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
+        impl.create(ObjectClass.ACCOUNT, bob);
+        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
+        assertTrue(file.exists()); // the failed save left a partial file
+        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose)); // not a file that appeared: saved again
+    }
+
+    @Test
     public void savedNewFileIsNotWrittenAgain() throws Exception {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));
