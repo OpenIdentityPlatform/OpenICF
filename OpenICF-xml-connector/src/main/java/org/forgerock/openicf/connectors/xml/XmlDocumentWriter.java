@@ -77,17 +77,20 @@ final class XmlDocumentWriter {
                 continue;
             }
             Node parent = node.getParentNode();
-            List<Node> run = new ArrayList<Node>();
-            StringBuilder value = new StringBuilder();
-            Node after = node;
-            while (after != null && isText(after)) {
-                run.add(after);
-                value.append(after.getNodeValue());
-                after = after.getNextSibling();
-            }
-            boolean blank = isXmlWhitespace(value);
-            if (blank || run.size() > 1 || node.getNodeType() != Node.TEXT_NODE) {
-                if (!blank) {
+            Node after = node.getNextSibling();
+            if (node.getNodeType() == Node.TEXT_NODE && (after == null || !isText(after))) {
+                // A lone Text node, the usual case: nothing to merge.
+                if (isXmlWhitespace(node.getNodeValue())) {
+                    parent.removeChild(node);
+                }
+            } else {
+                List<Node> run = new ArrayList<Node>();
+                StringBuilder value = new StringBuilder();
+                for (after = node; after != null && isText(after); after = after.getNextSibling()) {
+                    run.add(after);
+                    value.append(after.getNodeValue());
+                }
+                if (!isXmlWhitespace(value)) {
                     parent.insertBefore(parent.getOwnerDocument().createTextNode(value.toString()), node);
                 }
                 for (Node n : run) {
