@@ -383,12 +383,11 @@ public class XMLHandlerImpl implements XMLHandler {
             log.error("UPDATE COLLUSION: File has been modified after read into memory and the data in memory has not been synced before.");
         }
 
+        // Callers hold the handler's write lock.
+        Document saved = getDocument();
         try {
-            // Callers hold the handler's write lock; the document monitor stays as before.
-            synchronized (document) {
-                XmlDocumentWriter.normalizeText(document);
-                XmlDocumentWriter.write(document, config.getXmlFilePath());
-            }
+            XmlDocumentWriter.normalizeText(saved);
+            XmlDocumentWriter.write(saved, config.getXmlFilePath());
             log.info("Saving changes to xml file");
         } catch (TransformerException | SAXException | IOException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);

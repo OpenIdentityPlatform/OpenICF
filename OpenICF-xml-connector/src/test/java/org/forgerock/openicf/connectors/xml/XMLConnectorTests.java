@@ -333,6 +333,13 @@ public class XMLConnectorTests {
     }
 
     @Test
+    public void saveWithoutADocumentThrowsConnectorException() {
+        XMLHandlerImpl handler = newHandler(); // init() never ran, as when it fails on the first load
+        ConnectorException e = expectThrows(ConnectorException.class, handler::dispose);
+        AssertJUnit.assertTrue(e.getMessage(), e.getMessage().startsWith("Data file does not exists: "));
+    }
+
+    @Test
     public void successfulSaveLogsItsExit() throws Exception {
         XMLHandlerImpl handler = newHandler();
         handler.init(); // no file yet: a new document in memory
