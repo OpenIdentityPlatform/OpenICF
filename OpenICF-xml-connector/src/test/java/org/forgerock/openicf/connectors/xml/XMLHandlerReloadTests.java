@@ -259,7 +259,8 @@ public class XMLHandlerReloadTests {
 
     @Test
     public void relativeDtdIsResolvedUnderANonAsciiDirectory() throws Exception {
-        File dir = new File(file.getParentFile(), "\u0434\u0438\u0440-\u00e9");
+        // Unique per run: a directory left by a killed run would otherwise turn this test into a skip.
+        File dir = new File(file.getParentFile(), "\u0434\u0438\u0440-\u00e9-" + file.getName());
         try {
             // A path the platform encoding cannot hold (Linux under LANG=C) throws here, before anything is created.
             Files.createDirectory(dir.toPath());
