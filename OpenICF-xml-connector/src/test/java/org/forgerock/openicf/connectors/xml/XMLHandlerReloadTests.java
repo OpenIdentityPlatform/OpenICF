@@ -245,6 +245,17 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void whitespaceOnlyValueOfALoadedFileIsAbsent() throws Exception {
+        writeAccounts(file, "alice");
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("<ri:lastname>Last-alice</ri:lastname>", "<ri:lastname> </ri:lastname>");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+        setModified(file, now() - HOUR);
+        // As after a save and a reload: the blank text is gone, and so is the attribute.
+        assertEquals(call(h -> lastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), Collections.singletonList(null));
+    }
+
+    @Test
     public void relativeDtdIsResolvedUnderANonAsciiDirectory() throws Exception {
         File dir = new File(file.getParentFile(), "\u0434\u0438\u0440-\u00e9");
         try {
