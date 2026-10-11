@@ -20,20 +20,28 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
 package org.forgerock.openicf.connectors.xml;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -41,6 +49,7 @@ import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ResultsHandler;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.w3c.dom.NodeList;
 
 public class XmlConnectorTestUtil {
 
@@ -112,6 +121,56 @@ public class XmlConnectorTestUtil {
     static {
         XSD_SCHEMA_FILEPATH = getTestFile("ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4.xsd");
         ICF_SCHEMA_FILEPATH = getTestFile("resource-schema-1.xsd");
+    }
+
+    public static final String ICF_NAMESPACE = "http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd";
+    public static final String RI_NAMESPACE = "http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4";
+
+    /**
+     * Writes a store file with one account per name: __UID__ uid-NAME, __NAME__ NAME, lastname
+     * Last-NAME and __PASSWORD__ secret-NAME. Names of equal length give files of equal size. An
+     * existing file is rewritten in place, so it keeps its file key.
+     */
+    public static void writeAccounts(File file, String... names) throws IOException {
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
+                .append("<icf:OpenICFContainer xmlns:icf=\"").append(ICF_NAMESPACE)
+                .append("\" xmlns:ri=\"").append(RI_NAMESPACE).append("\">\n");
+        for (String name : names) {
+            xml.append("  <ri:__ACCOUNT__>\n")
+                    .append("    <icf:__UID__>uid-").append(name).append("</icf:__UID__>\n")
+                    .append("    <icf:__NAME__>").append(name).append("</icf:__NAME__>\n")
+                    .append("    <ri:lastname>Last-").append(name).append("</ri:lastname>\n")
+                    .append("    <icf:__PASSWORD__>secret-").append(name).append("</icf:__PASSWORD__>\n")
+                    .append("  </ri:__ACCOUNT__>\n");
+        }
+        xml.append("</icf:OpenICFContainer>\n");
+        Files.write(file.toPath(), xml.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static void setModified(File file, long millis) throws IOException {
+        Files.setLastModifiedTime(file.toPath(), FileTime.fromMillis(millis));
+    }
+
+    /** The __NAME__ values in the file, in document order, read by a parser of its own. */
+    public static List<String> namesInFile(File file) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        NodeList names = factory.newDocumentBuilder().parse(file).getElementsByTagNameNS(ICF_NAMESPACE, Name.NAME);
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < names.getLength(); i++) {
+            result.add(names.item(i).getTextContent());
+        }
+        return result;
+    }
+
+    /** The attributes of a new account with the values {@link #writeAccounts} writes; create assigns its own __UID__. */
+    public static Set<Attribute> account(String name) {
+        Set<Attribute> attributes = new HashSet<Attribute>();
+        attributes.add(AttributeBuilder.build(Name.NAME, name));
+        attributes.add(AttributeBuilder.buildPassword(("secret-" + name).toCharArray()));
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-" + name));
+        return attributes;
     }
 
     public static File getRandomXMLFile() {
