@@ -21,6 +21,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.identityconnectors.common.security.GuardedString;
@@ -50,7 +51,7 @@ public class XMLConnectorBundleIT {
         ConnectorInfoManager manager = ConnectorInfoManagerFactory.getInstance().getLocalManager(bundle.toURI().toURL());
         assertEquals(manager.getConnectorInfos().size(), 1);
         APIConfiguration api = manager.getConnectorInfos().get(0).createDefaultAPIConfiguration();
-        File xmlFile = getRandomXMLFile();
+        File xmlFile = getRandomXMLFile(); // no file yet: the first call creates a new document under the bundle's loader
         ConfigurationProperties properties = api.getConfigurationProperties();
         properties.setPropertyValue("xmlFilePath", xmlFile);
         properties.setPropertyValue("xsdFilePath", XSD_SCHEMA_FILEPATH);
@@ -64,8 +65,14 @@ public class XMLConnectorBundleIT {
         Uid bob = facade.authenticate(ObjectClass.ACCOUNT, "bob", new GuardedString("secret-bob".toCharArray()), null);
         facade.delete(ObjectClass.ACCOUNT, bob, null);
 
-        assertEquals(namesInFile(xmlFile), Collections.singletonList("alice"));
+        assertEquals(namesInFile(xmlFile), Arrays.asList("alice"));
         ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, alice, null);
         assertEquals(AttributeUtil.getStringValue(read.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)), "Changed");
+
+        // An outside edit, so that a call parses a file under the bundle's loader.
+        writeAccounts(xmlFile, "carol");
+        setModified(xmlFile, System.currentTimeMillis() - 3_600_000L);
+        ConnectorObject carol = facade.getObject(ObjectClass.ACCOUNT, new Uid("uid-carol"), null);
+        assertEquals(carol.getName().getNameValue(), "carol");
     }
 }

@@ -36,8 +36,12 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
@@ -285,15 +289,14 @@ public class XMLConnectorTests {
 
     @Test
     public void disposeNeverUsesNodeLists() throws Exception {
-        String icf = "http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd";
-        String ri = "http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4";
-        Files.write(xmlFile.toPath(), ("<icf:OpenICFContainer xmlns:icf='" + icf + "' xmlns:ri='" + ri + "'>\n"
-                + "  <ri:__ACCOUNT__>\n    <icf:__NAME__>a</icf:__NAME__>\n  </ri:__ACCOUNT__>\n"
-                + "  <ri:__ACCOUNT__>\n    <icf:__NAME__>b</icf:__NAME__>\n  </ri:__ACCOUNT__>\n"
-                + "</icf:OpenICFContainer>\n").getBytes(StandardCharsets.UTF_8));
         XMLHandlerImpl handler = newHandler();
-        handler.init();
+        handler.init(); // no file yet: a new document, which dispose() saves
+        Document document = handler.getDocument();
+        // Two children: Xerces allocates no node list cache for a parent with fewer.
+        document.getDocumentElement().appendChild(document.createElementNS(RI_NAMESPACE, "ri:" + ACCOUNT_TYPE));
+        document.getDocumentElement().appendChild(document.createElementNS(RI_NAMESPACE, "ri:" + ACCOUNT_TYPE));
         handler.dispose();
+        AssertJUnit.assertTrue(xmlFile.exists());
         AssertJUnit.assertFalse(XercesNodeLists.used(handler.getDocument()));
     }
 
@@ -333,10 +336,11 @@ public class XMLConnectorTests {
     }
 
     @Test
-    public void saveWithoutADocumentThrowsConnectorException() {
+    public void saveWithoutADocumentSavesNothing() throws Exception {
         XMLHandlerImpl handler = newHandler(); // init() never ran, as when it fails on the first load
-        ConnectorException e = expectThrows(ConnectorException.class, handler::dispose);
-        AssertJUnit.assertTrue(e.getMessage(), e.getMessage().startsWith("Data file does not exists: "));
+        String out = captureStdOut(handler::dispose);
+        AssertJUnit.assertTrue(out, out.contains("Exit serialize: nothing to save"));
+        AssertJUnit.assertFalse(xmlFile.exists());
     }
 
     @Test
@@ -345,6 +349,114 @@ public class XMLConnectorTests {
         handler.init(); // no file yet: a new document in memory
         String out = captureStdOut(handler::dispose);
         AssertJUnit.assertTrue(out, out.contains("Exit serialize" + System.lineSeparator()));
+    }
+
+    @Test
+    public void readOnlyOperationsDoNotRewriteTheFile() throws Exception {
+        Uid uid = facade.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
+        FileTime past = FileTime.fromMillis(System.currentTimeMillis() - 3_600_000L);
+        Files.setLastModifiedTime(xmlFile.toPath(), past);
+        byte[] before = Files.readAllBytes(xmlFile.toPath());
+
+        facade.search(ObjectClass.ACCOUNT, null, new TestResultsHandler(), null);
+        facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        facade.authenticate(ObjectClass.ACCOUNT, ATTR_ACCOUNT_VALUE_NAME,
+                new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
+        facade.test();
+        facade.schema();
+
+        AssertJUnit.assertEquals(past, Files.getLastModifiedTime(xmlFile.toPath()));
+        AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+    }
+
+    @Test(timeOut = 60_000L)
+    public void initOnOneFileDoesNotWaitForAnotherFile() throws Exception {
+        File slowFile = getRandomXMLFile();
+        String key = slowFile.getCanonicalPath();
+        BlockingHandler blocking = new BlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(blocking));
+        }
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> slow = executor.submit(() -> new XMLConnector().init(configFor(slowFile)));
+            AssertJUnit.assertTrue(blocking.entered.await(10, TimeUnit.SECONDS));
+
+            Future<?> other = executor.submit(() -> {
+                XMLConnector connector = new XMLConnector();
+                connector.init(configFor(getRandomXMLFile()));
+                connector.dispose();
+            });
+            other.get(10, TimeUnit.SECONDS);
+
+            blocking.release.countDown();
+            slow.get(10, TimeUnit.SECONDS);
+        } finally {
+            blocking.release.countDown();
+            executor.shutdownNow();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
+    private static XMLConfiguration configFor(File xmlFile) {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(xmlFile);
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        config.setCreateFileIfNotExists(true);
+        return config;
+    }
+
+    /** A handler whose init() blocks until released. */
+    private static final class BlockingHandler implements XMLHandler {
+        final CountDownLatch entered = new CountDownLatch(1);
+        final CountDownLatch release = new CountDownLatch(1);
+
+        @Override
+        public XMLHandler init() {
+            entered.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return this;
+        }
+
+        @Override
+        public void dispose() {
+        }
+
+        @Override
+        public Uid create(ObjectClass objClass, Set<Attribute> attributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void delete(ObjectClass objClass, Uid uid) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Uid authenticate(String username, GuardedString password) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isSupportUid(ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     private XMLHandlerImpl newHandler() {
