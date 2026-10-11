@@ -203,7 +203,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     private Query createComparisonQuery(String name, String operator, String value) {
         Query query = new QueryImpl();
-        query.set(new ComparisonQuery("$x/" + name, operator, escape(value)));
+        query.set(new ComparisonQuery("$x/" + name, operator, value, escape(value)));
 
         return query;
     }

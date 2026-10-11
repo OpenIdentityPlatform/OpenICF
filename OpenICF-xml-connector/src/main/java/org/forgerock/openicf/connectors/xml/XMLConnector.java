@@ -27,7 +27,6 @@
 package org.forgerock.openicf.connectors.xml;
 
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
-import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import java.io.IOException;
 import java.util.Collection;
@@ -215,9 +214,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     @Override
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
         synchronized (getLock()) {
-            QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
-            Collection<ConnectorObject> hits = xmlInstanceHandler.search(
-                    queryBuilder.toString(), objClass);
+            Collection<ConnectorObject> hits = xmlInstanceHandler.search(query, objClass);
             int count = 0;
             for (ConnectorObject hit : hits) {
                 count++;

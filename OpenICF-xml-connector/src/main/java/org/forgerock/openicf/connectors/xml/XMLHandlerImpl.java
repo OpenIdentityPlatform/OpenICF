@@ -31,7 +31,11 @@ import org.forgerock.openicf.connectors.xml.util.ElementIdentifierFieldType;
 import org.forgerock.openicf.connectors.xml.util.GuardedStringAccessor;
 import org.forgerock.openicf.connectors.xml.util.NamespaceLookupUtil;
 import org.forgerock.openicf.connectors.xml.util.XmlHandlerUtil;
+import org.forgerock.openicf.connectors.xml.query.ComparisonQuery;
+import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.query.XQueryHandler;
+import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
+import org.forgerock.openicf.connectors.xml.query.abstracts.QueryPart;
 import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
@@ -423,6 +427,62 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     @Override
+    public Collection<ConnectorObject> search(Query query, ObjectClass objClass) {
+        List<Element> entries = indexedEntries(query, objClass);
+        if (entries == null) {
+            return search(new QueryBuilder(query, objClass).toString(), objClass);
+        }
+        return toConnectorObjects(entries, objClass);
+    }
+
+    /** The entries a query selects if the index can tell, in document order; {@code null} otherwise. */
+    List<Element> indexedEntries(Query query, ObjectClass objClass) {
+        String objectClass = objClass.getObjectClassValue();
+        if (query == null || query.getParts().isEmpty()) {
+            return entryIndex.all(objectClass);
+        }
+        String field = identifierField(query);
+        if (field == null) {
+            return null;
+        }
+        String value = ((ComparisonQuery) query.getParts().iterator().next()).getValue();
+        return entryIndex.find(objectClass, field, value);
+    }
+
+    /**
+     * The identifier a query compares, if the query is exactly {@code $x/icf:__UID__ = 'v'} or
+     * {@code $x/icf:__NAME__ = 'v'} after XMLFilterTranslator's rewrites; otherwise {@code null}.
+     */
+    static String identifierField(Query query) {
+        if (query.getParts().size() != 1) {
+            return null;
+        }
+        QueryPart part = query.getParts().iterator().next();
+        if (!(part instanceof ComparisonQuery)) {
+            return null;
+        }
+        ComparisonQuery comparison = (ComparisonQuery) part;
+        if (!"=".equals(comparison.getOperator()) || comparison.getValue() == null) {
+            return null;
+        }
+        for (String field : new String[] {Uid.NAME, Name.NAME}) {
+            if (("$x/" + ICF_NAMESPACE_PREFIX + ":" + field).equals(comparison.getName())) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private List<ConnectorObject> toConnectorObjects(Collection<Element> entries, ObjectClass objClass) {
+        ConnectorObjectCreator creator = newConnectorObjectCreator(objClass);
+        List<ConnectorObject> results = new ArrayList<ConnectorObject>(entries.size());
+        for (Element entry : entries) {
+            results.add(creator.createConnectorObject(entry));
+        }
+        return results;
+    }
+
+    @Override
     public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
@@ -444,6 +504,7 @@ public class XMLHandlerImpl implements XMLHandler {
         Document saved = getDocument();
         try {
             XmlDocumentWriter.normalizeText(saved);
+            entryIndex.rebuild(saved); // the normalization can change an identifier's value
             checksum = XmlDocumentWriter.write(saved, xmlFile);
             dirty = false;
             unsavedNewFile = false;

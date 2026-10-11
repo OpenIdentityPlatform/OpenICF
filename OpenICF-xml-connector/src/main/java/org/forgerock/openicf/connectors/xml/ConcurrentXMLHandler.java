@@ -30,6 +30,7 @@ import com.sun.xml.xsom.XSSchemaSet;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -96,6 +97,19 @@ public class ConcurrentXMLHandler implements XMLHandler {
 
     @Override
     public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
+        Collection<ConnectorObject> result = null;
+        lock.readLock().lock();
+        try {
+            result = proxy.search(query, objectClass);
+        }
+        finally {
+            lock.readLock().unlock();
+        }
+        return result;
+    }
+
+    @Override
+    public Collection<ConnectorObject> search(Query query, ObjectClass objectClass) {
         Collection<ConnectorObject> result = null;
         lock.readLock().lock();
         try {

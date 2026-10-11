@@ -47,6 +47,19 @@ public class ComparisonQuery implements QueryPart {
         this.literal = literal;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    /** The compared value, or {@code null} if only an XQuery literal was given. */
+    public String getValue() {
+        return value;
+    }
+
     @Override
     public String getExpression() {
         return String.format("%s %s %s", this.name, this.operator, this.literal);
