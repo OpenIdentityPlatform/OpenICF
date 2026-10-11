@@ -80,7 +80,7 @@ public class XmlDocumentWriterTests {
     public void normalizedDocumentIsLeftAlone() throws Exception {
         Document document = parse("<r><a>x</a><b/></r>");
         Node text = only(document, "a").getFirstChild();
-        XmlDocumentWriter.normalizeText(document);
+        assertFalse(XmlDocumentWriter.normalizeText(document));
         assertSingleText(only(document, "a"), "x");
         assertSame(only(document, "a").getFirstChild(), text);
     }
@@ -88,7 +88,7 @@ public class XmlDocumentWriterTests {
     @Test
     public void whitespaceOnlyTextIsRemoved() throws Exception {
         Document document = parse("<r>\n  <a> \t&#13;&#10;</a>\n  <c/>\n  <b>x</b>\n</r>");
-        XmlDocumentWriter.normalizeText(document);
+        assertTrue(XmlDocumentWriter.normalizeText(document));
         assertNull(only(document, "a").getFirstChild());
         for (Node n = document.getDocumentElement().getFirstChild(); n != null; n = n.getNextSibling()) {
             assertEquals(n.getNodeType(), Node.ELEMENT_NODE);
@@ -122,14 +122,14 @@ public class XmlDocumentWriterTests {
     @Test
     public void adjacentTextAndCdataBecomeOneTextNode() throws Exception {
         Document document = parse("<r><a> <![CDATA[x<y]]> </a></r>");
-        XmlDocumentWriter.normalizeText(document);
+        assertTrue(XmlDocumentWriter.normalizeText(document));
         assertSingleText(only(document, "a"), " x<y ");
     }
 
     @Test
     public void singleCdataBecomesATextNode() throws Exception {
         Document document = parse("<r><b><![CDATA[z]]></b></r>");
-        XmlDocumentWriter.normalizeText(document);
+        assertTrue(XmlDocumentWriter.normalizeText(document));
         assertSingleText(only(document, "b"), "z");
     }
 

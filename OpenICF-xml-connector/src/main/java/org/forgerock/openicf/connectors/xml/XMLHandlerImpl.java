@@ -503,8 +503,9 @@ public class XMLHandlerImpl implements XMLHandler {
         // Callers hold the handler's write lock.
         Document saved = getDocument();
         try {
-            XmlDocumentWriter.normalizeText(saved);
-            entryIndex.rebuild(saved); // the normalization can change an identifier's value
+            if (XmlDocumentWriter.normalizeText(saved)) {
+                entryIndex.rebuild(saved); // a whitespace-only identifier may have just become empty
+            }
             checksum = XmlDocumentWriter.write(saved, xmlFile);
             dirty = false;
             unsavedNewFile = false;

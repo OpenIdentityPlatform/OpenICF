@@ -53,6 +53,7 @@ import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import javax.xml.xquery.XQResultSequence;
 
@@ -211,6 +212,21 @@ public class XMLHandlerIndexTests {
         assertIndexAgreesWithXQuery("failed rename");
         handler.dispose();
         assertIndexAgreesWithXQuery("saved");
+    }
+
+    @Test
+    public void saveRebuildsTheIndexWhenItEmptiesAnIdentifier() throws Exception {
+        // Stands in for a schema with an optional __NAME__, where update can store a whitespace-only name
+        // that the save empties; the handler would not accept the value, so the DOM is edited directly.
+        Element u1 = handler.indexedEntries(equalsQuery("__UID__", "u1"), ObjectClass.ACCOUNT).get(0);
+        for (Node child = u1.getFirstChild(); child != null; child = child.getNextSibling()) {
+            if (child.getNodeType() == Node.ELEMENT_NODE && Name.NAME.equals(child.getLocalName())) {
+                child.setTextContent("  ");
+            }
+        }
+        handler.create(ObjectClass.ACCOUNT, account("x"));
+        handler.dispose();
+        assertIndexAgreesWithXQuery("saved after a name became blank");
     }
 
     @Test
