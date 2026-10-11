@@ -21,8 +21,10 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -36,6 +38,7 @@ import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
 import org.testng.annotations.Test;
 
 /**
@@ -56,12 +59,20 @@ public class XMLConnectorBundleIT {
         properties.setPropertyValue("xmlFilePath", xmlFile);
         properties.setPropertyValue("xsdFilePath", XSD_SCHEMA_FILEPATH);
         properties.setPropertyValue("createFileIfNotExists", true);
+        // The framework re-applies the filter to what the connector returns; off, a query the connector ignores shows.
+        api.getResultsHandlerConfiguration().setEnableFilteredResultsHandler(false);
         ConnectorFacade facade = ConnectorFacadeFactory.getInstance().newInstance(api);
 
         Uid alice = facade.create(ObjectClass.ACCOUNT, account("alice"), null);
         facade.create(ObjectClass.ACCOUNT, account("bob"), null);
         facade.update(ObjectClass.ACCOUNT, alice,
                 Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Changed")), null);
+        // A filter on a non-identifier attribute is the one call that still runs Saxon XQJ under the bundle's loader.
+        List<ConnectorObject> changed = new ArrayList<ConnectorObject>();
+        facade.search(ObjectClass.ACCOUNT, FilterBuilder.equalTo(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Changed")),
+                changed::add, null);
+        assertEquals(changed.size(), 1);
+        assertEquals(changed.get(0).getUid().getUidValue(), alice.getUidValue());
         Uid bob = facade.authenticate(ObjectClass.ACCOUNT, "bob", new GuardedString("secret-bob".toCharArray()), null);
         facade.delete(ObjectClass.ACCOUNT, bob, null);
 

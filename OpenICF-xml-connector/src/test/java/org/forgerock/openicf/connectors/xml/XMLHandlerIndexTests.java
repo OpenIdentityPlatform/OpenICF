@@ -230,6 +230,14 @@ public class XMLHandlerIndexTests {
     }
 
     @Test
+    public void queryOnAnotherAttributeFallsBackToXQuery() {
+        Query query = new XMLFilterTranslator(true).createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L2")), false);
+        assertNull(handler.indexedEntries(query, ObjectClass.ACCOUNT));
+        assertEquals(describe(handler.search(query, ObjectClass.ACCOUNT)), Arrays.asList("u2|dup"));
+    }
+
+    @Test
     public void onlySingleEqualityOnAnIdentifierGoesToTheIndex() {
         XMLFilterTranslator translator = new XMLFilterTranslator(true);
         Query byName = translator.createEqualsExpression(new EqualsFilter(AttributeBuilder.build(Name.NAME, "x")), false);
