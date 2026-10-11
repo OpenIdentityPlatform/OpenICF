@@ -57,6 +57,8 @@ final class EntryIndex {
     private final Map<String, TreeMap<Long, Element>> byClass = new HashMap<String, TreeMap<Long, Element>>();
     private final Map<Key, List<Indexed>> byIdentifier = new HashMap<Key, List<Indexed>>();
     private long nextOrder;
+    /** Whether the last rebuilt document has the container as its root; otherwise nothing is indexed. */
+    private boolean containerRoot;
 
     EntryIndex(String icfNamespace, String riNamespace, Set<String> objectClasses) {
         this.icfNamespace = icfNamespace;
@@ -70,11 +72,13 @@ final class EntryIndex {
         byClass.clear();
         byIdentifier.clear();
         nextOrder = 0;
+        containerRoot = false;
         Element root = document.getDocumentElement();
         if (root == null || !icfNamespace.equals(root.getNamespaceURI())
                 || !XMLHandlerImpl.ICF_CONTAINER_TAG.equals(root.getLocalName())) {
             return;
         }
+        containerRoot = true;
         Node node = root.getFirstChild();
         while (node != null) {
             Node child = null;
@@ -112,7 +116,9 @@ final class EntryIndex {
 
     /** Records an entry just appended as the last child of the container. */
     void added(Element entry) {
-        add(entry);
+        if (containerRoot) {
+            add(entry);
+        }
     }
 
     /** Forgets {@code subtree} if it is an entry, and every entry inside it. */

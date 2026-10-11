@@ -102,6 +102,18 @@ public class EntryIndexTests {
     }
 
     @Test
+    public void addedEntryOfADocumentWithAnotherRootIsNotIndexed() throws Exception {
+        Document document = parseRaw("<ri:other xmlns:ri='" + RI_NAMESPACE + "' xmlns:icf='" + ICF_NAMESPACE + "'/>");
+        EntryIndex index = index(parse(account("u0", "z"))); // a container first: a rebuild must forget it
+        index.rebuild(document);
+        Element added = (Element) document.importNode(parse(account("u1", "a")).getDocumentElement().getFirstChild(), true);
+        document.getDocumentElement().appendChild(added);
+        index.added(added);
+        assertTrue(index.all(ACCOUNT).isEmpty());
+        assertNull(index.first(ACCOUNT, NAME, "a"));
+    }
+
+    @Test
     public void addedEntryComesLast() throws Exception {
         Document document = parse(account("u1", "dup"));
         EntryIndex index = index(document);
