@@ -36,8 +36,11 @@ public class XMLConnectorScaleTests {
 
     private static final int ENTRIES = 20_000;
     private static final int LOOKUPS = 20;
-    /** About 1 s with the index; quadratic lookups need well over a minute. */
-    private static final long LIMIT_MILLIS = 10_000L;
+    /**
+     * About 0.3 s with the index (measured: 343 ms); the lookups routed around it take tens of
+     * seconds (measured: 24.8 s and 30.0 s with two routing mutants).
+     */
+    private static final long LIMIT_MILLIS = 5_000L;
 
     @Test(timeOut = 120_000L)
     public void identifierLookupsOnALargeFileStayFast() throws Exception {
