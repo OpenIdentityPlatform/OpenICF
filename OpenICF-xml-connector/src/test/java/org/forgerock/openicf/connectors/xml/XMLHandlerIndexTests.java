@@ -20,6 +20,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
 import java.io.File;
@@ -40,6 +41,7 @@ import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -235,6 +237,19 @@ public class XMLHandlerIndexTests {
                 new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L2")), false);
         assertNull(handler.indexedEntries(query, ObjectClass.ACCOUNT));
         assertEquals(describe(handler.search(query, ObjectClass.ACCOUNT)), Arrays.asList("u2|dup"));
+    }
+
+    @Test
+    public void searchWithoutADocumentFailsAsBefore() throws Exception {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(getRandomXMLFile());
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        SchemaParser parser = new SchemaParser(XMLConnector.class, config.getXsdFilePath());
+        XMLHandlerImpl uninitialized = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+        ConnectorException byIdentifier = expectThrows(ConnectorException.class,
+                () -> uninitialized.search(equalsQuery("__NAME__", "dup"), ObjectClass.ACCOUNT));
+        assertTrue(byIdentifier.getMessage().startsWith("Data file does not exists: "), byIdentifier.getMessage());
+        expectThrows(ConnectorException.class, () -> uninitialized.search(new QueryImpl(), ObjectClass.ACCOUNT));
     }
 
     @Test

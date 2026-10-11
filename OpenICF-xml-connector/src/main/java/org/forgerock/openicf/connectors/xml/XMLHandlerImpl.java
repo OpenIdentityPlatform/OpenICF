@@ -437,6 +437,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /** The entries a query selects if the index can tell, in document order; {@code null} otherwise. */
     List<Element> indexedEntries(Query query, ObjectClass objClass) {
+        getDocument(); // throws if there is no document, as the XQuery search did
         String objectClass = objClass.getObjectClassValue();
         if (query == null || query.getParts().isEmpty()) {
             return entryIndex.all(objectClass);
