@@ -38,8 +38,8 @@ import org.w3c.dom.Node;
 /**
  * Finds entries by {@code __UID__} and {@code __NAME__} without walking the document.
  * <p>
- * Gives the entries, in the order, that {@code /icf:OpenICFContainer//ri:CLASS} filtered by
- * {@code $x/icf:FIELD = 'VALUE'} gives: entries at any depth below the container, an entry under
+ * Gives the same entries, in the same order, as {@code /icf:OpenICFContainer//ri:CLASS} filtered by
+ * {@code $x/icf:FIELD = 'VALUE'}: entries at any depth below the container, an entry under
  * every value of its identifier child elements, values compared as they are, results in document
  * order, so the first of several duplicates comes first.
  * <p>
