@@ -199,9 +199,9 @@ final class XmlDocumentWriter {
      * Returns the namespace to use for {@code prefix}: the node's own, declared here if it is not
      * in scope yet. A prefix the element already declares, by an attribute or for its name, keeps
      * that namespace; the old serializer did the same for the default namespace, and for any other
-     * prefix let the node's own namespace win. A DOM level 1 node has
-     * none: with a prefix it takes the namespace in scope, and an element without one is in no
-     * namespace, as the old serializer wrote it.
+     * prefix let the node's own namespace win. A DOM level 1 node has none: with a prefix it takes
+     * the namespace in scope, and an element without one is in no namespace, as the old serializer
+     * wrote it.
      */
     private static String bind(String prefix, String uri, TransformerHandler out, NamespaceSupport namespaces,
             List<String> declared) throws SAXException {
