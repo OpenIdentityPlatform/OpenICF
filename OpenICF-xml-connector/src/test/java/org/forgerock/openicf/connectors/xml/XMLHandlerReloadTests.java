@@ -631,7 +631,13 @@ public class XMLHandlerReloadTests {
         }
     }
 
-    /** A store path whose stamp cannot be read while {@code statFails} is set: the stamp is then read through a link to itself. */
+    /**
+     * A store path whose stamp cannot be read while {@code statFails} is set: the stamp is then read through a link to itself.
+     * Only callers of {@code toPath()} are diverted, such as {@code FileStamp}. {@code isFile()} and
+     * {@code XmlDocumentWriter.write}, which opens a {@code FileOutputStream} on the path string, still reach the store.
+     * A writer that opened {@code toPath()} would fail on the link before writing a byte, and the test would find no
+     * partial file.
+     */
     private static final class StatFailingFile extends File {
 
         boolean statFails;
