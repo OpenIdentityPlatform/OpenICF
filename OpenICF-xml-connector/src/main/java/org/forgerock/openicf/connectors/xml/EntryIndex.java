@@ -117,15 +117,12 @@ final class EntryIndex {
 
     /** Forgets {@code subtree} if it is an entry, and every entry inside it. */
     void removed(Node subtree) {
-        Node node = subtree;
-        while (node != null) {
-            Indexed indexed = entries.remove(node);
+        for (Element entry : entriesIn(subtree)) {
+            Indexed indexed = entries.remove(entry);
             if (indexed != null) {
                 byClass.get(indexed.objectClass).remove(indexed.order);
                 unlink(indexed);
             }
-            Node child = node.getFirstChild();
-            node = child != null ? child : following(node, subtree);
         }
     }
 
@@ -154,29 +151,35 @@ final class EntryIndex {
 
     /** Indexes {@code subtree} if it is an entry, and every entry inside it, in document order. */
     private void addAll(Node subtree) {
+        for (Element entry : entriesIn(subtree)) {
+            add(entry);
+        }
+    }
+
+    private boolean holdsUnindexedEntry(Node subtree) {
+        for (Element entry : entriesIn(subtree)) {
+            if (!entries.containsKey(entry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** {@code subtree} if it is an entry, and every entry inside it, in document order. */
+    private List<Element> entriesIn(Node subtree) {
+        List<Element> found = new ArrayList<Element>();
         Node node = subtree;
         while (node != null) {
             Node child = null;
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 if (isEntry(node)) {
-                    add((Element) node);
+                    found.add((Element) node);
                 }
                 child = node.getFirstChild();
             }
             node = child != null ? child : following(node, subtree);
         }
-    }
-
-    private boolean holdsUnindexedEntry(Node subtree) {
-        Node node = subtree;
-        while (node != null) {
-            if (node.getNodeType() == Node.ELEMENT_NODE && isEntry(node) && !entries.containsKey(node)) {
-                return true;
-            }
-            Node child = node.getFirstChild();
-            node = child != null ? child : following(node, subtree);
-        }
-        return false;
+        return found;
     }
 
     private void add(Element entry) {
