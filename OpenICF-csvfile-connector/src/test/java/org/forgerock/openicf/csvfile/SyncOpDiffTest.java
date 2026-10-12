@@ -68,6 +68,10 @@ public class SyncOpDiffTest {
 
     private static final SyncToken SNAPSHOT_TOKEN = new SyncToken(1300000000000L);
 
+    // the second row of each uid differs from the first one, so even a fresh copy of this file reports two UPDATEs
+    private static final String[] DUPLICATE_UIDS =
+            { HEADER, "x,Jane,Doe,pw1", "x,Jane,Changed,pw1", "y,John,Roe,pw2", "y,John,Other,pw2" };
+
     private Path dir;
 
     private File csvFile;
@@ -250,6 +254,24 @@ public class SyncOpDiffTest {
         expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(SNAPSHOT_TOKEN, () -> { }));
 
         assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void failedSyncKeepsTheSnapshotOfADeltaItHandled() throws Exception {
+        givenLive(DUPLICATE_UIDS);
+
+        List<SyncToken> handled = syncFailingAfter(1);
+
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + handled.get(0).getValue()));
+    }
+
+    @Test
+    public void syncWhoseFirstDeltaFailsDeletesTheSnapshotItCopied() throws Exception {
+        givenLive(DUPLICATE_UIDS);
+
+        syncFailingAfter(0);
+
+        assertEquals(snapshots(), Collections.emptyList());
     }
 
     @Test
@@ -436,6 +458,19 @@ public class SyncOpDiffTest {
                 throw new IllegalStateException("token not stored");
             }
         }, null);
+    }
+
+    // syncs from no token, handles the given number of deltas and fails on the next one
+    private List<SyncToken> syncFailingAfter(final int count) {
+        final List<SyncToken> handled = new ArrayList<>();
+        expectThrows(IllegalStateException.class, () -> connector().sync(ObjectClass.ACCOUNT, null, delta -> {
+            if (handled.size() == count) {
+                throw new IllegalStateException("delta not stored");
+            }
+            handled.add(delta.getToken());
+            return true;
+        }, null));
+        return handled;
     }
 
     private void setDirMode(Set<PosixFilePermission> mode) {

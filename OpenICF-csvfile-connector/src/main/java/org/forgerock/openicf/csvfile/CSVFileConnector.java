@@ -575,7 +575,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     if (!index.containsKey(uid)) {
                         if (reportDeletes) {
                             SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);
-                            if (handler.handle(delta)) {
+                            final boolean more = handler.handle(delta);
+                            // the handler may have stored the token of this delta, so its snapshot must stay
+                            copies.clear();
+                            if (more) {
                                 changesProcessed = true;
                             } else {
                                 // keep reading: the next pass needs the fingerprints of the remaining origin rows
@@ -622,7 +625,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                         continue;
                     }
                     SyncDelta delta = generateSyncDelta(type, newConnectorObject(entry), token);
-                    if (!handler.handle(delta)) {
+                    final boolean more = handler.handle(delta);
+                    // the handler may have stored the token of this delta, so its snapshot must stay
+                    copies.clear();
+                    if (!more) {
                         break;
                     }
                     changesProcessed = true;
