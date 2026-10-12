@@ -19,6 +19,7 @@ import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.ICF_NAME
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.RI_NAMESPACE;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
@@ -167,6 +168,45 @@ public class EntryIndexTests {
         index.rekeyed(entry);
         assertNull(index.first(ACCOUNT, NAME, "a"));
         assertEquals(uidOf(index.first(ACCOUNT, UID, "u1")), "u1");
+    }
+
+    /** create writes every attribute as a child element, so a schema attribute named like a class gives an entry. */
+    @Test
+    public void addedEntryBringsTheEntriesInsideItAlong() throws Exception {
+        Document document = parse(account("u1", "a"));
+        EntryIndex index = index(document);
+        Element added = (Element) document.importNode(parse("<ri:__GROUP__><icf:__NAME__>g</icf:__NAME__>"
+                + account("u2", "b") + "</ri:__GROUP__>").getDocumentElement().getFirstChild(), true);
+        document.getDocumentElement().appendChild(added);
+        index.added(added);
+        assertEquals(uids(index.all(ACCOUNT)), Arrays.asList("u1", "u2"));
+        assertEquals(uidOf(index.first(ACCOUNT, NAME, "b")), "u2");
+        assertSame(index.first(GROUP, NAME, "g"), added);
+    }
+
+    @Test
+    public void entryWrittenIntoAnEarlierEntryTakesItsPlaceInDocumentOrder() throws Exception {
+        Document document = parse("<ri:__GROUP__><icf:__NAME__>g</icf:__NAME__></ri:__GROUP__>" + account("u1", "a"));
+        EntryIndex index = index(document);
+        Element group = index.first(GROUP, NAME, "g");
+        group.appendChild(document.importNode(parse(account("u2", "b")).getDocumentElement().getFirstChild(), true));
+        index.rekeyed(group);
+        assertEquals(uids(index.all(ACCOUNT)), Arrays.asList("u2", "u1"));
+        assertEquals(uidOf(index.first(ACCOUNT, NAME, "b")), "u2");
+        assertSame(index.first(GROUP, NAME, "g"), group);
+    }
+
+    @Test
+    public void rekeyedEntryWithoutANewEntryInsideLeavesTheRestAlone() throws Exception {
+        // Stands in for a count of rebuilds: one would read u2's unreported rename and walk the whole document.
+        Document document = parse("<ri:__ACCOUNT__><icf:__UID__>u1</icf:__UID__><icf:__NAME__>a</icf:__NAME__>"
+                + "<ri:lastname>" + account("u3", "c") + "</ri:lastname></ri:__ACCOUNT__>" + account("u2", "b"));
+        EntryIndex index = index(document);
+        Element second = index.first(ACCOUNT, UID, "u2");
+        second.getElementsByTagNameNS(ICF_NAMESPACE, NAME).item(0).setTextContent("renamed");
+        index.rekeyed(index.first(ACCOUNT, UID, "u1"));
+        assertSame(index.first(ACCOUNT, NAME, "b"), second);
+        assertNull(index.first(ACCOUNT, NAME, "renamed"));
     }
 
     private static EntryIndex index(Document document) {

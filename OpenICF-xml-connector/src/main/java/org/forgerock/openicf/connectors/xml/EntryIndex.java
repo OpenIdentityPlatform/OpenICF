@@ -46,6 +46,10 @@ import org.w3c.dom.Node;
  * Every change to the entries must be reported through {@link #added}, {@link #removed} and
  * {@link #rekeyed}. Nothing is computed on read, so concurrent readers are safe while nobody
  * changes the index; callers change it under the handler's write lock only.
+ * <p>
+ * An entry inside another entry's identifier element is part of that identifier's value, but
+ * changing or removing it re-keys only the inner entry: the outer one keeps its old key until the
+ * next {@link #rebuild}. The connector never writes that shape; only a hand-edited file has it.
  */
 final class EntryIndex {
 
@@ -79,17 +83,7 @@ final class EntryIndex {
             return;
         }
         containerRoot = true;
-        Node node = root.getFirstChild();
-        while (node != null) {
-            Node child = null;
-            if (node.getNodeType() == Node.ELEMENT_NODE) {
-                if (isEntry(node)) {
-                    add((Element) node);
-                }
-                child = node.getFirstChild();
-            }
-            node = child != null ? child : following(node, root);
-        }
+        addAll(root);
     }
 
     Element first(String objectClass, String field, String value) {
@@ -114,10 +108,10 @@ final class EntryIndex {
         return ordered == null ? Collections.<Element>emptyList() : new ArrayList<Element>(ordered.values());
     }
 
-    /** Records an entry just appended as the last child of the container. */
+    /** Records an entry just appended as the last child of the container, and every entry inside it. */
     void added(Element entry) {
         if (containerRoot) {
-            add(entry);
+            addAll(entry);
         }
     }
 
@@ -135,18 +129,54 @@ final class EntryIndex {
         }
     }
 
-    /** Reads the identifiers of an entry whose children have changed; its place in document order stays. */
+    /**
+     * Reads the identifiers of an entry whose children have changed; its place in document order stays.
+     * A new entry inside it, such as a value element named like an object class, has no place in
+     * document order yet, so the whole index is rebuilt then.
+     */
     void rekeyed(Element entry) {
         Indexed indexed = entries.get(entry);
-        if (indexed != null) {
-            unlink(indexed);
-            indexed.keys = keysOf(entry, indexed.objectClass);
-            link(indexed);
+        if (indexed == null) {
+            return;
         }
+        if (holdsUnindexedEntry(entry)) {
+            rebuild(entry.getOwnerDocument());
+            return;
+        }
+        unlink(indexed);
+        indexed.keys = keysOf(entry, indexed.objectClass);
+        link(indexed);
     }
 
     private boolean isEntry(Node node) {
         return riNamespace.equals(node.getNamespaceURI()) && objectClasses.contains(node.getLocalName());
+    }
+
+    /** Indexes {@code subtree} if it is an entry, and every entry inside it, in document order. */
+    private void addAll(Node subtree) {
+        Node node = subtree;
+        while (node != null) {
+            Node child = null;
+            if (node.getNodeType() == Node.ELEMENT_NODE) {
+                if (isEntry(node)) {
+                    add((Element) node);
+                }
+                child = node.getFirstChild();
+            }
+            node = child != null ? child : following(node, subtree);
+        }
+    }
+
+    private boolean holdsUnindexedEntry(Node subtree) {
+        Node node = subtree;
+        while (node != null) {
+            if (node.getNodeType() == Node.ELEMENT_NODE && isEntry(node) && !entries.containsKey(node)) {
+                return true;
+            }
+            Node child = node.getFirstChild();
+            node = child != null ? child : following(node, subtree);
+        }
+        return false;
     }
 
     private void add(Element entry) {
