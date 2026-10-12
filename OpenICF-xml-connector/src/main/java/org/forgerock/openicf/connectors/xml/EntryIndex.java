@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -195,18 +194,24 @@ final class EntryIndex {
         link(indexed);
     }
 
-    /** Identifier child elements only: {@code $x/icf:FIELD} selects children, not descendants. */
-    private Set<Key> keysOf(Element entry, String objectClass) {
-        Set<Key> keys = new LinkedHashSet<Key>();
+    /**
+     * Identifier child elements only: {@code $x/icf:FIELD} selects children, not descendants. Each key
+     * once; an array, because an entry usually has one or two.
+     */
+    private Key[] keysOf(Element entry, String objectClass) {
+        List<Key> keys = new ArrayList<Key>(2);
         for (Node child = entry.getFirstChild(); child != null; child = child.getNextSibling()) {
             if (child.getNodeType() == Node.ELEMENT_NODE && icfNamespace.equals(child.getNamespaceURI())) {
                 String field = child.getLocalName();
                 if (Uid.NAME.equals(field) || Name.NAME.equals(field)) {
-                    keys.add(new Key(objectClass, field, child.getTextContent()));
+                    Key key = new Key(objectClass, field, child.getTextContent());
+                    if (!keys.contains(key)) {
+                        keys.add(key);
+                    }
                 }
             }
         }
-        return keys;
+        return keys.toArray(new Key[keys.size()]);
     }
 
     private void link(Indexed indexed) {
@@ -238,9 +243,9 @@ final class EntryIndex {
         final Element element;
         final String objectClass;
         final long order;
-        Set<Key> keys;
+        Key[] keys;
 
-        Indexed(Element element, String objectClass, long order, Set<Key> keys) {
+        Indexed(Element element, String objectClass, long order, Key[] keys) {
             this.element = element;
             this.objectClass = objectClass;
             this.order = order;
