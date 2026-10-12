@@ -713,10 +713,9 @@ public class XMLHandlerImpl implements XMLHandler {
         return entryIndex.first(objClass.getObjectClassValue(), identifierElement(objClass, identifierField), uid.getUidValue());
     }
 
-    /** The identifier element to match; XMLFilterTranslator rewrites __UID__ to __NAME__ the same way. */
+    /** The identifier element to match, by the rule that XMLFilterTranslator applies to a search. */
     private String identifierElement(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
-        String field = getElementIdentifierField(objClass, identifierField);
-        return Uid.NAME.equals(field) && !isSupportUid(objClass) ? Name.NAME : field;
+        return XMLFilterTranslator.elementName(getElementIdentifierField(objClass, identifierField), isSupportUid(objClass));
     }
 
     private boolean entryExists(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
