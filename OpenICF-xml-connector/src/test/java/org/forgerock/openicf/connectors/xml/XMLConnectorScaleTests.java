@@ -58,24 +58,32 @@ public class XMLConnectorScaleTests {
         config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
         ConnectorFacade facade = ConnectorFacadeFactory.getInstance()
                 .newInstance(TestHelpers.createTestConfiguration(XMLConnector.class, config));
-        facade.test(); // parses the file and builds the index; not timed
+        try {
+            facade.test(); // parses the file and builds the index; not timed
 
-        long start = System.nanoTime();
-        for (int i = 0; i < LOOKUPS; i++) {
-            String name = names[ENTRIES - 1 - i * (ENTRIES / LOOKUPS)];
-            TestResultsHandler byName = new TestResultsHandler();
-            facade.search(ObjectClass.ACCOUNT, new EqualsFilter(new Name(name)), byName, null);
-            assertEquals(byName.getResultSize(), 1, name);
-            assertNotNull(facade.getObject(ObjectClass.ACCOUNT, new Uid("uid-" + name), null), name);
-            assertEquals(facade.authenticate(ObjectClass.ACCOUNT, name,
-                    new GuardedString(("secret-" + name).toCharArray()), null).getUidValue(), "uid-" + name);
+            long start = System.nanoTime();
+            for (int i = 0; i < LOOKUPS; i++) {
+                String name = names[ENTRIES - 1 - i * (ENTRIES / LOOKUPS)];
+                TestResultsHandler byName = new TestResultsHandler();
+                facade.search(ObjectClass.ACCOUNT, new EqualsFilter(new Name(name)), byName, null);
+                assertEquals(byName.getResultSize(), 1, name);
+                assertNotNull(facade.getObject(ObjectClass.ACCOUNT, new Uid("uid-" + name), null), name);
+                assertEquals(facade.authenticate(ObjectClass.ACCOUNT, name,
+                        new GuardedString(("secret-" + name).toCharArray()), null).getUidValue(), "uid-" + name);
+            }
+            TestResultsHandler missing = new TestResultsHandler();
+            facade.search(ObjectClass.ACCOUNT, new EqualsFilter(new Name("no-such-user")), missing, null);
+            assertEquals(missing.getResultSize(), 0);
+            long elapsedMillis = (System.nanoTime() - start) / 1_000_000L;
+
+            assertTrue(elapsedMillis < LIMIT_MILLIS,
+                    (3 * LOOKUPS + 1) + " lookups in " + ENTRIES + " entries took " + elapsedMillis + " ms");
+        } finally {
+            // The handler cache is static: without this, the DOM and the index stay for the rest of the run.
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(file.getCanonicalPath());
+            }
+            file.delete();
         }
-        TestResultsHandler missing = new TestResultsHandler();
-        facade.search(ObjectClass.ACCOUNT, new EqualsFilter(new Name("no-such-user")), missing, null);
-        assertEquals(missing.getResultSize(), 0);
-        long elapsedMillis = (System.nanoTime() - start) / 1_000_000L;
-
-        assertTrue(elapsedMillis < LIMIT_MILLIS,
-                (3 * LOOKUPS + 1) + " lookups in " + ENTRIES + " entries took " + elapsedMillis + " ms");
     }
 }
