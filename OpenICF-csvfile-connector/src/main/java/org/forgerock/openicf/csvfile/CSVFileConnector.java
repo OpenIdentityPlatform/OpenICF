@@ -562,6 +562,12 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 boolean reportDeletes = true;
                 while ((entry = reader.read(originHeader, processors)) != null) {
                     final String uid = (String) entry.get(config.getHeaderUid());
+                    if (StringUtil.isBlank(uid)) {
+                        // a row without a uid was never reported, so there is no object to delete
+                        log.warn("Skipping line {0} of {1}: it has no {2} value",
+                                String.valueOf(reader.getLineNumber()), syncOrigin.toString(), config.getHeaderUid());
+                        continue;
+                    }
                     if (!index.containsKey(uid)) {
                         if (reportDeletes) {
                             SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);

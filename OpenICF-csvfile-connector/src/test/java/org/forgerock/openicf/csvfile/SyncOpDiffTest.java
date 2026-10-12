@@ -16,10 +16,13 @@
 package org.forgerock.openicf.csvfile;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -176,6 +179,25 @@ public class SyncOpDiffTest {
         assertEquals(e.getMessage(), "Line 3 of " + csvFile + " has no uid value");
     }
 
+    @Test(dataProvider = "rowsWithoutUid")
+    public void snapshotRowWithoutUidIsSkipped(String row) throws Exception {
+        givenSnapshot(HEADER, "u1,Ann,Roe,pw0", row, "u3,Bob,Poe,pw3");
+        givenLive(HEADER, "u3,Bob,Poe,pw3", "u2,Jane,Doe,pw1");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Arrays.asList("DELETE u1 [Ann, Roe, pw0]", "CREATE u2 [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void skippedSnapshotRowIsLogged() throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1", ",John,Roe,pw2");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+
+        String output = captureStdOut(() -> sync(SNAPSHOT_TOKEN));
+
+        assertTrue(output.contains("Skipping line 3 of "
+                + dir.resolve(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()) + ": it has no uid value"), output);
+    }
+
     @Test
     public void rowWithWrongColumnCountFailsSyncBeforeAnyDelta() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
@@ -296,6 +318,19 @@ public class SyncOpDiffTest {
 
     private void givenLive(String... lines) throws IOException {
         Files.write(csvFile.toPath(), Arrays.asList(lines), StandardCharsets.UTF_8);
+    }
+
+    // the connector logs through StdOutLogger, which reads System.out on every call
+    private static String captureStdOut(Runnable action) {
+        final PrintStream original = System.out;
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(buffer, true));
+        try {
+            action.run();
+        } finally {
+            System.setOut(original);
+        }
+        return buffer.toString();
     }
 
     private CSVFileConnector connector() {
