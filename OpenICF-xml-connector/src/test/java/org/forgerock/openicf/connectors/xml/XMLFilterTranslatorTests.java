@@ -19,6 +19,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -347,5 +348,20 @@ public class XMLFilterTranslatorTests {
 
         return new ArrayList<ConnectorObject>(
                 xmlHandler.search(new QueryBuilder(query, ObjectClass.ACCOUNT).toString(), ObjectClass.ACCOUNT));
+    }
+
+    @Test
+    public void comparisonExpressionsAreUnchanged() {
+        AssertJUnit.assertEquals("$x/icf:__NAME__ = 'O''B'", expression(filterTranslator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_NAME, "O'B")), false)));
+        AssertJUnit.assertEquals("$x/icf:__NAME__ != 'x'", expression(filterTranslator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_NAME, "x")), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname >= 'M'", expression(filterTranslator.createGreaterThanOrEqualExpression(
+                new GreaterThanOrEqualFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+    }
+
+    private static String expression(Query query) {
+        AssertJUnit.assertEquals(1, query.getParts().size());
+        return query.getParts().iterator().next().getExpression();
     }
 }

@@ -64,11 +64,15 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
     }
 
     private String getAttributeName(Attribute attribute) {
-        String attrName = attribute.getName();
-        if (!preferUidOverName && Uid.NAME.equals(attrName)) {
-            attrName = Name.NAME;
-        }
-        return attrName;
+        return elementName(attribute.getName(), preferUidOverName);
+    }
+
+    /**
+     * The element an attribute is stored in: {@code __UID__} is stored as {@code __NAME__} unless
+     * {@code preferUidOverName}. XMLHandlerImpl looks entries up by the same rule.
+     */
+    static String elementName(String attributeName, boolean preferUidOverName) {
+        return !preferUidOverName && Uid.NAME.equals(attributeName) ? Name.NAME : attributeName;
     }
 
     @Override
@@ -203,7 +207,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     private Query createComparisonQuery(String name, String operator, String value) {
         Query query = new QueryImpl();
-        query.set(new ComparisonQuery("$x/" + name, operator, escape(value)));
+        query.set(new ComparisonQuery("$x/" + name, operator, value, escape(value)));
 
         return query;
     }

@@ -67,8 +67,13 @@ final class XmlDocumentWriter {
      * {@code //text()[normalize-space(.) = '']}, removed only its first node. Any other run
      * becomes one Text node with the same value, which is what a reload of the written file gives.
      * Text inside an entity reference is left alone: the DOM makes it read-only.
+     *
+     * @return {@code true} if the tree changed: a whitespace-only run was removed, or a run of
+     *         several nodes or a lone CDATA section was replaced by a Text node; a lone Text node
+     *         that holds more than whitespace is no change
      */
-    static void normalizeText(Node root) {
+    static boolean normalizeText(Node root) {
+        boolean changed = false;
         Node node = root.getFirstChild();
         while (node != null) {
             if (!isText(node)) {
@@ -82,6 +87,7 @@ final class XmlDocumentWriter {
                 // A lone Text node, the usual case: nothing to merge.
                 if (isXmlWhitespace(node.getNodeValue())) {
                     parent.removeChild(node);
+                    changed = true;
                 }
             } else {
                 List<Node> run = new ArrayList<Node>();
@@ -96,9 +102,11 @@ final class XmlDocumentWriter {
                 for (Node n : run) {
                     parent.removeChild(n);
                 }
+                changed = true;
             }
             node = after != null ? after : following(parent, root);
         }
+        return changed;
     }
 
     /**

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<icf:OpenICFContainer xmlns:icf="http://openidm.forgerock.com/xml/ns/public/resource/openicf/resource-schema-1.xsd" xmlns:ri="http://openidm.forgerock.com/xml/ns/public/resource/instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4" xmlns:x="urn:other">
+  <ri:__ACCOUNT__><icf:__UID__>u1</icf:__UID__><icf:__NAME__>dup</icf:__NAME__><ri:lastname>L1</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u2</icf:__UID__><icf:__NAME__>dup</icf:__NAME__><ri:lastname>L2</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>no-uid</icf:__NAME__><ri:lastname>L3</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u4</icf:__UID__><icf:__NAME__>two-a</icf:__NAME__><icf:__NAME__>two-b</icf:__NAME__><ri:lastname>L4</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u5</icf:__UID__><icf:__NAME__>  padded  </icf:__NAME__><ri:lastname>L5</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u6</icf:__UID__><icf:__NAME__><![CDATA[cd]]>ata</icf:__NAME__><ri:lastname>L6</ri:lastname></ri:__ACCOUNT__>
+  <x:__ACCOUNT__><icf:__UID__>u7</icf:__UID__><icf:__NAME__>foreign</icf:__NAME__></x:__ACCOUNT__>
+  <ri:wrapper><ri:__ACCOUNT__><icf:__UID__>u8</icf:__UID__><icf:__NAME__>nested</icf:__NAME__><ri:lastname>L8</ri:lastname></ri:__ACCOUNT__></ri:wrapper>
+  <ri:__ACCOUNT__><icf:__UID__>u9</icf:__UID__><ri:lastname>L9</ri:lastname><icf:__NAME__>late</icf:__NAME__><x:__NAME__>foreign-name</x:__NAME__></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u10</icf:__UID__><icf:__NAME__>  </icf:__NAME__><ri:lastname>L10</ri:lastname></ri:__ACCOUNT__>
+  <ri:__ACCOUNT__><icf:__UID__>u11</icf:__UID__><icf:__NAME__>holder</icf:__NAME__><ri:lastname><ri:__ACCOUNT__><icf:__UID__>u12</icf:__UID__><icf:__NAME__>inner</icf:__NAME__></ri:__ACCOUNT__></ri:lastname></ri:__ACCOUNT__>
+  <ri:__GROUP__><icf:__NAME__>dup</icf:__NAME__><icf:__DESCRIPTION__>D</icf:__DESCRIPTION__><icf:__SHORT_NAME__>S</icf:__SHORT_NAME__></ri:__GROUP__>
+</icf:OpenICFContainer>

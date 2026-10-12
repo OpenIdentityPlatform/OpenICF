@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -27,6 +28,7 @@ package org.forgerock.openicf.connectors.xml;
 
 import java.util.Collection;
 import java.util.Set;
+import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
@@ -42,6 +44,8 @@ public interface XMLHandler {
     void delete(final ObjectClass objClass, final Uid uid);
 
     Collection<ConnectorObject> search(String query, ObjectClass objectClass);
+
+    Collection<ConnectorObject> search(Query query, ObjectClass objectClass);
 
     Uid authenticate(String username, GuardedString password);
 

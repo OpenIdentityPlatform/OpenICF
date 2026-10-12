@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -30,19 +31,37 @@ import org.forgerock.openicf.connectors.xml.query.abstracts.QueryPart;
 
 public class ComparisonQuery implements QueryPart {
 
-    private String name;
-    private String operator;
-    private String value;
-   
-    
-    public ComparisonQuery(String name, String operator, String value) {
+    private final String name;
+    private final String operator;
+    private final String value;
+    private final String literal;
+
+    public ComparisonQuery(String name, String operator, String literal) {
+        this(name, operator, null, literal);
+    }
+
+    public ComparisonQuery(String name, String operator, String value, String literal) {
         this.name = name;
         this.operator = operator;
         this.value = value;
+        this.literal = literal;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    /** The compared value, or {@code null} if only an XQuery literal was given. */
+    public String getValue() {
+        return value;
     }
 
     @Override
     public String getExpression() {
-        return String.format("%s %s %s", this.name, this.operator, this.value);
+        return String.format("%s %s %s", this.name, this.operator, this.literal);
     }
 }

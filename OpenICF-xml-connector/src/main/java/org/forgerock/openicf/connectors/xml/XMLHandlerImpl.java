@@ -31,9 +31,11 @@ import org.forgerock.openicf.connectors.xml.util.ElementIdentifierFieldType;
 import org.forgerock.openicf.connectors.xml.util.GuardedStringAccessor;
 import org.forgerock.openicf.connectors.xml.util.NamespaceLookupUtil;
 import org.forgerock.openicf.connectors.xml.util.XmlHandlerUtil;
-import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
+import org.forgerock.openicf.connectors.xml.query.ComparisonQuery;
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.query.XQueryHandler;
+import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
+import org.forgerock.openicf.connectors.xml.query.abstracts.QueryPart;
 import com.sun.xml.xsom.XSSchema;
 import com.sun.xml.xsom.XSSchemaSet;
 
@@ -44,6 +46,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,10 +76,8 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
-import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
-import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -93,6 +94,7 @@ public class XMLHandlerImpl implements XMLHandler {
     private Schema connSchema;
     private XSSchema icfSchema;
     private XSSchema riSchema;
+    private final EntryIndex entryIndex;
     /** Whether the document holds user changes that the file does not have yet. */
     private boolean dirty;
     /** Whether the document was created in memory because the file did not exist, and is not saved yet. */
@@ -114,6 +116,12 @@ public class XMLHandlerImpl implements XMLHandler {
         this.connSchema = connSchema;
         this.riSchema = xsdSchemas.getSchema(1);
         this.icfSchema = xsdSchemas.getSchema(2);
+
+        Set<String> objectClasses = new HashSet<String>();
+        for (ObjectClassInfo info : connSchema.getObjectClassInfo()) {
+            objectClasses.add(info.getType());
+        }
+        entryIndex = new EntryIndex(icfSchema.getTargetNamespace(), riSchema.getTargetNamespace(), objectClasses);
 
         NamespaceLookupUtil.INSTANCE.initialize(icfSchema, riSchema);
     }
@@ -276,6 +284,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         markDirty();
         getDocument().getDocumentElement().appendChild(objElement);
+        entryIndex.added(objElement);
 
         log.info("Exit {0}", method);
 
@@ -292,10 +301,12 @@ public class XMLHandlerImpl implements XMLHandler {
         ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
         Map<String, AttributeInfo> objAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
 
-        if (entryExists(objClass, uid, ElementIdentifierFieldType.AUTO)) {
+        Element entry = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
+        if (entry == null) {
+            throw new UnknownUidException("Could not update entry. No entry of type " + objClass.getObjectClassValue() + " with the id " + uid.getUidValue() + " found.");
+        }
 
-            Element entry = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
-
+        try {
             for (Attribute attribute : replaceAttributes) {
 
                 if (!objAttributes.containsKey(attribute.getName())) {
@@ -351,8 +362,9 @@ public class XMLHandlerImpl implements XMLHandler {
                     }
                 }
             }
-        } else {
-            throw new UnknownUidException("Could not update entry. No entry of type " + objClass.getObjectClassValue() + " with the id " + uid.getUidValue() + " found.");
+        } finally {
+            // A rejected attribute may leave the entry already changed, so report the change either way.
+            entryIndex.rekeyed(entry);
         }
 
         log.info("Exit {0}", method);
@@ -367,14 +379,14 @@ public class XMLHandlerImpl implements XMLHandler {
 
         XmlHandlerUtil.checkObjectType(objClass, riSchema);
 
-        if (entryExists(objClass, uid, ElementIdentifierFieldType.AUTO)) {
-            Element elementToRemove = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
-            getDocument().getDocumentElement().removeChild(elementToRemove);
-            markDirty();
-            log.info("Deleting entry: " + elementToRemove.toString());
-        } else {
+        Element elementToRemove = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
+        if (elementToRemove == null) {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
         }
+        getDocument().getDocumentElement().removeChild(elementToRemove);
+        markDirty();
+        entryIndex.removed(elementToRemove);
+        log.info("Deleting entry: " + elementToRemove.toString());
 
         log.info("Exit {0}", method);
     }
@@ -415,6 +427,63 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     @Override
+    public Collection<ConnectorObject> search(Query query, ObjectClass objClass) {
+        List<Element> entries = indexedEntries(query, objClass);
+        if (entries == null) {
+            return search(new QueryBuilder(query, objClass).toString(), objClass);
+        }
+        return toConnectorObjects(entries, objClass);
+    }
+
+    /** The entries a query selects if the index can tell, in document order; {@code null} otherwise. */
+    List<Element> indexedEntries(Query query, ObjectClass objClass) {
+        getDocument(); // throws if there is no document, as the XQuery search did
+        String objectClass = objClass.getObjectClassValue();
+        if (query == null || query.getParts().isEmpty()) {
+            return entryIndex.all(objectClass);
+        }
+        String field = identifierField(query);
+        if (field == null) {
+            return null;
+        }
+        String value = ((ComparisonQuery) query.getParts().iterator().next()).getValue();
+        return entryIndex.find(objectClass, field, value);
+    }
+
+    /**
+     * The identifier a query compares, if the query is exactly {@code $x/icf:__UID__ = 'v'} or
+     * {@code $x/icf:__NAME__ = 'v'} after XMLFilterTranslator's rewrites; otherwise {@code null}.
+     */
+    static String identifierField(Query query) {
+        if (query.getParts().size() != 1) {
+            return null;
+        }
+        QueryPart part = query.getParts().iterator().next();
+        if (!(part instanceof ComparisonQuery)) {
+            return null;
+        }
+        ComparisonQuery comparison = (ComparisonQuery) part;
+        if (!"=".equals(comparison.getOperator()) || comparison.getValue() == null) {
+            return null;
+        }
+        for (String field : new String[] {Uid.NAME, Name.NAME}) {
+            if (("$x/" + ICF_NAMESPACE_PREFIX + ":" + field).equals(comparison.getName())) {
+                return field;
+            }
+        }
+        return null;
+    }
+
+    private List<ConnectorObject> toConnectorObjects(Collection<Element> entries, ObjectClass objClass) {
+        ConnectorObjectCreator creator = newConnectorObjectCreator(objClass);
+        List<ConnectorObject> results = new ArrayList<ConnectorObject>(entries.size());
+        for (Element entry : entries) {
+            results.add(creator.createConnectorObject(entry));
+        }
+        return results;
+    }
+
+    @Override
     public void dispose() {
         final String method = "serialize";
         log.info("Entry {0}", method);
@@ -435,7 +504,9 @@ public class XMLHandlerImpl implements XMLHandler {
         // Callers hold the handler's write lock.
         Document saved = getDocument();
         try {
-            XmlDocumentWriter.normalizeText(saved);
+            if (XmlDocumentWriter.normalizeText(saved)) {
+                entryIndex.rebuild(saved); // a whitespace-only identifier may have just become empty
+            }
             checksum = XmlDocumentWriter.write(saved, xmlFile);
             dirty = false;
             unsavedNewFile = false;
@@ -615,6 +686,7 @@ public class XMLHandlerImpl implements XMLHandler {
         } else {
             loadDocument(xmlFile);
         }
+        entryIndex.rebuild(document);
 
         log.info("Exit {0}", method);
     }
@@ -637,51 +709,17 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     private Element getEntry(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
-        final String method = "getEntry";
-        log.info("Entry {0}", method);
+        getDocument();
+        return entryIndex.first(objClass.getObjectClassValue(), identifierElement(objClass, identifierField), uid.getUidValue());
+    }
 
-        Element result = null;
-
-        // Build search query
-        XMLFilterTranslator translator = new XMLFilterTranslator(isSupportUid(objClass));
-        String idField = getElementIdentifierField(objClass, identifierField);
-        AttributeBuilder builder = new AttributeBuilder();
-        builder.setName(idField);
-        builder.addValue(uid.getUidValue());
-        EqualsFilter equals = new EqualsFilter(builder.build());
-        Query query = translator.createEqualsExpression(equals, false);
-        QueryBuilder queryBuilder = new QueryBuilder(query, objClass);
-
-        // Execute query
-        XQueryHandler xqHandler = null;
-
-        try {
-            xqHandler = new XQueryHandler(queryBuilder.toString(), document);
-            XQResultSequence results = xqHandler.getResultSequence();
-
-            if (results.next()) {
-                result = (Element) results.getItem().getNode();
-                log.info("Entry found: ", result.toString());
-            }
-        } catch (XQException ex) {
-            throw ConnectorException.wrap(ex);
-        } finally {
-            if (null != xqHandler) {
-                xqHandler.close();
-            }
-        }
-
-        log.info("Exit {0}", method);
-
-        return result;
+    /** The identifier element to match, by the rule that XMLFilterTranslator applies to a search. */
+    private String identifierElement(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
+        return XMLFilterTranslator.elementName(getElementIdentifierField(objClass, identifierField), isSupportUid(objClass));
     }
 
     private boolean entryExists(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
-        if (getEntry(objClass, uid, identifierField) != null) {
-            return true;
-        }
-
-        return false;
+        return getEntry(objClass, uid, identifierField) != null;
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
@@ -731,6 +769,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         for (Element e : elementsToRemove) {
             element.removeChild(e);
+            entryIndex.removed(e);
         }
     }
 

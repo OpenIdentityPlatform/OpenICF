@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
@@ -445,6 +446,11 @@ public class XMLConnectorTests {
 
         @Override
         public Collection<ConnectorObject> search(String query, ObjectClass objectClass) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Collection<ConnectorObject> search(Query query, ObjectClass objectClass) {
             throw new UnsupportedOperationException();
         }
 
