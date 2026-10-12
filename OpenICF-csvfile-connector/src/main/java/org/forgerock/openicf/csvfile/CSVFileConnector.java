@@ -463,6 +463,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         final String[] header = getHeader();
         File syncOrigin = null;
+        // the snapshots this call copies from the live file; deleted again if the sync fails
+        final List<File> copies = new ArrayList<File>(2);
         boolean changesProcessed = false;
 
         // start with a write-lock
@@ -482,6 +484,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
+                copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
             scrubSyncFiles();
@@ -493,6 +496,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
 
         // we now have a read-lock unless the above block threw an Exception
+        boolean completed = false;
         try {
             final MessageDigest digest = newFingerprintDigest();
             // uid of every current row -> fingerprint of the first origin row with that uid, null while there is none
@@ -649,6 +653,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     } catch (IOException e) {
                         throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                     }
+                    copies.add(syncOrigin);
                     token = new SyncToken(timestamp);
                 }
             }
@@ -656,8 +661,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (handler instanceof SyncTokenResultsHandler) {
                 ((SyncTokenResultsHandler) handler).handleResult(token);
             }
+            completed = true;
         } finally {
             rwLock.readLock().unlock();
+            if (!completed) {
+                // a kept copy could be handed out by getLatestSyncToken,
+                // and it would stop a retry from copying the unchanged live file again
+                for (File copy : copies) {
+                    deleteSnapshot(rwLock, copy);
+                }
+            }
         }
     }
 
@@ -1002,6 +1015,18 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         while (files.size() > config.getSyncFileRetentionCount()) {
             Long key = (Long) files.keySet().toArray()[0];
             files.remove(key);
+        }
+    }
+
+    /**
+     * Deletes a snapshot under the write lock, so that no sync in this JVM is reading it meanwhile.
+     */
+    private void deleteSnapshot(ReentrantReadWriteLock rwLock, File snapshot) {
+        rwLock.writeLock().lock();
+        try {
+            deleteRewriteFile(snapshot);
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 

@@ -23,14 +23,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.identityconnectors.common.security.GuardedString;
@@ -46,6 +52,7 @@ import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.supercsv.exception.SuperCsvException;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -199,6 +206,80 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void failedSyncDeletesTheSnapshotItCopied() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1", ",John,Roe,pw2");
+
+        expectThrows(IllegalArgumentException.class, () -> sync(null));
+
+        assertEquals(snapshots(), Collections.emptyList());
+    }
+
+    @Test
+    public void failedSyncKeepsTheSnapshotOfItsToken() throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1", ",John,Roe,pw2");
+
+        expectThrows(IllegalArgumentException.class, () -> sync(SNAPSHOT_TOKEN));
+
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void successfulSyncKeepsTheSnapshotItCopied() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+
+        sync(null);
+
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @Test
+    public void syncWhoseTokenIsNotDeliveredDeletesTheSnapshotItCopied() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> { }));
+
+        assertEquals(snapshots(), Collections.emptyList());
+    }
+
+    @Test
+    public void syncWhoseTokenIsNotDeliveredDeletesTheSnapshotItCopiedAfterTheDiff() throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1", "u2,John,Roe,pw2");
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(SNAPSHOT_TOKEN, () -> { }));
+
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void snapshotThatCannotBeDeletedIsLogged() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from deleting files");
+        }
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final File copy = new File(dir.toFile(), csvFile.getName() + "." + csvFile.lastModified());
+
+        final String output;
+        try {
+            output = captureStdOut(() -> expectThrows(IllegalStateException.class,
+                    () -> syncWithFailingHandleResult(null, () -> setDirMode(readOnly))));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertTrue(output.contains("Could not delete " + copy), output);
+    }
+
+    @Test
     public void rowWithWrongColumnCountFailsSyncBeforeAnyDelta() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
         givenLive(HEADER, "u1,Jane,Changed,pw1", "u2,John,Roe");
@@ -331,6 +412,38 @@ public class SyncOpDiffTest {
             System.setOut(original);
         }
         return buffer.toString();
+    }
+
+    private List<String> snapshots() throws IOException {
+        try (Stream<Path> paths = Files.list(dir)) {
+            return paths.map(path -> path.getFileName().toString())
+                    .filter(name -> name.startsWith(csvFile.getName() + "."))
+                    .sorted()
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private void syncWithFailingHandleResult(final SyncToken token, final Runnable beforeFailing) {
+        connector().sync(ObjectClass.ACCOUNT, token, new SyncTokenResultsHandler() {
+            @Override
+            public boolean handle(SyncDelta delta) {
+                return true;
+            }
+
+            @Override
+            public void handleResult(SyncToken syncToken) {
+                beforeFailing.run();
+                throw new IllegalStateException("token not stored");
+            }
+        }, null);
+    }
+
+    private void setDirMode(Set<PosixFilePermission> mode) {
+        try {
+            Files.setPosixFilePermissions(dir, mode);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private CSVFileConnector connector() {
