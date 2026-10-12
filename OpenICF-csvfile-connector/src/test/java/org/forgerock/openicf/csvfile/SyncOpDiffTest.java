@@ -266,6 +266,19 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void failedSyncKeepsTheSnapshotOfADeleteItHandled() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1", "u2,John,Roe,pw2");
+        connector();
+        // relies on the header cached at init: the live rows are read with it, so every live uid is a password,
+        // while a fresh copy is read with its own header and reports two DELETEs
+        givenLive("password,lastName,uid,firstName", "pw1,Doe,u1,Jane", "pw2,Roe,u2,John");
+
+        List<SyncToken> handled = syncFailingAfter(1);
+
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + handled.get(0).getValue()));
+    }
+
+    @Test
     public void syncWhoseFirstDeltaFailsDeletesTheSnapshotItCopied() throws Exception {
         givenLive(DUPLICATE_UIDS);
 
@@ -299,6 +312,34 @@ public class SyncOpDiffTest {
         }
 
         assertTrue(output.contains("Could not delete " + copy), output);
+    }
+
+    @Test
+    public void syncThatCannotListItsSnapshotsDeletesTheSnapshotItCopied() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unlistable directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        // files can still be created in the directory, but not listed
+        final Set<PosixFilePermission> writeOnly = PosixFilePermissions.fromString("-wx------");
+        setDirMode(writeOnly);
+        final boolean listable = dir.toFile().list() != null;
+        setDirMode(mode);
+        if (listable) {
+            throw new SkipException("A directory without read permission does not stop this user from listing it");
+        }
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+
+        setDirMode(writeOnly);
+        try {
+            // the copy is made, then scrubSyncFiles fails while the sync still holds the write lock
+            expectThrows(NullPointerException.class, () -> sync(null));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertEquals(snapshots(), Collections.emptyList());
     }
 
     @Test

@@ -469,6 +469,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
+        boolean downgraded = false;
         rwLock.writeLock().lock();
         try {
             if (token != null && token.getValue() != null) {
@@ -491,7 +492,14 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
             // downgrade to a read-lock
             rwLock.readLock().lock();
+            downgraded = true;
         } finally {
+            if (!downgraded) {
+                // the read section below deletes the copies only once it is entered
+                for (File copy : copies) {
+                    deleteRewriteFile(copy);
+                }
+            }
             rwLock.writeLock().unlock();
         }
 
