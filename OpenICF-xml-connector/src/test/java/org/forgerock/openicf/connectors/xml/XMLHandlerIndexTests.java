@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -102,6 +103,8 @@ public class XMLHandlerIndexTests {
                 () -> handler.update(ObjectClass.ACCOUNT, new Uid("u1"), renameThenFail("a")));
         // The rename was applied before the failure (#158): u1 is no longer "dup" in the document.
         assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "a"), Collections.singletonList("u1|a"));
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "a"), ObjectClass.ACCOUNT)),
+                Collections.singletonList("u1|a")); // the index has the new name too
         handler.delete(ObjectClass.ACCOUNT, new Uid("u2"));
         handler.create(ObjectClass.ACCOUNT, account("dup")); // a stale "dup" for u1 in the index would refuse this
     }
@@ -123,6 +126,48 @@ public class XMLHandlerIndexTests {
         handler.create(ObjectClass.ACCOUNT, account("eve"));
         Uid uid = handler.authenticate("eve", new GuardedString("secret-eve".toCharArray()));
         assertEquals(uid.getUidValue() + "|eve", byXQuery(ObjectClass.ACCOUNT, Name.NAME, "eve").get(0));
+    }
+
+    @Test
+    public void identifierWithAnAmpersandIsFound() {
+        // The XQuery literal 'a&b' is not valid: create's duplicate check failed on it before the index.
+        Uid uid = handler.create(ObjectClass.ACCOUNT, account("a&b"));
+        Query byName = new XMLFilterTranslator(true).createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(Name.NAME, "a&b")), false);
+        assertEquals(describe(handler.search(byName, ObjectClass.ACCOUNT)),
+                Collections.singletonList(uid.getUidValue() + "|a&b"));
+        assertEquals(handler.authenticate("a&b", new GuardedString("secret-a&b".toCharArray())), uid);
+    }
+
+    @Test
+    public void identifierLookupsUseTheHandlersOwnNamespaces() throws Exception {
+        XMLConfiguration config = new XMLConfiguration();
+        config.setXmlFilePath(getRandomXMLFile());
+        Files.copy(getTestFile("index-fixture.xml").toPath(), config.getXmlFilePath().toPath());
+        config.setXsdFilePath(XSD_SCHEMA_FILEPATH);
+        SchemaParser parser = new SchemaParser(XMLConnector.class, XSD_SCHEMA_FILEPATH);
+        XMLHandlerImpl own = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+
+        // Next to the original, so that its import of resource-schema-1.xsd resolves.
+        File otherXsd = getTestFile("other-ri-namespace.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        Files.write(otherXsd.toPath(), xsd.replace("instances/ef2bc95b-76e0-48e2-86d6-4d4f44d4e4a4", "instances/other")
+                .getBytes(StandardCharsets.UTF_8));
+        try {
+            XMLConfiguration otherConfig = new XMLConfiguration();
+            otherConfig.setXmlFilePath(getRandomXMLFile());
+            otherConfig.setXsdFilePath(otherXsd);
+            SchemaParser otherParser = new SchemaParser(XMLConnector.class, otherXsd);
+            // Sets the JVM-wide namespaces to its own: it is now the last configured handler.
+            new XMLHandlerImpl(otherConfig, otherParser.parseSchema(), otherParser.getXsdSchema());
+            own.init();
+            assertEquals(describe(own.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
+                    Arrays.asList("u1|dup", "u2|dup"));
+        } finally {
+            Files.delete(otherXsd.toPath());
+            // Puts the JVM-wide namespaces back for the tests that run after this one.
+            new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+        }
     }
 
     /** {@code $x/icf:FIELD = 'VALUE'} exactly as XMLFilterTranslator builds it, without the framework's value checks. */
@@ -249,7 +294,9 @@ public class XMLHandlerIndexTests {
         ConnectorException byIdentifier = expectThrows(ConnectorException.class,
                 () -> uninitialized.search(equalsQuery("__NAME__", "dup"), ObjectClass.ACCOUNT));
         assertTrue(byIdentifier.getMessage().startsWith("Data file does not exists: "), byIdentifier.getMessage());
-        expectThrows(ConnectorException.class, () -> uninitialized.search(new QueryImpl(), ObjectClass.ACCOUNT));
+        ConnectorException all = expectThrows(ConnectorException.class,
+                () -> uninitialized.search(new QueryImpl(), ObjectClass.ACCOUNT));
+        assertTrue(all.getMessage().startsWith("Data file does not exists: "), all.getMessage());
     }
 
     @Test

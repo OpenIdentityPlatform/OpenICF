@@ -156,6 +156,9 @@ public class XMLHandlerReloadTests {
         writeAccounts(file, "carol");
         setModified(file, now() - 2 * HOUR);
         assertEquals(names(), List.of("carol"));
+        // names() reads through XQuery; authenticate goes through the index
+        assertEquals(call(h -> h.authenticate("carol", new GuardedString("secret-carol".toCharArray()))),
+                new Uid("uid-carol"));
     }
 
     @Test
