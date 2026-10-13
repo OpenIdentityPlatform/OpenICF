@@ -27,6 +27,7 @@ WORKDIR /opt
 #COPY OpenICF-java-framework/openicf-zip/target/*.zip ./
 
 RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
  && apt-get install -y --no-install-recommends curl unzip \
  && bash -c  'if [ ! -z "$VERSION" ] && ! ls ./openicf-*.zip >/dev/null 2>&1 ; then curl -L https://github.com/OpenIdentityPlatform/OpenICF/releases/download/$VERSION/openicf-$VERSION.zip --output openicf-$VERSION.zip ; fi' \
  && unzip openicf-*.zip && rm -rf *.zip \
