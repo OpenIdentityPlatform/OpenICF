@@ -38,7 +38,7 @@
     <name>OpenICF Simulated XML Connector</name>
     <description>Connector can simulate almost any kind of resource.</description>
     <properties>
-        <openicf.osgi.embed>jaxen,Saxon-HE,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
+        <openicf.osgi.embed>Saxon-HE,xsom,relaxngDatatype,xml-apis,xercesImpl,stax-api</openicf.osgi.embed>
         <openicf.osgi.import.before.defaults>!javax.swing*,</openicf.osgi.import.before.defaults>
         <openicf.osgi.failok>true</openicf.osgi.failok>
         <connectorPackage>org.forgerock.openicf.connectors.xml</connectorPackage>
@@ -52,18 +52,12 @@
             <artifactId>connector-framework</artifactId>
         </dependency>
         <dependency>
-            <groupId>jaxen</groupId>
-            <artifactId>jaxen</artifactId>
-            <version>1.1.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
             <version>1.4.01</version>
         </dependency>
-        <!-- Embedded: the parser DocumentBuilderFactory.newInstance() finds in the bundle. Declared here
-             because jaxen would otherwise bring xercesImpl 2.6.2 (CVE-2012-0881, CVE-2013-4002) -->
+        <!-- Embedded: the parser DocumentBuilderFactory.newInstance() finds in the bundle, and the one
+             the tests read through org.apache.xerces internals (XercesNodeLists) -->
         <dependency>
             <groupId>xerces</groupId>
             <artifactId>xercesImpl</artifactId>
