@@ -109,8 +109,20 @@ public class XMLHandlerReloadTests {
         assertEquals(namesInFile(file), List.of("alice", "bob"));
     }
 
-    @Test
-    public void failedUpdateLeavesTheFileInAgreementWithMemory() throws Exception {
+    @DataProvider
+    public Object[][] updatesFailingMidway() {
+        Attribute newLastName = AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW");
+        return new Object[][] {
+                // The failing attribute comes after one that was applied.
+                {attributes(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"), newLastName), "CHANGED|null"},
+                // The failing attribute is the first one applied: its removal alone must mark the document changed.
+                {attributes(newLastName), "null|null"},
+        };
+    }
+
+    @Test(dataProvider = "updatesFailingMidway")
+    public void failedUpdateLeavesTheFileInAgreementWithMemory(Set<Attribute> attributes, String changedInMemory)
+            throws Exception {
         writeAccounts(file, "alice");
         // An XSD-invalid hand edit (#182): update's descendant lookup finds the inner lastname after alice's own,
         // and removeChild rejects it, so the update fails midway. Once #182 is fixed, this needs another midway failure.
@@ -119,19 +131,16 @@ public class XMLHandlerReloadTests {
                         "    <ri:lastname>Last-alice</ri:lastname>\n    <ri:wrapper><ri:lastname>inner</ri:lastname></ri:wrapper>\n");
         Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
         setModified(file, now() - HOUR);
-        Set<Attribute> firstThenLast = new LinkedHashSet<Attribute>();
-        firstThenLast.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"));
-        firstThenLast.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW"));
         List<String> inMemory;
         handler.init(); // holds the document: no reload and no save until the last dispose()
         try {
             expectThrows(DOMException.class,
-                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), firstThenLast)));
+                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes)));
             inMemory = firstAndLastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
         } finally {
             handler.dispose();
         }
-        assertEquals(inMemory, List.of("CHANGED|null")); // the update got as far as removing alice's own lastname
+        assertEquals(inMemory, List.of(changedInMemory)); // the update got as far as removing alice's own lastname
         assertEquals(firstAndLastNamesIn(file), inMemory);
     }
 
@@ -150,6 +159,9 @@ public class XMLHandlerReloadTests {
                         "Data field: no-such-attribute is not supported."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME)),
                         "No values provided for required attribute: lastname"},
+                // A required attribute's values are read before the type check, which then never runs.
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5))),
+                        "lastname contains invalid type. Value(s) should be of type java.lang.String"},
         };
     }
 
