@@ -463,10 +463,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         final String[] header = getHeader();
         File syncOrigin = null;
+        // the snapshots this call copies from the live file; deleted again if the sync fails
+        final List<File> copies = new ArrayList<File>(2);
         boolean changesProcessed = false;
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
+        boolean downgraded = false;
         rwLock.writeLock().lock();
         try {
             if (token != null && token.getValue() != null) {
@@ -482,17 +485,26 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
+                copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
             scrubSyncFiles();
 
             // downgrade to a read-lock
             rwLock.readLock().lock();
+            downgraded = true;
         } finally {
+            if (!downgraded) {
+                // the read section below deletes the copies only once it is entered
+                for (File copy : copies) {
+                    deleteRewriteFile(copy);
+                }
+            }
             rwLock.writeLock().unlock();
         }
 
         // we now have a read-lock unless the above block threw an Exception
+        boolean completed = false;
         try {
             final MessageDigest digest = newFingerprintDigest();
             // uid of every current row -> fingerprint of the first origin row with that uid, null while there is none
@@ -562,10 +574,19 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 boolean reportDeletes = true;
                 while ((entry = reader.read(originHeader, processors)) != null) {
                     final String uid = (String) entry.get(config.getHeaderUid());
+                    if (StringUtil.isBlank(uid)) {
+                        // a row without a uid was never reported, so there is no object to delete
+                        log.warn("Skipping line {0} of {1}: it has no {2} value",
+                                String.valueOf(reader.getLineNumber()), syncOrigin.toString(), config.getHeaderUid());
+                        continue;
+                    }
                     if (!index.containsKey(uid)) {
                         if (reportDeletes) {
                             SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);
-                            if (handler.handle(delta)) {
+                            final boolean more = handler.handle(delta);
+                            // the handler may have stored the token of this delta, so its snapshot must stay
+                            copies.clear();
+                            if (more) {
                                 changesProcessed = true;
                             } else {
                                 // keep reading: the next pass needs the fingerprints of the remaining origin rows
@@ -612,7 +633,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                         continue;
                     }
                     SyncDelta delta = generateSyncDelta(type, newConnectorObject(entry), token);
-                    if (!handler.handle(delta)) {
+                    final boolean more = handler.handle(delta);
+                    // the handler may have stored the token of this delta, so its snapshot must stay
+                    copies.clear();
+                    if (!more) {
                         break;
                     }
                     changesProcessed = true;
@@ -643,6 +667,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     } catch (IOException e) {
                         throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                     }
+                    copies.add(syncOrigin);
                     token = new SyncToken(timestamp);
                 }
             }
@@ -650,8 +675,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (handler instanceof SyncTokenResultsHandler) {
                 ((SyncTokenResultsHandler) handler).handleResult(token);
             }
+            completed = true;
         } finally {
             rwLock.readLock().unlock();
+            if (!completed) {
+                // a kept copy could be handed out by getLatestSyncToken,
+                // and it would stop a retry from copying the unchanged live file again
+                for (File copy : copies) {
+                    deleteSnapshot(rwLock, copy);
+                }
+            }
         }
     }
 
@@ -996,6 +1029,18 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         while (files.size() > config.getSyncFileRetentionCount()) {
             Long key = (Long) files.keySet().toArray()[0];
             files.remove(key);
+        }
+    }
+
+    /**
+     * Deletes a snapshot under the write lock, so that no sync in this JVM is reading it meanwhile.
+     */
+    private void deleteSnapshot(ReentrantReadWriteLock rwLock, File snapshot) {
+        rwLock.writeLock().lock();
+        try {
+            deleteRewriteFile(snapshot);
+        } finally {
+            rwLock.writeLock().unlock();
         }
     }
 
