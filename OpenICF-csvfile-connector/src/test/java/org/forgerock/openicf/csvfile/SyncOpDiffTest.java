@@ -16,6 +16,7 @@
 package org.forgerock.openicf.csvfile;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -28,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
@@ -330,15 +332,20 @@ public class SyncOpDiffTest {
         }
         givenLive(HEADER, "u1,Jane,Doe,pw1");
         connector();
+        // only creating or deleting an entry in the directory moves its mtime off this value
+        final FileTime untouched = FileTime.fromMillis(0);
+        Files.setLastModifiedTime(dir, untouched);
 
         setDirMode(writeOnly);
         try {
-            // the copy is made, then scrubSyncFiles fails while the sync still holds the write lock
-            expectThrows(NullPointerException.class, () -> sync(null));
+            // the copy is made, then scrubSyncFiles fails while the sync still holds the write lock;
+            // how it fails is not the point here
+            expectThrows(RuntimeException.class, () -> sync(null));
         } finally {
             setDirMode(mode);
         }
 
+        assertNotEquals(Files.getLastModifiedTime(dir), untouched, "The sync failed before it copied the CSV file");
         assertEquals(snapshots(), Collections.emptyList());
     }
 
