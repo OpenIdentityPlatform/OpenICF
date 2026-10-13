@@ -135,6 +135,12 @@ public final class ReflectionUtil {
      * caller passes its own {@link MethodHandles#lookup()}: a package-private
      * class stays instantiable from its own package, as it was with
      * {@link Class#newInstance()}.
+     * <p>
+     * A class that cannot be linked, typically because a class it refers to is
+     * missing from the connector bundle, fails with that {@link LinkageError}
+     * (e.g. {@link NoClassDefFoundError}), as it did with
+     * {@link Class#newInstance()}: the connector info managers skip such a
+     * connector instead of failing the whole bundle.
      *
      * @param <T>
      *            the type of the instance.
@@ -150,8 +156,21 @@ public final class ReflectionUtil {
      */
     public static <T> T newInstance(final MethodHandles.Lookup lookup, final Class<T> clazz)
             throws Exception {
-        final MethodHandle constructor =
-                lookup.findConstructor(clazz, MethodType.methodType(void.class));
+        final MethodHandle constructor;
+        try {
+            constructor = lookup.findConstructor(clazz, MethodType.methodType(void.class));
+        } catch (ReflectiveOperationException e) {
+            // A missing or inaccessible constructor comes with a NoSuchMethodError
+            // or IllegalAccessError as the cause; any other LinkageError means the
+            // class itself failed to link, which findConstructor reports as an
+            // IllegalAccessException "no such constructor"
+            final Throwable cause = e.getCause();
+            if (cause instanceof LinkageError && !(cause instanceof NoSuchMethodError)
+                    && !(cause instanceof IllegalAccessError)) {
+                throw (LinkageError) cause;
+            }
+            throw e;
+        }
         try {
             return clazz.cast(constructor.invoke());
         } catch (Exception | Error e) {
