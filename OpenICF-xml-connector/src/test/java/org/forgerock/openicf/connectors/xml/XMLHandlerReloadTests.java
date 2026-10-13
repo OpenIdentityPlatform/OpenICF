@@ -57,10 +57,12 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.w3c.dom.DOMException;
 
@@ -131,6 +133,78 @@ public class XMLHandlerReloadTests {
         }
         assertEquals(inMemory, List.of("CHANGED|null")); // the update got as far as removing alice's own lastname
         assertEquals(firstAndLastNamesIn(file), inMemory);
+    }
+
+    @DataProvider
+    public Object[][] rejectedUpdates() {
+        Attribute changedFirstName = AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED");
+        String twoLastNames = "Data field: lastname is not multivalued  can not have more than one value";
+        return new Object[][] {
+                {attributes(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B")), twoLastNames},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B")), twoLastNames},
+                {attributes(changedFirstName, AttributeBuilder.build(Name.NAME, "  ")), "Parameter '__NAME__' must not be blank."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, Boolean.TRUE)),
+                        "is-deleted is not updatable."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")), "age contains values of illegal type"},
+                {attributes(changedFirstName, AttributeBuilder.build("no-such-attribute", "x")),
+                        "Data field: no-such-attribute is not supported."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME)),
+                        "No values provided for required attribute: lastname"},
+        };
+    }
+
+    @Test(dataProvider = "rejectedUpdates")
+    public void rejectedUpdateLeavesTheEntryAndTheFileAlone(Set<Attribute> attributes, String message) throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes)));
+
+        assertEquals(e.getMessage(), message);
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        // The file is unchanged, so the next call keeps the document in memory: it must be unchanged as well.
+        assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
+    }
+
+    @Test
+    public void updateIsInTheFileWhenTheLastUserLeaves() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(
+                AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "F"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L"))));
+        assertEquals(firstAndLastNamesIn(file), List.of("F|L"));
+    }
+
+    @Test
+    public void updateWithNoAttributesLeavesTheFileAlone() throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.<Attribute>emptySet()));
+
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
+    public void repeatedAttributeKeepsTheLastValue() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        // Attribute.equals compares the values too, so a set can hold the same name twice: update applies both, in order.
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "B"))));
+        assertEquals(firstAndLastNamesIn(file), List.of("null|B"));
+    }
+
+    /** The attributes in the order given, which is the order update() goes through them. */
+    private static Set<Attribute> attributes(Attribute... attributes) {
+        return new LinkedHashSet<Attribute>(Arrays.asList(attributes));
     }
 
     @Test

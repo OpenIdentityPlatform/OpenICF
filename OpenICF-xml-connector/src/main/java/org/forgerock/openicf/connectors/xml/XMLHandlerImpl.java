@@ -43,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -306,50 +307,58 @@ public class XMLHandlerImpl implements XMLHandler {
             throw new UnknownUidException("Could not update entry. No entry of type " + objClass.getObjectClassValue() + " with the id " + uid.getUidValue() + " found.");
         }
 
+        // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
+        List<Map.Entry<String, List<String>>> checkedAttributes = new ArrayList<Map.Entry<String, List<String>>>();
+        for (Attribute attribute : replaceAttributes) {
+
+            if (!objAttributes.containsKey(attribute.getName())) {
+                throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
+            }
+
+            AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
+            String attributeName = attribute.getName();
+
+            if (!attributeInfo.isUpdateable()) {
+                throw new IllegalArgumentException(attributeName + " is not updatable.");
+            }
+
+            if (attributeInfo.isRequired()) {
+                List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+                if (values.isEmpty()) {
+                    throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
+                }
+                for (String value : values) {
+                    Assertions.blankCheck(value, attributeName);
+                    Assertions.nullCheck(value, attributeName);
+                }
+            }
+
+            // Check if the provided value is the same as the class defined in schema
+            Class expectedClass = attributeInfo.getType();
+
+            if (attribute.getValue() != null) {
+                if (!valuesAreExpectedClass(expectedClass, attribute.getValue())) {
+                    throw new IllegalArgumentException(attributeName + " contains values of illegal type");
+                }
+            }
+
+            List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+
+            if (!attributeInfo.isMultiValued() && values.size() > 1) {
+                throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
+            }
+
+            checkedAttributes.add(new AbstractMap.SimpleImmutableEntry<String, List<String>>(attributeName, values));
+        }
+
         try {
-            for (Attribute attribute : replaceAttributes) {
-
-                if (!objAttributes.containsKey(attribute.getName())) {
-                    throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
-                }
-
-                AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
-                String attributeName = attribute.getName();
-
-                if (!attributeInfo.isUpdateable()) {
-                    throw new IllegalArgumentException(attributeName + " is not updatable.");
-                }
-
-                if (attributeInfo.isRequired()) {
-                    List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
-                    if (values.isEmpty()) {
-                        throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
-                    }
-                    for (String value : values) {
-                        Assertions.blankCheck(value, attributeName);
-                        Assertions.nullCheck(value, attributeName);
-                    }
-                }
-
-                // Check if the provided value is the same as the class defined in schema
-                Class expectedClass = attributeInfo.getType();
-
-                if (attribute.getValue() != null) {
-                    if (!valuesAreExpectedClass(expectedClass, attribute.getValue())) {
-                        throw new IllegalArgumentException(attributeName + " contains values of illegal type");
-                    }
-                }
+            for (Map.Entry<String, List<String>> checkedAttribute : checkedAttributes) {
+                String attributeName = checkedAttribute.getKey();
+                List<String> values = checkedAttribute.getValue();
 
                 // Remove existing nodes from entry
                 markDirty();
                 removeChildrenFromElement(entry, prefixAttributeName(attributeName));
-
-                // Add updated nodes to entry
-                List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
-
-                if (!attributeInfo.isMultiValued() && values.size() > 1) {
-                    throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
-                }
 
                 // Append empty element if no values is provided
                 if (values.isEmpty()) {
@@ -363,7 +372,8 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
         } finally {
-            // A rejected attribute may leave the entry already changed, so report the change either way.
+            // A DOM failure midway, such as a value below another element (#182), may leave the entry already changed,
+            // so report the change either way.
             entryIndex.rekeyed(entry);
         }
 

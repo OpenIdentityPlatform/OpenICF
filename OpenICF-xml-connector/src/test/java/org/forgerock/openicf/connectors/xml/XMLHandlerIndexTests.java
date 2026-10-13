@@ -111,9 +111,20 @@ public class XMLHandlerIndexTests {
         handler.create(ObjectClass.ACCOUNT, account("dup")); // a stale "dup" for u1 in the index would refuse this
     }
 
+    @Test
+    public void rejectedRenameKeepsTheOldName() {
+        expectThrows(IllegalArgumentException.class,
+                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u1"), renameThenFail("a")));
+        assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "a"), Collections.emptyList());
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "a"), ObjectClass.ACCOUNT)), Collections.emptyList());
+        assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "dup"), Arrays.asList("u1|dup", "u2|dup"));
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
+                Arrays.asList("u1|dup", "u2|dup"));
+    }
+
     /**
-     * Renames to {@code newName}, then fails on an unknown attribute. update() applies the attributes
-     * in order, so the rename is in the document when it throws. A two-valued __NAME__ cannot be used:
+     * Renames to {@code newName} along with an unknown attribute. update() rejects the unknown attribute
+     * before it changes the entry, so the rename is not applied. A two-valued __NAME__ cannot be used:
      * AttributeBuilder.build(Name.NAME, "a", "b") throws before update() runs.
      */
     static Set<Attribute> renameThenFail(String newName) {

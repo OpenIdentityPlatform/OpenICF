@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -194,6 +195,22 @@ public class XMLConnectorTests {
         Uid updatedUid = facade.update(ObjectClass.ACCOUNT, insertedUid, attributes, null);
 
         AssertJUnit.assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
+    }
+
+    @Test
+    public void failedAddAttributeValuesKeepsTheOldValue() {
+        Set<Attribute> attributes = getRequiredAccountAttributes();
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "F1"));
+        Uid uid = facade.create(ObjectClass.ACCOUNT, attributes, null);
+
+        // The connector has no UpdateAttributeValuesOp: the facade reads firstname and updates it to [F1, F1b].
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> facade.addAttributeValues(
+                ObjectClass.ACCOUNT, uid, Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "F1b")), null));
+
+        AssertJUnit.assertEquals("Data field: firstname is not multivalued  can not have more than one value", e.getMessage());
+        ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        AssertJUnit.assertEquals(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "F1"),
+                read.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME));
     }
 
     @Test(expectedExceptions = NullPointerException.class)
