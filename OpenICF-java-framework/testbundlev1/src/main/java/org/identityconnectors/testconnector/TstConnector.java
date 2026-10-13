@@ -440,7 +440,7 @@ public class TstConnector implements CreateOp, PoolableConnector, SchemaOp, Sear
         }
     }
 
-    private class BatchUseCase3Processor extends Thread {
+    private static class BatchUseCase3Processor extends Thread {
         private OperationOptions options;
         private Observer<BatchResult> observer;
         private String token;

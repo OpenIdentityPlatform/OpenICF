@@ -267,7 +267,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         if (password == null) {
             throw new InvalidPasswordException("Password cannot be null.");
         }
-        return testCredentials(userName, password, options);
+        return testCredentials(userName, password);
     }
 
     /**
@@ -276,10 +276,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     @Override
     public Uid resolveUsername(final ObjectClass objectClass, final String userName, final OperationOptions options) {
         isAccount(objectClass);
-        return testCredentials(userName, null, options);
+        return testCredentials(userName, null);
     }
 
-    private Uid testCredentials(String name, GuardedString password, OperationOptions options) {
+    private Uid testCredentials(String name, GuardedString password) {
         if (name == null) {
             throw new InvalidCredentialException("Name cannot be null.");
         }
@@ -297,7 +297,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     public Uid create(final ObjectClass objectClass, final Set<Attribute> createAttributes,
             final OperationOptions options) {
         isAccount(objectClass);
-        return doCreate(createAttributes, options);
+        return doCreate(createAttributes);
     }
 
     /**
@@ -469,7 +469,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
-        boolean downgraded = false;
         rwLock.writeLock().lock();
         try {
             if (token != null && token.getValue() != null) {
@@ -492,14 +491,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
             // downgrade to a read-lock
             rwLock.readLock().lock();
-            downgraded = true;
-        } finally {
-            if (!downgraded) {
-                // the read section below deletes the copies only once it is entered
-                for (File copy : copies) {
-                    deleteRewriteFile(copy);
-                }
+        } catch (RuntimeException | Error e) {
+            // the read section below deletes the copies only once it is entered
+            for (File copy : copies) {
+                deleteRewriteFile(copy);
             }
+            throw e;
+        } finally {
             rwLock.writeLock().unlock();
         }
 
@@ -801,7 +799,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     private class BatchTaskExecutorImpl implements BatchTaskExecutor {
         @Override
         public Uid execute(CreateBatchTask task) {
-            return doCreate(task.getCreateAttributes(), task.getOptions());
+            return doCreate(task.getCreateAttributes());
         }
 
         @Override
@@ -1060,7 +1058,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
     }
 
-    private Uid doCreate(Set<Attribute> attributes, OperationOptions options) {
+    private Uid doCreate(Set<Attribute> attributes) {
         if (attributes == null || attributes.size() == 0) {
             throw new IllegalArgumentException("Attributes may not be null or empty.");
         }
