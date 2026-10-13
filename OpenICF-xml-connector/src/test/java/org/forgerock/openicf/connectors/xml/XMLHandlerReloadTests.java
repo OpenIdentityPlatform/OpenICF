@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -109,18 +110,27 @@ public class XMLHandlerReloadTests {
     @Test
     public void failedUpdateLeavesTheFileInAgreementWithMemory() throws Exception {
         writeAccounts(file, "alice");
+        // An XSD-invalid hand edit (#182): update's descendant lookup finds the inner lastname after alice's own,
+        // and removeChild rejects it, so the update fails midway. Once #182 is fixed, this needs another midway failure.
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("    <ri:lastname>Last-alice</ri:lastname>\n",
+                        "    <ri:lastname>Last-alice</ri:lastname>\n    <ri:wrapper><ri:lastname>inner</ri:lastname></ri:wrapper>\n");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
         setModified(file, now() - HOUR);
-        Set<Attribute> twoLastNames = Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B"));
+        Set<Attribute> firstThenLast = new LinkedHashSet<Attribute>();
+        firstThenLast.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"));
+        firstThenLast.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW"));
         List<String> inMemory;
         handler.init(); // holds the document: no reload and no save until the last dispose()
         try {
-            expectThrows(IllegalArgumentException.class,
-                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), twoLastNames)));
-            inMemory = lastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
+            expectThrows(DOMException.class,
+                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), firstThenLast)));
+            inMemory = firstAndLastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
         } finally {
             handler.dispose();
         }
-        assertEquals(lastNamesIn(file), inMemory);
+        assertEquals(inMemory, List.of("CHANGED|null")); // the update got as far as removing alice's own lastname
+        assertEquals(firstAndLastNamesIn(file), inMemory);
     }
 
     @Test
@@ -799,9 +809,21 @@ public class XMLHandlerReloadTests {
         return values;
     }
 
-    private static List<String> lastNamesIn(File file) {
+    /** "first|last" per object, with null for a missing attribute. */
+    private static List<String> firstAndLastNames(Collection<ConnectorObject> objects) {
+        List<String> values = new ArrayList<String>();
+        for (ConnectorObject object : objects) {
+            Attribute firstName = object.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME);
+            Attribute lastName = object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME);
+            values.add((firstName == null ? null : AttributeUtil.getStringValue(firstName)) + "|"
+                    + (lastName == null ? null : AttributeUtil.getStringValue(lastName)));
+        }
+        return values;
+    }
+
+    private static List<String> firstAndLastNamesIn(File file) {
         XMLHandler fresh = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema()).init();
-        return lastNames(fresh.search(allAccounts(), ObjectClass.ACCOUNT));
+        return firstAndLastNames(fresh.search(allAccounts(), ObjectClass.ACCOUNT));
     }
 
     private static XMLConfiguration config(File file) {
