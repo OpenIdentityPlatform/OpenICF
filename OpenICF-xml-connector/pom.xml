@@ -60,7 +60,14 @@
         <dependency>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
-            <version>1.3.04</version>
+            <version>1.4.01</version>
+        </dependency>
+        <!-- Embedded: the parser DocumentBuilderFactory.newInstance() finds in the bundle. Declared here
+             because jaxen would otherwise bring xercesImpl 2.6.2 (CVE-2012-0881, CVE-2013-4002) -->
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.12.2</version>
         </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>
