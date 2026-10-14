@@ -465,6 +465,26 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void csvFileChangedAfterItsCopyIsReportedByTheNextSync() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1");
+        assertTrue(csvFile.setLastModified(1400000000000L));
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                // an external writer removes u once the copy is taken; runs on every sync, so it writes fixed content
+                givenLive(HEADER, "k,Ann,Poe,pw3");
+                return copy;
+            }
+        });
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), 1400000000000L);
+        assertEquals(sync(resultToken), Collections.singletonList("DELETE u [Jane, Doe, pw1]"));
+    }
+
+    @Test
     public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
@@ -568,13 +588,18 @@ public class SyncOpDiffTest {
 
     private CSVFileConnector connector() {
         if (connector == null) {
-            CSVFileConfiguration config = new CSVFileConfiguration();
-            config.setCsvFile(csvFile);
-            config.setHeaderUid("uid");
-            config.setHeaderPassword("password");
-            connector = new CSVFileConnector();
-            connector.init(config);
+            connector(new CSVFileConnector());
         }
+        return connector;
+    }
+
+    private CSVFileConnector connector(CSVFileConnector instance) {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setCsvFile(csvFile);
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        instance.init(config);
+        connector = instance;
         return connector;
     }
 
