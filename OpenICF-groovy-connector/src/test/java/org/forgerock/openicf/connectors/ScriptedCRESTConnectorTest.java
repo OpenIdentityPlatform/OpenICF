@@ -367,6 +367,24 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         }
     }
 
+    @Test
+    public void testOperationsAfterTheFirstDoNotTakeA401() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Auth0001"), null);
+        try {
+            // A fresh client takes one 401, which fills the shared AuthCache.
+            Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            requestCounter.reset();
+            for (int i = 0; i < 20; i++) {
+                Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.unauthorized(), 0);
+            Assert.assertEquals(requestCounter.requests(), 20);
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));
