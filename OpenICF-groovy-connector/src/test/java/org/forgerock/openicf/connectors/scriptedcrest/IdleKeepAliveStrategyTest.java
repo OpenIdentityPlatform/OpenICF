@@ -49,7 +49,7 @@ public class IdleKeepAliveStrategyTest {
     }
 
     @Test
-    public void testCapsAZeroAnnouncedTimeout() {
-        Assert.assertEquals(durationFor("timeout=0"), 10000L);
+    public void testExpiresAZeroAnnouncedTimeoutAtOnce() {
+        Assert.assertEquals(durationFor("timeout=0"), 1L);
     }
 }

@@ -246,8 +246,11 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         final ConnectorFacade facade = getFacade();
         final List<Uid> uids = new ArrayList<Uid>();
         try {
-            // More users than I/O dispatchers: new connections are assigned round-robin, so a
-            // nested call eventually lands on the dispatcher that runs the handler.
+            // More users than I/O dispatchers: new connections are assigned round-robin, so with a
+            // new connection per request a nested call eventually lands on the dispatcher that
+            // runs the handler. Pooled connections keep the nested calls on one connection off
+            // that dispatcher, so this case passes even when the handler runs on an I/O thread;
+            // testSearchHandlerRunsOnTheCallingThread is the one that catches that.
             final int count = 2 * Runtime.getRuntime().availableProcessors() + 2;
             for (int i = 0; i < count; i++) {
                 uids.add(facade.create(ObjectClass.ACCOUNT,

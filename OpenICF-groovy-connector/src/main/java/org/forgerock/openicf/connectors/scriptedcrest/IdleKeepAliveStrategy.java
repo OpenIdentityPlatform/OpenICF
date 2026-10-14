@@ -43,8 +43,11 @@ public final class IdleKeepAliveStrategy implements ConnectionKeepAliveStrategy 
     public long getKeepAliveDuration(final HttpResponse response, final HttpContext context) {
         final long announced =
                 DefaultConnectionKeepAliveStrategy.INSTANCE.getKeepAliveDuration(response, context);
-        // The pool keeps a connection with a duration of 0 or less forever: "timeout=0" is no
-        // exception to the cap.
-        return announced <= 0 || announced > MAX_IDLE_MILLIS ? MAX_IDLE_MILLIS : announced;
+        // The pool keeps a connection with a duration of 0 or less forever, so "timeout=0", which
+        // allows no idle time, expires the entry at once instead.
+        if (announced == 0) {
+            return 1L;
+        }
+        return announced < 0 || announced > MAX_IDLE_MILLIS ? MAX_IDLE_MILLIS : announced;
     }
 }

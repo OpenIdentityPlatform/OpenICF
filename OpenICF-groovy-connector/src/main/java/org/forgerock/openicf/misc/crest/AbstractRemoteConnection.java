@@ -257,6 +257,9 @@ public abstract class AbstractRemoteConnection implements Connection {
      * The response is parsed and the {@code handler} is called on the HTTP client's I/O thread.
      * A handler that makes a synchronous request through this connection can block that thread
      * for good; use {@link #query(Context, QueryRequest, QueryResourceHandler)} for such a handler.
+     * <p>
+     * {@link #query(Context, QueryRequest, QueryResourceHandler)} does not call this method: a
+     * subclass that overrides it to change the request must override {@code query} as well.
      */
     @Override
     public Promise<QueryResponse, ResourceException> queryAsync(Context context, QueryRequest request,
