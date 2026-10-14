@@ -233,6 +233,8 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
                     Closure clone = init.rehydrate(this, this, this);
                     clone.setResolveStrategy(Closure.DELEGATE_FIRST);
                     HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
+                    // Set before the customizer runs, so that a customizer can still replace it.
+                    builder.setKeepAliveStrategy(IdleKeepAliveStrategy.INSTANCE);
                     clone(builder);
                     httpClient = builder.build();
                     httpClient.start();

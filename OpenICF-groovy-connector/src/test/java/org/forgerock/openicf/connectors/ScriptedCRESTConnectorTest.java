@@ -385,6 +385,23 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         }
     }
 
+    @Test
+    public void testOperationsReuseOneConnection() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Reuse0001"), null);
+        try {
+            Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            requestCounter.reset();
+            for (int i = 0; i < 20; i++) {
+                Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.requests(), 20);
+            Assert.assertEquals(requestCounter.connections(), 1);
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));

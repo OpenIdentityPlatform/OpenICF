@@ -92,4 +92,16 @@ public class ScriptedCRESTConfigurationTest {
             configuration.release();
         }
     }
+
+    @Test
+    public void testClientDropsConnectionsAfterTenIdleSeconds() throws Exception {
+        final ScriptedCRESTConfiguration configuration = newConfiguration(null);
+        try {
+            // InternalHttpAsyncClient.exec is a MainClientExec, which holds the keep-alive strategy.
+            final Object exec = field(configuration.getHttpAsyncClient(), "exec");
+            Assert.assertSame(field(exec, "keepaliveStrategy"), IdleKeepAliveStrategy.INSTANCE);
+        } finally {
+            configuration.release();
+        }
+    }
 }
