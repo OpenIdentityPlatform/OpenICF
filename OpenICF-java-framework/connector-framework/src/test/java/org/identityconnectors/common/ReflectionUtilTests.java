@@ -93,6 +93,13 @@ public class ReflectionUtilTests {
         newInstance(MethodHandles.lookup(), NoNoArgConstructor.class);
     }
 
+    @Test(expectedExceptions = IllegalAccessException.class)
+    public void newInstanceFailsOnInaccessibleConstructor() throws Exception {
+        // publicLookup() is no nestmate: the private constructor fails the access
+        // check with an IllegalAccessError cause, which must not escape as an Error
+        newInstance(MethodHandles.publicLookup(), PrivateConstructor.class);
+    }
+
     @Test
     public void newInstanceThrowsLinkageErrorOfClassWithMissingDependency() throws Exception {
         // A connector configuration class whose dependency is missing from the
@@ -104,7 +111,9 @@ public class ReflectionUtilTests {
             newInstance(MethodHandles.lookup(), clazz);
             fail("NoClassDefFoundError expected");
         } catch (NoClassDefFoundError e) {
-            assertTrue(e.getMessage().contains("Hidden"), e.getMessage());
+            // the missing dependency, not the class that refers to it
+            assertTrue(e.getMessage().contains(Hidden.class.getName().replace('.', '/')),
+                    e.getMessage());
         }
     }
 
@@ -159,6 +168,11 @@ public class ReflectionUtilTests {
 
     public static class NoNoArgConstructor {
         public NoNoArgConstructor(String value) {
+        }
+    }
+
+    public static class PrivateConstructor {
+        private PrivateConstructor() {
         }
     }
 
