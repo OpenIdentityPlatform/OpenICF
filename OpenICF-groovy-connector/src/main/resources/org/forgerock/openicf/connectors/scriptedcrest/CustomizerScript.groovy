@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.connectors.scriptedcrest
@@ -80,16 +82,12 @@ customize {
         builder.setConnectionManager(cm)
 
 
-        // configure timeout on the entire client
-        RequestConfig requestConfig = RequestConfig.custom()/*
-                                                             * .
-                                                             * setConnectionRequestTimeout
-                                                             * ( 50).
-                                                             * setConnectTimeout
-                                                             * (50)
-                                                             * .setSocketTimeout
-                                                             * (50)
-                                                             */.build();
+        // Bound the time spent opening a connection and waiting for a pooled one. The socket
+        // timeout stays unlimited: a long query may send nothing until its result is ready.
+        RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout(10000)
+                .setConnectionRequestTimeout(60000)
+                .build();
         builder.setDefaultRequestConfig(requestConfig)
 
         if (false) {
@@ -117,20 +115,7 @@ customize {
         //PROXY
         if (c.proxyAddress != null) {
             HttpHost proxy = new HttpHost(c.proxyAddress.host, c.proxyAddress.port, c.proxyAddress.scheme);
-            RequestConfig config = RequestConfig.custom().setProxy(proxy)
-
-            // configure timeout on the entire client
-            /*
-                                                 * .
-                                                 * setConnectionRequestTimeout
-                                                 * ( 50).
-                                                 * setConnectTimeout
-                                                 * (50)
-                                                 * .setSocketTimeout
-                                                 * (50)
-
-            */
-                    .build();
+            RequestConfig config = RequestConfig.copy(requestConfig).setProxy(proxy).build();
 
             builder.setDefaultRequestConfig(config)
 
@@ -152,8 +137,9 @@ customize {
                 c.propertyBag.put(HttpClientContext.AUTH_CACHE, authCache)
 
             case AuthMethod.BASIC:
-                // It's part of the http client spec to request the resource anonymously
-                // first and respond to the 401 with the Authorization header.
+                // The first request to a host is sent without credentials and repeated with the
+                // Authorization header after the 401. ScriptedCRESTConfiguration then keeps the
+                // BASIC scheme in a shared AuthCache, so later requests send credentials up front.
                 
                 c.password.access(
                         {
