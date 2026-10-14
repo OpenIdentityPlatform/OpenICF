@@ -207,19 +207,34 @@ public abstract class AbstractRemoteConnection implements Connection {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The HTTP client's I/O thread only buffers the response. The body is parsed and the
+     * {@code handler} is called on the calling thread, so the handler may make further
+     * synchronous requests through this connection.
+     */
     @Override
     public QueryResponse query(final Context context, final QueryRequest request, final QueryResourceHandler handler)
             throws ResourceException {
-        final Promise<QueryResponse, ResourceException> promise = queryAsync(context, request, handler);
+        final PromiseImpl<HttpResponse, ResourceException> promise = PromiseImpl.create();
+        final HttpResponse response;
         try {
-            return promise.getOrThrow();
+            execute(context, convert(request), new BufferedResponseConsumer(),
+                    new InternalFutureCallback<HttpResponse>(promise));
+            response = promise.getOrThrow();
         } catch (final InterruptedException e) {
             throw interrupted(e);
-        } catch (Exception e) {
-            throw adapt(e);
+        } catch (final Throwable t) {
+            throw adapt(t);
         } finally {
             // Cancel the request if it hasn't completed.
             promise.cancel(false);
+        }
+        try {
+            return parseQueryResponse(response, handler);
+        } catch (final Exception e) {
+            throw adapt(e);
         }
     }
 
@@ -236,6 +251,13 @@ public abstract class AbstractRemoteConnection implements Connection {
         return query(context, request, handler);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * The response is parsed and the {@code handler} is called on the HTTP client's I/O thread.
+     * A handler that makes a synchronous request through this connection can block that thread
+     * for good; use {@link #query(Context, QueryRequest, QueryResourceHandler)} for such a handler.
+     */
     @Override
     public Promise<QueryResponse, ResourceException> queryAsync(Context context, QueryRequest request,
             final QueryResourceHandler handler) {
@@ -604,6 +626,19 @@ public abstract class AbstractRemoteConnection implements Connection {
             this.buf = null;
         }
 
+    }
+
+    /**
+     * Buffers the whole response and returns it unparsed, so that the caller can parse the body
+     * on its own thread instead of the HTTP client's I/O thread.
+     */
+    private static final class BufferedResponseConsumer
+            extends AbstractJsonValueResponseHandler<HttpResponse> {
+
+        @Override
+        protected HttpResponse buildResult(final HttpContext context) {
+            return response;
+        }
     }
 
     /**
