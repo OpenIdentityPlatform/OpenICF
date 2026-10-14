@@ -30,7 +30,9 @@ import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -465,6 +467,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         File syncOrigin = null;
         // the snapshots this call copies from the live file; deleted again if the sync fails
         final List<File> copies = new ArrayList<File>(2);
+        // a copy of the live file taken before the diff, which reads it instead, so that a change an external
+        // writer makes meanwhile is left to the next sync; it becomes the next snapshot once a delta is accepted
+        File next = null;
+        long nextTimestamp;
         boolean changesProcessed = false;
 
         // start with a write-lock
@@ -487,6 +493,17 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
+            // read before the copy is taken: named after a later mtime, a copy that misses a change would be
+            // kept over the fresh copy of that mtime, and every sync would report the change again
+            nextTimestamp = config.getCsvFile().lastModified();
+            try {
+                next = copyCsvFile();
+            } catch (NoSuchFileException e) {
+                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                throw new ConnectorException("Unable to copy CSV file for sync operation", e);
+            }
             scrubSyncFiles();
 
             // downgrade to a read-lock
@@ -495,6 +512,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // the read section below deletes the copies only once it is entered
             for (File copy : copies) {
                 deleteRewriteFile(copy);
+            }
+            if (next != null) {
+                deleteRewriteFile(next);
             }
             throw e;
         } finally {
@@ -529,7 +549,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // Index current uids
             reader = null;
             try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+                reader = new CsvMapReader(new FileReader(next), csvPreference);
 
                 final CellProcessor[] processors = getProcessors(header);
 
@@ -614,7 +634,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // Sync creates/updates
             reader = null;
             try {
-                reader = new CsvMapReader(new FileReader(config.getCsvFile()), csvPreference);
+                reader = new CsvMapReader(new FileReader(next), csvPreference);
 
                 final CellProcessor[] processors = getProcessors(header);
 
@@ -656,17 +676,18 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
 
             if (changesProcessed) {
-                long timestamp = config.getCsvFile().lastModified();
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + timestamp);
-                if (!syncOrigin.exists()) {
-                    try {
-                        Files.copy(config.getCsvFile().toPath(), syncOrigin.toPath());
-                    } catch (IOException e) {
-                        throw new ConnectorException("Unable to copy CSV file for sync operation", e);
-                    }
+                        config.getCsvFile().getName() + "." + nextTimestamp);
+                try {
+                    Files.move(next.toPath(), syncOrigin.toPath());
+                    // the name is free again, and createRewriteFile may hand it to a writer
+                    next = null;
                     copies.add(syncOrigin);
-                    token = new SyncToken(timestamp);
+                    token = new SyncToken(nextTimestamp);
+                } catch (FileAlreadyExistsException e) {
+                    // the snapshot of this mtime is kept, and so is the token
+                } catch (IOException e) {
+                    throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
             }
 
@@ -682,6 +703,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 for (File copy : copies) {
                     deleteSnapshot(rwLock, copy);
                 }
+            }
+            if (next != null) {
+                // not a snapshot, so no other sync reads it
+                deleteRewriteFile(next);
             }
         }
     }
@@ -1270,6 +1295,27 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         File csv = config.getCsvFile().getAbsoluteFile();
         return Files.createTempFile(csv.getParentFile().toPath(), csv.getName() + ".", ".tmp")
                 .toFile();
+    }
+
+    /**
+     * Copies the CSV into a file made by {@link #createRewriteFile()}, which
+     * is deleted again if the copy fails. Unlike a rewritten copy, this one
+     * takes the mode of the CSV, as a sync snapshot does. A copy left behind
+     * by a process that died while making it is not removed automatically
+     * either: delete {@code <csv>.<digits>.tmp} files by hand.
+     */
+    File copyCsvFile() throws IOException {
+        final File copy = createRewriteFile();
+        boolean copied = false;
+        try {
+            Files.copy(config.getCsvFile().toPath(), copy.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            copied = true;
+            return copy;
+        } finally {
+            if (!copied) {
+                deleteRewriteFile(copy);
+            }
+        }
     }
 
     /**

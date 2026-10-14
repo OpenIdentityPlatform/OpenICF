@@ -61,7 +61,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
- * Pins the deltas {@link CSVFileConnector#sync} reports when it compares a snapshot with the live CSV file.
+ * Pins the deltas {@link CSVFileConnector#sync} reports when it compares a snapshot with a copy of the live CSV file.
  * Every test works on its own files: the connector caches the header per CSV path.
  */
 public class SyncOpDiffTest {
@@ -444,22 +444,59 @@ public class SyncOpDiffTest {
         assertEquals(resultToken.getValue(), csvFile.lastModified(), change);
     }
 
+    @Test
+    public void rowDeletedDuringSyncIsReportedByTheNextSync() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1");
+
+        assertEquals(syncRewritingLive(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3"),
+                Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(sync(resultToken), Collections.singletonList("DELETE u [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void rowCreatedDuringSyncIsReportedByTheNextSyncOnly() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(syncRewritingLive(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3", "c,Jane,Doe,pw1"),
+                Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(sync(resultToken), Collections.singletonList("CREATE c [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        final List<String> existingLines = Arrays.asList(HEADER, "x,Ann,Poe,pw3");
+        Files.write(existing, existingLines, StandardCharsets.UTF_8);
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), existingLines);
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                existing.getFileName().toString()));
+    }
+
     @Test(expectedExceptions = ConnectorException.class, expectedExceptionsMessageRegExp = "Headers do not match")
-    public void snapshotHeaderMismatchFailsBeforeTheLiveFileIsRead() throws Exception {
+    public void snapshotHeaderMismatchFailsBeforeTheCurrentRowsAreRead() throws Exception {
         givenSnapshot("uid,firstName,surname,password", "u1,Jane,Doe,pw1");
         givenLive(HEADER, "u1,Jane,Doe,pw1", ",Jane,Doe,pw1");
 
         sync(SNAPSHOT_TOKEN);
     }
 
-    @Test(expectedExceptions = ConnectorIOException.class, expectedExceptionsMessageRegExp = "File .* does not exist")
+    @Test
     public void missingCsvFileFailsSync() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
         givenLive(HEADER, "u1,Jane,Doe,pw1");
         connector();
         Files.delete(csvFile.toPath());
 
-        sync(SNAPSHOT_TOKEN);
+        ConnectorIOException e = expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN));
+        assertTrue(e.getMessage().matches("File .* does not exist"), e.getMessage());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
     }
 
     private void givenSnapshot(String... lines) throws IOException {
@@ -546,10 +583,28 @@ public class SyncOpDiffTest {
     }
 
     private List<String> sync(SyncToken token, final boolean accept) {
+        return sync(token, accept, () -> { });
+    }
+
+    // syncs like sync(token), while an external writer replaces the live file with the given lines on the first delta
+    private List<String> syncRewritingLive(SyncToken token, final String... live) {
+        return sync(token, true, () -> {
+            try {
+                givenLive(live);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    private List<String> sync(SyncToken token, final boolean accept, final Runnable onFirstDelta) {
         deltas = new ArrayList<>();
         connector().sync(ObjectClass.ACCOUNT, token, new SyncTokenResultsHandler() {
             @Override
             public boolean handle(SyncDelta delta) {
+                if (deltas.isEmpty()) {
+                    onFirstDelta.run();
+                }
                 deltas.add(render(delta));
                 return accept;
             }
