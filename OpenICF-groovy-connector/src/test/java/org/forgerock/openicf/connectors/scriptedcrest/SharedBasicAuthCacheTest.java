@@ -15,9 +15,17 @@
  */
 package org.forgerock.openicf.connectors.scriptedcrest;
 
+import org.apache.http.Consts;
+import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.auth.AUTH;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.DigestScheme;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicHttpRequest;
+import org.apache.http.protocol.BasicHttpContext;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -48,5 +56,55 @@ public class SharedBasicAuthCacheTest {
         cache.put(HOST, new BasicScheme());
         cache.clear();
         Assert.assertNull(cache.get(HOST));
+    }
+
+    @Test
+    public void testGivesEachRequestItsOwnScheme() {
+        final SharedBasicAuthCache cache = new SharedBasicAuthCache();
+        final BasicScheme cached = new BasicScheme();
+        cache.put(HOST, cached);
+        final Object first = cache.get(HOST);
+        final Object second = cache.get(HOST);
+        Assert.assertNotSame(first, second);
+        Assert.assertNotSame(first, cached);
+        Assert.assertNotSame(second, cached);
+    }
+
+    @Test
+    public void testCopyAuthenticatesLikeTheCachedScheme() throws Exception {
+        final SharedBasicAuthCache cache = new SharedBasicAuthCache();
+        final BasicScheme cached = new BasicScheme();
+        cached.processChallenge(new BasicHeader(AUTH.WWW_AUTH, "Basic realm=\"r\""));
+        cache.put(HOST, cached);
+        final UsernamePasswordCredentials credentials =
+                new UsernamePasswordCredentials("admin", "Passw0rd");
+        final HttpRequest request = new BasicHttpRequest("GET", "/");
+        final Header expected = cached.authenticate(credentials, request, new BasicHttpContext());
+        final Header actual =
+                ((BasicScheme) cache.get(HOST)).authenticate(credentials, request,
+                        new BasicHttpContext());
+        Assert.assertEquals(actual.getName(), expected.getName());
+        Assert.assertEquals(actual.getValue(), expected.getValue());
+    }
+
+    @Test
+    public void testCopyKeepsTheProxyState() throws Exception {
+        final SharedBasicAuthCache cache = new SharedBasicAuthCache();
+        final BasicScheme cached = new BasicScheme();
+        cached.processChallenge(new BasicHeader(AUTH.PROXY_AUTH, "Basic realm=\"r\""));
+        cache.put(HOST, cached);
+        final BasicScheme copy = (BasicScheme) cache.get(HOST);
+        Assert.assertTrue(copy.isProxy());
+        final Header header = copy.authenticate(new UsernamePasswordCredentials("admin", "Passw0rd"),
+                new BasicHttpRequest("GET", "/"), new BasicHttpContext());
+        Assert.assertEquals(header.getName(), AUTH.PROXY_AUTH_RESP);
+    }
+
+    @Test
+    public void testCopyKeepsTheCredentialsCharset() {
+        final SharedBasicAuthCache cache = new SharedBasicAuthCache();
+        cache.put(HOST, new BasicScheme(Consts.UTF_8));
+        final BasicScheme copy = (BasicScheme) cache.get(HOST);
+        Assert.assertEquals(copy.getCredentialsCharset(), Consts.UTF_8);
     }
 }
