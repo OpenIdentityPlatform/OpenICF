@@ -565,10 +565,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     index.put(uid, null);
                 }
             } catch (FileNotFoundException e) {
-                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
+                log.error(e, "Copy {0} of {1} does not exist!", next.toString(), config.getCsvFile().toString());
                 throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
             } catch (IOException e) {
-                log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
+                log.error(e, "Error reading from copy {0} of {1}!", next.toString(), config.getCsvFile().toString());
                 throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
                 if (reader != null) {
@@ -660,10 +660,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     changesProcessed = true;
                 }
             } catch (FileNotFoundException e) {
-                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
+                log.error(e, "Copy {0} of {1} does not exist!", next.toString(), config.getCsvFile().toString());
                 throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
             } catch (IOException e) {
-                log.error(e, "Error reading from {0}!", config.getCsvFile().toString());
+                log.error(e, "Error reading from copy {0} of {1}!", next.toString(), config.getCsvFile().toString());
                 throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
             } finally {
                 if (reader != null) {

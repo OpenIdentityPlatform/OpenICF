@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -499,6 +500,55 @@ public class SyncOpDiffTest {
                 existing.getFileName().toString()));
     }
 
+    @Test
+    public void snapshotThatCannotBeMovedInFailsSync() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from renaming files");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final ConnectorException e;
+        try {
+            // the delta is handled, then the copy cannot be moved into the read-only directory
+            e = expectThrows(ConnectorException.class, () -> connector().sync(ObjectClass.ACCOUNT, SNAPSHOT_TOKEN,
+                    delta -> {
+                        setDirMode(readOnly);
+                        return true;
+                    }, null));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertEquals(e.getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(e.getCause() instanceof AccessDeniedException, String.valueOf(e.getCause()));
+    }
+
+    @Test
+    public void snapshotTakesTheModeOfTheCsvFile() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A file mode needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(csvFile.toPath());
+        if (mode.equals(PosixFilePermissions.fromString("rw-------"))) {
+            throw new SkipException("The umask already gives the CSV file the mode of a rewrite file");
+        }
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(Files.getPosixFilePermissions(
+                dir.resolve(csvFile.getName() + "." + resultToken.getValue())), mode);
+    }
+
     @Test(expectedExceptions = ConnectorException.class, expectedExceptionsMessageRegExp = "Headers do not match")
     public void snapshotHeaderMismatchFailsBeforeTheCurrentRowsAreRead() throws Exception {
         givenSnapshot("uid,firstName,surname,password", "u1,Jane,Doe,pw1");
@@ -519,6 +569,64 @@ public class SyncOpDiffTest {
         assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
     }
 
+    @Test
+    public void unreadableCsvFileFailsSync() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unreadable file needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(csvFile.toPath());
+
+        final ConnectorException e;
+        Files.setPosixFilePermissions(csvFile.toPath(), PosixFilePermissions.fromString("---------"));
+        try {
+            if (Files.isReadable(csvFile.toPath())) {
+                throw new SkipException("A file without read permission can still be read by this user");
+            }
+            // the copy is the first read of the CSV file, and it fails as the copy of a sync without a token does
+            e = expectThrows(ConnectorException.class, () -> sync(SNAPSHOT_TOKEN));
+        } finally {
+            Files.setPosixFilePermissions(csvFile.toPath(), mode);
+        }
+
+        assertEquals(e.getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(e.getCause() instanceof AccessDeniedException, String.valueOf(e.getCause()));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void copyDeletedBeforeTheIndexPassFailsSyncNamingTheCsvFile() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(true);
+
+        final String output = captureStdErr(() -> {
+            ConnectorIOException e = expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN));
+            assertEquals(e.getMessage(), "File " + csvFile + " does not exist");
+        });
+
+        assertEquals(deltas, Collections.emptyList());
+        assertTrue(output.contains("Copy " + copies.get(0) + " of " + csvFile + " does not exist!"), output);
+    }
+
+    @Test
+    public void copyDeletedBeforeTheCreateUpdatePassFailsSyncNamingTheCsvFile() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(false);
+
+        final String output = captureStdErr(() -> {
+            ConnectorIOException e = expectThrows(ConnectorIOException.class,
+                    () -> sync(SNAPSHOT_TOKEN, true, () -> assertTrue(copies.get(0).delete())));
+            assertEquals(e.getMessage(), "File " + csvFile + " does not exist");
+        });
+
+        assertEquals(deltas, Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertTrue(output.contains("Copy " + copies.get(0) + " of " + csvFile + " does not exist!"), output);
+    }
+
     private void givenSnapshot(String... lines) throws IOException {
         Files.write(dir.resolve(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()), Arrays.asList(lines),
                 StandardCharsets.UTF_8);
@@ -537,6 +645,19 @@ public class SyncOpDiffTest {
             action.run();
         } finally {
             System.setOut(original);
+        }
+        return buffer.toString();
+    }
+
+    // StdOutLogger writes errors to System.err instead, which it also reads on every call
+    private static String captureStdErr(Runnable action) {
+        final PrintStream original = System.err;
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(buffer, true));
+        try {
+            action.run();
+        } finally {
+            System.setErr(original);
         }
         return buffer.toString();
     }
@@ -591,6 +712,23 @@ public class SyncOpDiffTest {
             connector(new CSVFileConnector());
         }
         return connector;
+    }
+
+    // records every copy of the CSV file that the connector takes; deleteAtOnce deletes each one before it is read
+    private List<File> connectorRecordingCopies(final boolean deleteAtOnce) {
+        final List<File> copies = new ArrayList<>();
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                copies.add(copy);
+                if (deleteAtOnce) {
+                    Files.delete(copy.toPath());
+                }
+                return copy;
+            }
+        });
+        return copies;
     }
 
     private CSVFileConnector connector(CSVFileConnector instance) {
