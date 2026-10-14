@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.connectors.scriptedcrest
@@ -141,6 +143,12 @@ class RemoteConnection extends AbstractRemoteConnection {
                     hasTrailingGarbage = true;
                 }
             })
+
+            if (parser.isStopped()) {
+                // The handler wants no more results: the rest of the response, including any
+                // paged results cookie, is left unread.
+                return newQueryResponse();
+            }
 
             if (content."${QueryResponse.FIELD_ERROR}" != null) {
                 exception = getAsResourceException(new JsonValue(content."${QueryResponse.FIELD_ERROR}"));

@@ -56,14 +56,33 @@ import static groovy.json.JsonTokenType.*;
  */
 public class StreamingJsonSlurper {
 
+    private boolean stopped;
+
+    /**
+     * Returns whether the last {@code parse} stopped early because the handler returned
+     * {@code false}. The returned content is then incomplete, and the callback was not called.
+     *
+     * @return {@code true} if the last parse stopped early
+     */
+    public boolean isStopped() {
+        return stopped;
+    }
+
     /**
      * Parse a JSON data structure from content from a reader
      *
      * @param reader
      *         reader over a JSON content
+     * @param handler
+     *         called with each object of the {@code result} array instead of keeping it; a
+     *         {@code false} from it stops the parse
+     * @param callback
+     *         called with the lexer and the content once the value is parsed, unless the
+     *         handler stopped the parse
      * @return a data structure of lists and maps
      */
     public Object parse(Reader reader, Closure handler, Closure<Object> callback) {
+        stopped = false;
         Object content = null;
 
         JsonLexer lexer = new JsonLexer(reader);
@@ -80,7 +99,7 @@ public class StreamingJsonSlurper {
                     + token.getStartColumn());
         }
 
-        if (null != callback) {
+        if (null != callback && !stopped) {
             callback.call(lexer, content);
         }
         return content;
@@ -123,12 +142,18 @@ public class StreamingJsonSlurper {
 
             if (currentToken.getType() == OPEN_CURLY) {
                 if (null != handler) {
-                    handler.call(parseObject(lexer, null));
+                    if (Boolean.FALSE.equals(handler.call(parseObject(lexer, null)))) {
+                        stopped = true;
+                        return content;
+                    }
                 } else {
                     content.add(parseObject(lexer, handler));
                 }
             } else if (currentToken.getType() == OPEN_BRACKET) {
                 content.add(parseArray(lexer, handler));
+                if (stopped) {
+                    return content;
+                }
             } else if (currentToken.getType().ordinal() >= NULL.ordinal()) {
                 content.add(currentToken.getValue());
             } else if (currentToken.getType() == CLOSE_BRACKET) {
@@ -232,6 +257,9 @@ public class StreamingJsonSlurper {
             } else if (currentToken.getType() == OPEN_BRACKET) {
                 if (mapKey.equals(QueryResponse.FIELD_RESULT)) {
                     content.put(mapKey, parseArray(lexer, handler));
+                    if (stopped) {
+                        return content;
+                    }
                 } else {
                     content.put(mapKey, parseArray(lexer, null));
                 }

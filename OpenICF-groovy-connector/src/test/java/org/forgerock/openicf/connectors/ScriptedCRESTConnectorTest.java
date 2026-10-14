@@ -339,6 +339,34 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         return false;
     }
 
+    @Test
+    public void testSearchStopsWhenTheHandlerReturnsFalse() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final List<Uid> uids = new ArrayList<Uid>();
+        try {
+            for (int i = 0; i < 3; i++) {
+                uids.add(facade.create(ObjectClass.ACCOUNT,
+                        createUserAttributes("John", String.format("Stop%04d", i)), null));
+            }
+            final AtomicInteger handled = new AtomicInteger();
+            final SearchResult result = facade.search(ObjectClass.ACCOUNT,
+                    FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "stop")),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            handled.incrementAndGet();
+                            return false;
+                        }
+                    }, new OperationOptionsBuilder().setPageSize(2)
+                            .setSortKeys(SortKey.ascendingOrder(Name.NAME)).build());
+            Assert.assertEquals(handled.get(), 1);
+            Assert.assertNotNull(result);
+            // The rest of the response, including the backend's cookie, is left unread.
+            Assert.assertNull(result.getPagedResultsCookie());
+        } finally {
+            deleteAll(facade, uids);
+        }
+    }
+
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {
         Set<Attribute> createAttributes = new HashSet<Attribute>();
         createAttributes.add(new Name(lastName.toLowerCase()));
