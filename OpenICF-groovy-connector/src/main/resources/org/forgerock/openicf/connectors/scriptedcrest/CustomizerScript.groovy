@@ -82,8 +82,10 @@ customize {
         builder.setConnectionManager(cm)
 
 
-        // Bound the time spent opening a connection and waiting for a pooled one. The socket
-        // timeout stays unlimited: a long query may send nothing until its result is ready.
+        // Fail a connect attempt after 10 s, and a wait for a pooled connection that is still
+        // unserved after 60 s. The pool checks that deadline only when it releases a connection or
+        // a connect attempt ends, so a wait can run over it. The socket timeout stays unlimited:
+        // a long query may send nothing until its result is ready.
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectTimeout(10000)
                 .setConnectionRequestTimeout(60000)

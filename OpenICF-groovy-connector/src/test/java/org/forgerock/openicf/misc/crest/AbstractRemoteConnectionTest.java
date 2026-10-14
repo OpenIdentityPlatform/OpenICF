@@ -100,7 +100,7 @@ public class AbstractRemoteConnectionTest {
     }
 
     /** Pins kept behaviour: an interrupted caller gets ServiceUnavailableException. */
-    @Test
+    @Test(timeOut = 10000)
     public void testInterruptedQueryFailsWithServiceUnavailable() {
         final StubConnection pending = new StubConnection() {
             @Override
@@ -117,6 +117,25 @@ public class AbstractRemoteConnectionTest {
             Assert.assertTrue(e instanceof ServiceUnavailableException, String.valueOf(e));
         } finally {
             Thread.interrupted();
+        }
+    }
+
+    /** Pins kept behaviour: a ResourceException from the transport reaches the caller unwrapped. */
+    @Test
+    public void testQueryPassesATransportResourceExceptionThrough() {
+        final StubConnection cancelling = new StubConnection() {
+            @Override
+            public <T> Future<T> execute(Context context, HttpUriRequest request,
+                    HttpAsyncResponseConsumer<T> responseConsumer, FutureCallback<T> callback) {
+                callback.cancelled(); // InternalFutureCallback fails the promise with ServiceUnavailableException
+                return null;
+            }
+        };
+        try {
+            cancelling.query(new RootContext(), usersQuery(), NO_RESOURCES_EXPECTED);
+            Assert.fail("ServiceUnavailableException expected");
+        } catch (ResourceException e) {
+            Assert.assertTrue(e instanceof ServiceUnavailableException, String.valueOf(e));
         }
     }
 
