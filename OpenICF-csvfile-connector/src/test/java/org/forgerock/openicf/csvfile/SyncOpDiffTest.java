@@ -39,6 +39,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -53,6 +59,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.supercsv.exception.SuperCsvException;
 import org.testng.SkipException;
@@ -486,6 +493,36 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void copyOfTheCsvFileBlocksWritersButNotReaders() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final ExecutorService other = Executors.newSingleThreadExecutor();
+        final List<Future<?>> writer = new ArrayList<>();
+        try {
+            connector(new CSVFileConnector() {
+                @Override
+                File copyCsvFile() throws IOException {
+                    if (writer.isEmpty()) {
+                        // getLatestSyncToken takes the read lock, as a search does, and does not wait for the copy
+                        assertEquals(await(other.submit(() -> getLatestSyncToken(ObjectClass.ACCOUNT))),
+                                SNAPSHOT_TOKEN);
+                        // a writer in this JVM waits until the sync ends
+                        writer.add(other.submit(() -> delete(ObjectClass.ACCOUNT, new Uid("k"), null)));
+                        expectThrows(TimeoutException.class, () -> writer.get(0).get(500, TimeUnit.MILLISECONDS));
+                    }
+                    return super.copyCsvFile();
+                }
+            });
+
+            assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+            await(writer.get(0));
+            assertEquals(sync(resultToken), Collections.singletonList("DELETE k [Ann, Poe, pw3]"));
+        } finally {
+            other.shutdownNow();
+        }
+    }
+
+    @Test
     public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
@@ -697,6 +734,15 @@ public class SyncOpDiffTest {
             return true;
         }, null));
         return handled;
+    }
+
+    // waits for a task on another thread, which the sync must not keep waiting
+    private static <T> T await(Future<T> task) {
+        try {
+            return task.get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private void setDirMode(Set<PosixFilePermission> mode) {

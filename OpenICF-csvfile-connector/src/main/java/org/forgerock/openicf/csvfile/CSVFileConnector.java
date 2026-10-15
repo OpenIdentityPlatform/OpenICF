@@ -470,7 +470,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         // a copy of the live file taken before the diff, which reads it instead, so that a change an external
         // writer makes meanwhile is left to the next sync; it becomes the next snapshot once a delta is accepted
         File next = null;
-        long nextTimestamp;
         boolean changesProcessed = false;
 
         // start with a write-lock
@@ -493,17 +492,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
-            // read before the copy is taken: named after a later mtime, a copy that misses a change would be
-            // kept over the fresh copy of that mtime, and every sync would report the change again
-            nextTimestamp = config.getCsvFile().lastModified();
-            try {
-                next = copyCsvFile();
-            } catch (NoSuchFileException e) {
-                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                throw new ConnectorException("Unable to copy CSV file for sync operation", e);
-            }
             scrubSyncFiles();
 
             // downgrade to a read-lock
@@ -513,9 +501,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             for (File copy : copies) {
                 deleteRewriteFile(copy);
             }
-            if (next != null) {
-                deleteRewriteFile(next);
-            }
             throw e;
         } finally {
             rwLock.writeLock().unlock();
@@ -524,6 +509,19 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         // we now have a read-lock unless the above block threw an Exception
         boolean completed = false;
         try {
+            // under the read lock, writers in this JVM still wait for the copy, but searches do not;
+            // the mtime is read before the copy is taken: named after a later mtime, a copy that misses
+            // a change would be kept over the fresh copy of that mtime, and every sync would report the change again
+            final long nextTimestamp = config.getCsvFile().lastModified();
+            try {
+                next = copyCsvFile();
+            } catch (NoSuchFileException e) {
+                log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
+                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+            } catch (IOException e) {
+                throw new ConnectorException("Unable to copy CSV file for sync operation", e);
+            }
+
             final MessageDigest digest = newFingerprintDigest();
             // uid of every current row -> fingerprint of the first origin row with that uid, null while there is none
             final Map<String, byte[]> index = new HashMap<String, byte[]>();
