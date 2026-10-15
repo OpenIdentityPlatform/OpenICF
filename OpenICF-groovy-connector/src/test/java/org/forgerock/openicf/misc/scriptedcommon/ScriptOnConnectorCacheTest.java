@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,7 +37,9 @@ import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.reflection.ClassInfo;
+import org.forgerock.openicf.connectors.groovy.ScriptedPoolableConnector;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.ScriptContext;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -218,6 +222,32 @@ public class ScriptOnConnectorCacheTest {
         assertThat(isCollected(evicted)).isTrue();
     }
 
+    @Test
+    public void testConnectorReusesTheCompiledScript() {
+        final GroovyClassLoader engineLoader = configuration.getGroovyScriptEngine().getGroovyClassLoader();
+        final int loadedBefore = engineLoader.getLoadedClasses().length;
+        final ScriptedPoolableConnector connector = connector();
+        final Object first = connector.runScriptOnConnector(groovy("return this.getClass()"), null);
+        assertThat(connector.runScriptOnConnector(groovy("return this.getClass()"), null)).isSameAs(first);
+        assertThat(engineLoader.getLoadedClasses()).hasSize(loadedBefore);
+    }
+
+    @Test
+    public void testConnectorScriptSeesItsArgumentsAndTheLogger() {
+        final ScriptContext request = new ScriptContext("Groovy", "return [a + 1, null != log]",
+                Collections.<String, Object>singletonMap("a", 41));
+        assertThat(connector().runScriptOnConnector(request, null)).isEqualTo(Arrays.asList(42, true));
+    }
+
+    @Test
+    public void testScriptRunByTheConnectorCanBeUnloadedOnceEvicted() throws Exception {
+        System.setProperty(ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, "1");
+        final WeakReference<Object> evicted = runOnConnectorAndForget("return this.getClass()");
+        // Evicted through the configuration, so the connector code runs no other script after it.
+        configuration.getScriptOnConnectorClass("return 2");
+        assertThat(isCollected(evicted)).isTrue();
+    }
+
     private ScriptedConfiguration withScriptRoot(ScriptedConfiguration result) {
         result.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
         return result;
@@ -280,5 +310,20 @@ public class ScriptOnConnectorCacheTest {
             Thread.sleep(50);
         }
         return null == reference.get();
+    }
+
+    /** Runs the script through a connector and keeps no strong reference to what it returned. */
+    private WeakReference<Object> runOnConnectorAndForget(String scriptText) {
+        return new WeakReference<Object>(connector().runScriptOnConnector(groovy(scriptText), null));
+    }
+
+    private ScriptedPoolableConnector connector() {
+        final ScriptedPoolableConnector connector = new ScriptedPoolableConnector();
+        connector.init(configuration);
+        return connector;
+    }
+
+    private static ScriptContext groovy(String scriptText) {
+        return new ScriptContext("Groovy", scriptText, Collections.<String, Object>emptyMap());
     }
 }

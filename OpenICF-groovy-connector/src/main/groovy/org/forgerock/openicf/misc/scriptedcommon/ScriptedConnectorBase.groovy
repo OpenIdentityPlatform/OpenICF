@@ -20,11 +20,12 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.misc.scriptedcommon
 
-import org.codehaus.groovy.runtime.InvokerHelper
 import org.identityconnectors.common.CollectionUtil
 import org.identityconnectors.common.StringUtil
 import org.identityconnectors.common.logging.Log
@@ -339,8 +340,6 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
         if (GROOVY.equalsIgnoreCase(request.getScriptLanguage())
                 && StringUtil.isNotBlank(request.getScriptText())) {
             try {
-                final GroovyCodeSource codeSource = new GroovyCodeSource(request.scriptText,
-                        "Script" + System.currentTimeMillis() + ".groovy", "fix");
                 Binding binding = new Binding();
                 for (Map.Entry<String, Object> entry : request.scriptArguments) {
                     binding.setVariable(entry.key, entry.value)
@@ -349,10 +348,10 @@ public class ScriptedConnectorBase<C extends ScriptedConfiguration> implements A
                         createBinding(binding, OperationType.RUNSCRIPTONCONNECTOR, null, null, null, options),
                         { String scriptName, Binding arguments ->
                             arguments.setVariable(LOGGER, logger)
-                            return InvokerHelper.createScript(getScriptedConfiguration().getGroovyScriptEngine().
-                                    getGroovyClassLoader().parseClass(codeSource, false),
-                                    arguments).run();
-                        });                       
+                            // Compiled once per text and run from Java, see evaluateScriptOnConnector.
+                            return getScriptedConfiguration().evaluateScriptOnConnector(request.scriptText,
+                                    arguments)
+                        });
             } catch (final RuntimeException e) {
                 throw e;
             } catch (final Exception e) {
