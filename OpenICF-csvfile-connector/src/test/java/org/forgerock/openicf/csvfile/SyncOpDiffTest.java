@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,6 +39,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,6 +59,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.OperationalAttributes;
 import org.identityconnectors.framework.common.objects.SyncDelta;
 import org.identityconnectors.framework.common.objects.SyncToken;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SyncTokenResultsHandler;
 import org.supercsv.exception.SuperCsvException;
 import org.testng.SkipException;
@@ -61,7 +69,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 /**
- * Pins the deltas {@link CSVFileConnector#sync} reports when it compares a snapshot with the live CSV file.
+ * Pins the deltas {@link CSVFileConnector#sync} reports when it compares a snapshot with a copy of the live CSV file.
  * Every test works on its own files: the connector caches the header per CSV path.
  */
 public class SyncOpDiffTest {
@@ -444,22 +452,216 @@ public class SyncOpDiffTest {
         assertEquals(resultToken.getValue(), csvFile.lastModified(), change);
     }
 
+    @Test
+    public void rowDeletedDuringSyncIsReportedByTheNextSync() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1");
+
+        assertEquals(syncRewritingLive(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3"),
+                Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(sync(resultToken), Collections.singletonList("DELETE u [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void rowCreatedDuringSyncIsReportedByTheNextSyncOnly() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(syncRewritingLive(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3", "c,Jane,Doe,pw1"),
+                Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(sync(resultToken), Collections.singletonList("CREATE c [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void csvFileChangedAfterItsCopyIsReportedByTheNextSync() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "u,Jane,Doe,pw1");
+        assertTrue(csvFile.setLastModified(1400000000000L));
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                // an external writer removes u once the copy is taken; runs on every sync, so it writes fixed content
+                givenLive(HEADER, "k,Ann,Poe,pw3");
+                return copy;
+            }
+        });
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), 1400000000000L);
+        assertEquals(sync(resultToken), Collections.singletonList("DELETE u [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void copyOfTheCsvFileBlocksWritersButNotReaders() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final ExecutorService other = Executors.newSingleThreadExecutor();
+        final List<Future<?>> writer = new ArrayList<>();
+        try {
+            connector(new CSVFileConnector() {
+                @Override
+                File copyCsvFile() throws IOException {
+                    if (writer.isEmpty()) {
+                        // getLatestSyncToken takes the read lock, as a search does, and does not wait for the copy
+                        assertEquals(await(other.submit(() -> getLatestSyncToken(ObjectClass.ACCOUNT))),
+                                SNAPSHOT_TOKEN);
+                        // a writer in this JVM waits until the sync ends
+                        writer.add(other.submit(() -> delete(ObjectClass.ACCOUNT, new Uid("k"), null)));
+                        expectThrows(TimeoutException.class, () -> writer.get(0).get(500, TimeUnit.MILLISECONDS));
+                    }
+                    return super.copyCsvFile();
+                }
+            });
+
+            assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+            await(writer.get(0));
+            assertEquals(sync(resultToken), Collections.singletonList("DELETE k [Ann, Poe, pw3]"));
+        } finally {
+            other.shutdownNow();
+        }
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        final List<String> existingLines = Arrays.asList(HEADER, "x,Ann,Poe,pw3");
+        Files.write(existing, existingLines, StandardCharsets.UTF_8);
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), existingLines);
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                existing.getFileName().toString()));
+    }
+
+    @Test
+    public void snapshotThatCannotBeMovedInFailsSync() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from renaming files");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final ConnectorException e;
+        try {
+            // the delta is handled, then the copy cannot be moved into the read-only directory
+            e = expectThrows(ConnectorException.class, () -> connector().sync(ObjectClass.ACCOUNT, SNAPSHOT_TOKEN,
+                    delta -> {
+                        setDirMode(readOnly);
+                        return true;
+                    }, null));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertEquals(e.getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(e.getCause() instanceof AccessDeniedException, String.valueOf(e.getCause()));
+    }
+
+    @Test
+    public void snapshotTakesTheModeOfTheCsvFile() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A file mode needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(csvFile.toPath());
+        if (mode.equals(PosixFilePermissions.fromString("rw-------"))) {
+            throw new SkipException("The umask already gives the CSV file the mode of a rewrite file");
+        }
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertEquals(Files.getPosixFilePermissions(
+                dir.resolve(csvFile.getName() + "." + resultToken.getValue())), mode);
+    }
+
     @Test(expectedExceptions = ConnectorException.class, expectedExceptionsMessageRegExp = "Headers do not match")
-    public void snapshotHeaderMismatchFailsBeforeTheLiveFileIsRead() throws Exception {
+    public void snapshotHeaderMismatchFailsBeforeTheCurrentRowsAreRead() throws Exception {
         givenSnapshot("uid,firstName,surname,password", "u1,Jane,Doe,pw1");
         givenLive(HEADER, "u1,Jane,Doe,pw1", ",Jane,Doe,pw1");
 
         sync(SNAPSHOT_TOKEN);
     }
 
-    @Test(expectedExceptions = ConnectorIOException.class, expectedExceptionsMessageRegExp = "File .* does not exist")
+    @Test
     public void missingCsvFileFailsSync() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
         givenLive(HEADER, "u1,Jane,Doe,pw1");
         connector();
         Files.delete(csvFile.toPath());
 
-        sync(SNAPSHOT_TOKEN);
+        ConnectorIOException e = expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN));
+        assertTrue(e.getMessage().matches("File .* does not exist"), e.getMessage());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void unreadableCsvFileFailsSync() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unreadable file needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(csvFile.toPath());
+
+        final ConnectorException e;
+        Files.setPosixFilePermissions(csvFile.toPath(), PosixFilePermissions.fromString("---------"));
+        try {
+            if (Files.isReadable(csvFile.toPath())) {
+                throw new SkipException("A file without read permission can still be read by this user");
+            }
+            // the copy is the first read of the CSV file, and it fails as the copy of a sync without a token does
+            e = expectThrows(ConnectorException.class, () -> sync(SNAPSHOT_TOKEN));
+        } finally {
+            Files.setPosixFilePermissions(csvFile.toPath(), mode);
+        }
+
+        assertEquals(e.getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(e.getCause() instanceof AccessDeniedException, String.valueOf(e.getCause()));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void copyDeletedBeforeTheIndexPassFailsSyncNamingTheCsvFile() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(true);
+
+        final String output = captureStdErr(() -> {
+            ConnectorIOException e = expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN));
+            assertEquals(e.getMessage(), "File " + csvFile + " does not exist");
+        });
+
+        assertEquals(deltas, Collections.emptyList());
+        assertTrue(output.contains("Copy " + copies.get(0) + " of " + csvFile + " does not exist!"), output);
+    }
+
+    @Test
+    public void copyDeletedBeforeTheCreateUpdatePassFailsSyncNamingTheCsvFile() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(false);
+
+        final String output = captureStdErr(() -> {
+            ConnectorIOException e = expectThrows(ConnectorIOException.class,
+                    () -> sync(SNAPSHOT_TOKEN, true, () -> assertTrue(copies.get(0).delete())));
+            assertEquals(e.getMessage(), "File " + csvFile + " does not exist");
+        });
+
+        assertEquals(deltas, Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        assertTrue(output.contains("Copy " + copies.get(0) + " of " + csvFile + " does not exist!"), output);
     }
 
     private void givenSnapshot(String... lines) throws IOException {
@@ -480,6 +682,19 @@ public class SyncOpDiffTest {
             action.run();
         } finally {
             System.setOut(original);
+        }
+        return buffer.toString();
+    }
+
+    // StdOutLogger writes errors to System.err instead, which it also reads on every call
+    private static String captureStdErr(Runnable action) {
+        final PrintStream original = System.err;
+        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(buffer, true));
+        try {
+            action.run();
+        } finally {
+            System.setErr(original);
         }
         return buffer.toString();
     }
@@ -521,6 +736,15 @@ public class SyncOpDiffTest {
         return handled;
     }
 
+    // waits for a task on another thread, which the sync must not keep waiting
+    private static <T> T await(Future<T> task) {
+        try {
+            return task.get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new AssertionError(e);
+        }
+    }
+
     private void setDirMode(Set<PosixFilePermission> mode) {
         try {
             Files.setPosixFilePermissions(dir, mode);
@@ -531,13 +755,35 @@ public class SyncOpDiffTest {
 
     private CSVFileConnector connector() {
         if (connector == null) {
-            CSVFileConfiguration config = new CSVFileConfiguration();
-            config.setCsvFile(csvFile);
-            config.setHeaderUid("uid");
-            config.setHeaderPassword("password");
-            connector = new CSVFileConnector();
-            connector.init(config);
+            connector(new CSVFileConnector());
         }
+        return connector;
+    }
+
+    // records every copy of the CSV file that the connector takes; deleteAtOnce deletes each one before it is read
+    private List<File> connectorRecordingCopies(final boolean deleteAtOnce) {
+        final List<File> copies = new ArrayList<>();
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                copies.add(copy);
+                if (deleteAtOnce) {
+                    Files.delete(copy.toPath());
+                }
+                return copy;
+            }
+        });
+        return copies;
+    }
+
+    private CSVFileConnector connector(CSVFileConnector instance) {
+        CSVFileConfiguration config = new CSVFileConfiguration();
+        config.setCsvFile(csvFile);
+        config.setHeaderUid("uid");
+        config.setHeaderPassword("password");
+        instance.init(config);
+        connector = instance;
         return connector;
     }
 
@@ -546,10 +792,28 @@ public class SyncOpDiffTest {
     }
 
     private List<String> sync(SyncToken token, final boolean accept) {
+        return sync(token, accept, () -> { });
+    }
+
+    // syncs like sync(token), while an external writer replaces the live file with the given lines on the first delta
+    private List<String> syncRewritingLive(SyncToken token, final String... live) {
+        return sync(token, true, () -> {
+            try {
+                givenLive(live);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
+    private List<String> sync(SyncToken token, final boolean accept, final Runnable onFirstDelta) {
         deltas = new ArrayList<>();
         connector().sync(ObjectClass.ACCOUNT, token, new SyncTokenResultsHandler() {
             @Override
             public boolean handle(SyncDelta delta) {
+                if (deltas.isEmpty()) {
+                    onFirstDelta.run();
+                }
                 deltas.add(render(delta));
                 return accept;
             }
