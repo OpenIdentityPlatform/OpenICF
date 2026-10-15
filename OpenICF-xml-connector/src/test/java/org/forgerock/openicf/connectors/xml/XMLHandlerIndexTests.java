@@ -55,6 +55,7 @@ import org.identityconnectors.framework.common.objects.filter.GreaterThanOrEqual
 import org.identityconnectors.framework.common.objects.filter.StartsWithFilter;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.w3c.dom.DOMException;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -98,10 +99,11 @@ public class XMLHandlerIndexTests {
     }
 
     @Test
-    public void failedRenameLeavesNoStaleName() {
-        expectThrows(IllegalArgumentException.class,
-                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u1"), renameThenFail("a")));
-        // The rename was applied before the failure (#158): u1 is no longer "dup" in the document.
+    public void renameFailingMidwayLeavesNoStaleName() {
+        nestLastNameInto("u1");
+        expectThrows(DOMException.class,
+                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u1"), renameThenFailMidway("a")));
+        // The DOM fails midway (#182), after the rename: u1 is no longer "dup" in the document.
         assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "a"), Collections.singletonList("u1|a"));
         assertEquals(describe(handler.search(equalsQuery(Name.NAME, "a"), ObjectClass.ACCOUNT)),
                 Collections.singletonList("u1|a")); // the index has the new name too
@@ -109,9 +111,20 @@ public class XMLHandlerIndexTests {
         handler.create(ObjectClass.ACCOUNT, account("dup")); // a stale "dup" for u1 in the index would refuse this
     }
 
+    @Test
+    public void rejectedRenameKeepsTheOldName() {
+        expectThrows(IllegalArgumentException.class,
+                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u1"), renameThenFail("a")));
+        assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "a"), Collections.emptyList());
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "a"), ObjectClass.ACCOUNT)), Collections.emptyList());
+        assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "dup"), Arrays.asList("u1|dup", "u2|dup"));
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
+                Arrays.asList("u1|dup", "u2|dup"));
+    }
+
     /**
-     * Renames to {@code newName}, then fails on an unknown attribute. update() applies the attributes
-     * in order, so the rename is in the document when it throws. A two-valued __NAME__ cannot be used:
+     * Renames to {@code newName} along with an unknown attribute. update() rejects the unknown attribute
+     * before it changes the entry, so the rename is not applied. A two-valued __NAME__ cannot be used:
      * AttributeBuilder.build(Name.NAME, "a", "b") throws before update() runs.
      */
     static Set<Attribute> renameThenFail(String newName) {
@@ -119,6 +132,27 @@ public class XMLHandlerIndexTests {
         attributes.add(AttributeBuilder.build(Name.NAME, newName));
         attributes.add(AttributeBuilder.build("no-such-attribute", "x"));
         return attributes;
+    }
+
+    /** Renames to {@code newName}, then replaces the lastname: on an entry given {@link #nestLastNameInto}, the DOM fails there. */
+    static Set<Attribute> renameThenFailMidway(String newName) {
+        Set<Attribute> attributes = new LinkedHashSet<Attribute>();
+        attributes.add(AttributeBuilder.build(Name.NAME, newName));
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW"));
+        return attributes;
+    }
+
+    /**
+     * An XSD-invalid hand edit (#182): update's descendant lookup finds the inner lastname, removeChild rejects it.
+     * Once #182 is fixed, the tests that use it need another way to fail midway.
+     */
+    private void nestLastNameInto(String uid) {
+        Element entry = handler.indexedEntries(equalsQuery(Uid.NAME, uid), ObjectClass.ACCOUNT).get(0);
+        Element wrapper = entry.getOwnerDocument().createElementNS(RI_NAMESPACE, "ri:wrapper");
+        Element inner = entry.getOwnerDocument().createElementNS(RI_NAMESPACE, "ri:" + ATTR_ACCOUNT_LAST_NAME);
+        inner.setTextContent("inner");
+        wrapper.appendChild(inner);
+        entry.appendChild(wrapper); // after the entry's own lastname, which update removes first
     }
 
     @Test
@@ -254,9 +288,10 @@ public class XMLHandlerIndexTests {
         assertIndexAgreesWithXQuery("first duplicate deleted");
         handler.update(ObjectClass.ACCOUNT, new Uid("u11"), Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L11")));
         assertIndexAgreesWithXQuery("value holding an entry replaced");
-        expectThrows(IllegalArgumentException.class,
-                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u4"), renameThenFail("x")));
-        assertIndexAgreesWithXQuery("failed rename");
+        nestLastNameInto("u4");
+        expectThrows(DOMException.class,
+                () -> handler.update(ObjectClass.ACCOUNT, new Uid("u4"), renameThenFailMidway("x")));
+        assertIndexAgreesWithXQuery("failed rename midway");
         handler.dispose();
         assertIndexAgreesWithXQuery("saved");
     }

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -56,10 +57,12 @@ import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
+import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.w3c.dom.DOMException;
 
@@ -106,21 +109,118 @@ public class XMLHandlerReloadTests {
         assertEquals(namesInFile(file), List.of("alice", "bob"));
     }
 
-    @Test
-    public void failedUpdateLeavesTheFileInAgreementWithMemory() throws Exception {
+    @DataProvider
+    public Object[][] updatesFailingMidway() {
+        Attribute newLastName = AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW");
+        return new Object[][] {
+                // The failing attribute comes after one that was applied.
+                {attributes(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"), newLastName), "CHANGED|null"},
+                // The failing attribute is the first one applied: its removal alone must mark the document changed.
+                {attributes(newLastName), "null|null"},
+        };
+    }
+
+    @Test(dataProvider = "updatesFailingMidway")
+    public void failedUpdateLeavesTheFileInAgreementWithMemory(Set<Attribute> attributes, String changedInMemory)
+            throws Exception {
         writeAccounts(file, "alice");
+        // An XSD-invalid hand edit (#182): update's descendant lookup finds the inner lastname after alice's own,
+        // and removeChild rejects it, so the update fails midway. Once #182 is fixed, this needs another midway failure.
+        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
+                .replace("    <ri:lastname>Last-alice</ri:lastname>\n",
+                        "    <ri:lastname>Last-alice</ri:lastname>\n    <ri:wrapper><ri:lastname>inner</ri:lastname></ri:wrapper>\n");
+        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
         setModified(file, now() - HOUR);
-        Set<Attribute> twoLastNames = Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B"));
         List<String> inMemory;
         handler.init(); // holds the document: no reload and no save until the last dispose()
         try {
-            expectThrows(IllegalArgumentException.class,
-                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), twoLastNames)));
-            inMemory = lastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
+            expectThrows(DOMException.class,
+                    () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes)));
+            inMemory = firstAndLastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
         } finally {
             handler.dispose();
         }
-        assertEquals(lastNamesIn(file), inMemory);
+        assertEquals(inMemory, List.of(changedInMemory)); // the update got as far as removing alice's own lastname
+        assertEquals(firstAndLastNamesIn(file), inMemory);
+    }
+
+    @DataProvider
+    public Object[][] rejectedUpdates() {
+        Attribute changedFirstName = AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED");
+        String twoLastNames = "Data field: lastname is not multivalued  can not have more than one value";
+        return new Object[][] {
+                {attributes(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B")), twoLastNames},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B")), twoLastNames},
+                {attributes(changedFirstName, AttributeBuilder.build(Name.NAME, "  ")), "Parameter '__NAME__' must not be blank."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, Boolean.TRUE)),
+                        "is-deleted is not updatable."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")), "age contains values of illegal type"},
+                {attributes(changedFirstName, AttributeBuilder.build("no-such-attribute", "x")),
+                        "Data field: no-such-attribute is not supported."},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME)),
+                        "No values provided for required attribute: lastname"},
+                // A required attribute's values are read before the type check, which then never runs.
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5))),
+                        "lastname contains invalid type. Value(s) should be of type java.lang.String"},
+                // is-deleted fails two checks and an unsupported attribute follows it: only the first check of the first
+                // failing attribute is reported.
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, "true"),
+                        AttributeBuilder.build("no-such-attribute", "x")), "is-deleted is not updatable."},
+        };
+    }
+
+    @Test(dataProvider = "rejectedUpdates")
+    public void rejectedUpdateLeavesTheEntryAndTheFileAlone(Set<Attribute> attributes, String message) throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes)));
+
+        assertEquals(e.getMessage(), message);
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        // The file is unchanged, so the next call keeps the document in memory: it must be unchanged as well.
+        assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
+    }
+
+    @Test
+    public void updateIsInTheFileWhenTheLastUserLeaves() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(
+                AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "F"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L"))));
+        assertEquals(firstAndLastNamesIn(file), List.of("F|L"));
+    }
+
+    @Test
+    public void updateWithNoAttributesLeavesTheFileAlone() throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.<Attribute>emptySet()));
+
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
+    public void repeatedAttributeKeepsTheLastValue() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        // Attribute.equals compares the values too, so a set can hold the same name twice: update applies both, in order.
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "B"))));
+        assertEquals(firstAndLastNamesIn(file), List.of("null|B"));
+    }
+
+    /** The attributes in the order given, which is the order update() goes through them. */
+    private static Set<Attribute> attributes(Attribute... attributes) {
+        return new LinkedHashSet<Attribute>(Arrays.asList(attributes));
     }
 
     @Test
@@ -793,15 +893,29 @@ public class XMLHandlerReloadTests {
     private static List<String> lastNames(Collection<ConnectorObject> objects) {
         List<String> values = new ArrayList<String>();
         for (ConnectorObject object : objects) {
-            Attribute lastName = object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME);
-            values.add(lastName == null ? null : AttributeUtil.getStringValue(lastName));
+            values.add(stringValue(object, ATTR_ACCOUNT_LAST_NAME));
         }
         return values;
     }
 
-    private static List<String> lastNamesIn(File file) {
+    /** "first|last" per object, with null for a missing attribute. */
+    private static List<String> firstAndLastNames(Collection<ConnectorObject> objects) {
+        List<String> values = new ArrayList<String>();
+        for (ConnectorObject object : objects) {
+            values.add(stringValue(object, ATTR_ACCOUNT_FIRST_NAME) + "|" + stringValue(object, ATTR_ACCOUNT_LAST_NAME));
+        }
+        return values;
+    }
+
+    /** The attribute's value, or null if the object has no such attribute. */
+    private static String stringValue(ConnectorObject object, String name) {
+        Attribute attribute = object.getAttributeByName(name);
+        return attribute == null ? null : AttributeUtil.getStringValue(attribute);
+    }
+
+    private static List<String> firstAndLastNamesIn(File file) {
         XMLHandler fresh = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema()).init();
-        return lastNames(fresh.search(allAccounts(), ObjectClass.ACCOUNT));
+        return firstAndLastNames(fresh.search(allAccounts(), ObjectClass.ACCOUNT));
     }
 
     private static XMLConfiguration config(File file) {
