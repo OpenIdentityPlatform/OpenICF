@@ -1,0 +1,217 @@
+/*
+ * The contents of this file are subject to the terms of the Common Development and
+ * Distribution License (the License). You may not use this file except in compliance with the
+ * License.
+ *
+ * You can obtain a copy of the License at legal/CDDLv1.0.txt. See the License for the
+ * specific language governing permission and limitations under the License.
+ *
+ * When distributing Covered Software, include this CDDL Header Notice in each file and include
+ * the License file at legal/CDDLv1.0.txt. If applicable, add the following below the CDDL
+ * Header, with the fields enclosed by brackets [] replaced by your own identifying
+ * information: "Portions copyright [year] [name of copyright owner]".
+ *
+ * Copyright 2026 3A Systems, LLC.
+ */
+
+package org.forgerock.openicf.misc.scriptedcommon;
+
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.fest.assertions.api.Assertions.assertThat;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.reflection.ClassInfo;
+import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import groovy.lang.Binding;
+import groovy.lang.ExpandoMetaClass;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovySystem;
+
+/**
+ * Tests how {@link ScriptedConfiguration} compiles, caches and releases the scripts of
+ * runScriptOnConnector.
+ */
+public class ScriptOnConnectorCacheTest {
+
+    /** What the customizer script does; set by the test that writes one. */
+    private static volatile Runnable customizer;
+
+    /** Called from the customizer script written by {@link #writeCustomizer()}. */
+    public static void customize() {
+        customizer.run();
+    }
+
+    /** While set, every compilation of a {@link #blockingCompilations()} configuration waits for it. */
+    private static volatile CountDownLatch compileGate;
+
+    /** Counted down when a compilation starts waiting for {@link #compileGate}. */
+    private static volatile CountDownLatch compileWaiting;
+
+    private File scriptRoot;
+
+    private ScriptedConfiguration configuration;
+
+    private ExecutorService executor;
+
+    @BeforeMethod
+    public void setUp() throws Exception {
+        scriptRoot = Files.createTempDirectory("script-on-connector").toFile();
+        Files.write(new File(scriptRoot, "Helper.groovy").toPath(),
+                "class Helper { static String greet() { 'hello' } }\n".getBytes(StandardCharsets.UTF_8));
+        configuration = withScriptRoot(new ScriptedConfiguration());
+        executor = Executors.newCachedThreadPool();
+    }
+
+    @AfterMethod
+    public void tearDown() {
+        customizer = null;
+        final CountDownLatch gate = compileGate;
+        compileGate = null;
+        if (null != gate) {
+            gate.countDown();
+        }
+        executor.shutdownNow();
+        configuration.release();
+        for (File file : scriptRoot.listFiles()) {
+            file.delete();
+        }
+        scriptRoot.delete();
+    }
+
+    @Test
+    public void testSameTextReusesTheCompiledClass() {
+        final Class first = configuration.getScriptOnConnectorClass("return 1");
+        assertThat(configuration.getScriptOnConnectorClass("return 1")).isSameAs(first);
+        assertThat(configuration.getScriptOnConnectorClass("return 2")).isNotSameAs(first);
+    }
+
+    @Test
+    public void testScriptClassStaysOutOfTheEngineLoader() {
+        final GroovyClassLoader engineLoader = configuration.getGroovyScriptEngine().getGroovyClassLoader();
+        final int loadedBefore = engineLoader.getLoadedClasses().length;
+        final Class scriptClass = configuration.getScriptOnConnectorClass("return 1");
+        assertThat(engineLoader.getLoadedClasses()).hasSize(loadedBefore);
+        assertThat(compilingLoader(scriptClass).getParent()).isSameAs(engineLoader);
+    }
+
+    @Test
+    public void testScriptSeesTheDefaultImports() {
+        assertThat(configuration.evaluateScriptOnConnector("return ObjectClass.ACCOUNT_NAME", new Binding()))
+                .isEqualTo(ObjectClass.ACCOUNT_NAME);
+    }
+
+    @Test
+    public void testScriptSeesTheClassesInTheScriptRoots() {
+        assertThat(configuration.evaluateScriptOnConnector("return Helper.greet()", new Binding()))
+                .isEqualTo("hello");
+    }
+
+    @Test
+    public void testScriptSeesItsBinding() {
+        final Binding binding = new Binding();
+        binding.setVariable("a", 41);
+        assertThat(configuration.evaluateScriptOnConnector("return a + 1", binding)).isEqualTo(42);
+    }
+
+    @Test
+    public void testReleaseUnregistersTheCachedClasses() {
+        final Class released = configuration.getScriptOnConnectorClass("return 1");
+        registerMetaClass(released);
+        configuration.release();
+        assertThat(ClassInfo.getClassInfo(released).getStrongMetaClass()).isNull();
+        final Class recompiled = configuration.getScriptOnConnectorClass("return 1");
+        assertThat(recompiled).isNotSameAs(released);
+        assertThat(compilingLoader(recompiled).getParent())
+                .isSameAs(configuration.getGroovyScriptEngine().getGroovyClassLoader());
+    }
+
+    @Test
+    public void testCustomizerCanRunAScriptOnConnector() throws Exception {
+        final AtomicReference<Object> result = new AtomicReference<Object>();
+        customizer = () -> result.set(configuration.evaluateScriptOnConnector("return 41 + 1", new Binding()));
+        writeCustomizer();
+        configuration.getGroovyScriptEngine();
+        assertThat(result.get()).isEqualTo(42);
+    }
+
+    @Test(timeOut = 60000)
+    public void testCachedScriptDoesNotWaitForAnotherCompilation() throws Exception {
+        final ScriptedConfiguration blocking = blockingCompilations();
+        configuration = blocking;
+        final Class cached = blocking.getScriptOnConnectorClass("return 1");
+        compileWaiting = new CountDownLatch(1);
+        compileGate = new CountDownLatch(1);
+        final Future<Class> compiling = executor.submit(() -> blocking.getScriptOnConnectorClass("return 2"));
+        assertThat(compileWaiting.await(10, SECONDS)).isTrue();
+        final Future<Class> hit = executor.submit(() -> blocking.getScriptOnConnectorClass("return 1"));
+        assertThat(hit.get(10, SECONDS)).isSameAs(cached);
+        compileGate.countDown();
+        assertThat(compiling.get(10, SECONDS)).isNotSameAs(cached);
+    }
+
+    private ScriptedConfiguration withScriptRoot(ScriptedConfiguration result) {
+        result.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
+        return result;
+    }
+
+    /** A configuration whose compilations wait for {@link #compileGate} while it is set. */
+    private ScriptedConfiguration blockingCompilations() {
+        return withScriptRoot(new ScriptedConfiguration() {
+            @Override
+            protected ImportCustomizer getImportCustomizer(ImportCustomizer parent) {
+                return super.getImportCustomizer(new ImportCustomizer() {
+                    @Override
+                    public void call(SourceUnit source, GeneratorContext context, ClassNode classNode) {
+                        final CountDownLatch gate = compileGate;
+                        if (null != gate) {
+                            compileWaiting.countDown();
+                            try {
+                                gate.await();
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }
+                        super.call(source, context, classNode);
+                    }
+                });
+            }
+        });
+    }
+
+    /** Writes a customizer script that calls {@link #customize()}, and configures it. */
+    private void writeCustomizer() throws IOException {
+        Files.write(new File(scriptRoot, "Customizer.groovy").toPath(),
+                (ScriptOnConnectorCacheTest.class.getName() + ".customize()\n").getBytes(StandardCharsets.UTF_8));
+        configuration.setCustomizerScriptFileName("Customizer.groovy");
+    }
+
+    /** Puts a strong metaclass on the class, as a script that changes its own metaclass does. */
+    private static void registerMetaClass(Class clazz) {
+        final ExpandoMetaClass metaClass = new ExpandoMetaClass(clazz, false, true);
+        metaClass.initialize();
+        GroovySystem.getMetaClassRegistry().setMetaClass(clazz, metaClass);
+        assertThat(ClassInfo.getClassInfo(clazz).getStrongMetaClass()).isNotNull();
+    }
+
+    /** The loader whose class cache holds a compiled script class: the parent of its InnerLoader. */
+    private static ClassLoader compilingLoader(Class scriptClass) {
+        return scriptClass.getClassLoader().getParent();
+    }
+}

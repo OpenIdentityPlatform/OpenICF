@@ -36,6 +36,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -677,6 +678,12 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                     publishedCustomizerClass = null;
                 }
                 groovyScriptEngine = null;
+                final ScriptOnConnectorCache cache = scriptOnConnectorCache;
+                scriptOnConnectorCache = null;
+                if (null != cache) {
+                    // Last, so that a failure here cannot leave the engine published.
+                    cache.clear();
+                }
             }
             propertyBag.clear();
             loggerCache.clear();
@@ -780,6 +787,44 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return null;
     }
 
+    /**
+     * Returns the class compiled from the text of a runScriptOnConnector request.
+     * <p>
+     * Each text is compiled once per engine, by its own child loader of the engine's loader. The
+     * child shares the engine's compiler configuration, and with it the default imports, and
+     * resolves the classes of the script roots through the engine's loader, but keeps the new
+     * classes out of the engine's class cache. No lock is held while compiling, so a cached script
+     * does not wait for another script to compile.
+     */
+    Class getScriptOnConnectorClass(String scriptText) {
+        final GroovyClassLoader engineLoader;
+        final ScriptOnConnectorCache cache;
+        synchronized (this) {
+            engineLoader = getGroovyScriptEngine().getGroovyClassLoader();
+            // Null while the customizer runs: what it compiles here is not cached.
+            cache = scriptOnConnectorCache;
+        }
+        if (null != cache) {
+            final Class cached = cache.get(scriptText);
+            if (null != cached) {
+                return cached;
+            }
+        }
+        final GroovyClassLoader loader = new GroovyClassLoader(engineLoader);
+        final Class scriptClass = loader.parseClass(new GroovyCodeSource(scriptText,
+                "Script" + System.currentTimeMillis() + ".groovy", "fix"), false);
+        return null == cache ? scriptClass : cache.put(scriptText, new CompiledScript(scriptClass, loader));
+    }
+
+    /**
+     * Runs the text of a runScriptOnConnector request with the given binding.
+     */
+    Object evaluateScriptOnConnector(String scriptText, Binding binding) {
+        // Runs from Java: a Groovy call site would keep the metaclass of the last class it ran,
+        // and with it the class.
+        return InvokerHelper.createScript(getScriptOnConnectorClass(scriptText), binding).run();
+    }
+
     protected Log getLogger(final Class<?> clazz) {
         final String key = clazz.getName();
         Log logger = loggerCache.get(key);
@@ -804,6 +849,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     /** The customizer class of the published engine; {@link #release()} unregisters it. Guarded by {@code this}. */
     private Class publishedCustomizerClass = null;
+
+    /** The runScriptOnConnector classes of the published engine. Guarded by {@code this}. */
+    private ScriptOnConnectorCache scriptOnConnectorCache = null;
 
     /**
      * Synchronised for the whole initialisation, not double-checked: the
@@ -836,6 +884,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 customizingGroovyScriptEngine = null;
             }
             publishedCustomizerClass = customizerClass;
+            scriptOnConnectorCache = new ScriptOnConnectorCache();
             groovyScriptEngine = engine;
         }
         return groovyScriptEngine;
@@ -845,7 +894,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      * This must be called once from thread-safe location and inside the
      * synchronized to avoid deadlock. The customizer runs while this
      * configuration's monitor is held: it must not wait for another thread
-     * that calls getGroovyScriptEngine(), evaluate() or loadScript().
+     * that calls getGroovyScriptEngine(), evaluate(), loadScript(),
+     * getScriptOnConnectorClass() or evaluateScriptOnConnector().
      * Returns the customizer class, or null if there is none.
      */
     private Class initializeCustomizer() {
@@ -935,5 +985,74 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     protected String[] getImports() {
         return new String[] { ConnectorObject.class.getPackage().getName() + ".*" };
+    }
+
+    /** A compiled runScriptOnConnector script and the loader whose class cache holds its classes. */
+    private static final class CompiledScript {
+
+        private final Class scriptClass;
+
+        private final GroovyClassLoader loader;
+
+        private CompiledScript(Class scriptClass, GroovyClassLoader loader) {
+            this.scriptClass = scriptClass;
+            this.loader = loader;
+        }
+
+        /**
+         * Drops the metaclasses of every class the script compiled, closures and declared classes
+         * included, so that the classes can be unloaded once nothing else uses them.
+         */
+        private void unregister() {
+            for (Class c : loader.getLoadedClasses()) {
+                InvokerHelper.removeClass(c);
+            }
+        }
+    }
+
+    /** The runScriptOnConnector classes compiled for one engine, keyed by the script text. */
+    private static final class ScriptOnConnectorCache {
+
+        /** Least recently used first. Guarded by itself. */
+        private final LinkedHashMap<String, CompiledScript> scripts =
+                new LinkedHashMap<String, CompiledScript>(16, 0.75f, true);
+
+        private Class get(String scriptText) {
+            synchronized (scripts) {
+                final CompiledScript script = scripts.get(scriptText);
+                return null == script ? null : script.scriptClass;
+            }
+        }
+
+        /**
+         * Caches the script unless another thread cached the same text first, and returns the
+         * class to run.
+         */
+        private Class put(String scriptText, CompiledScript script) {
+            final CompiledScript cached;
+            synchronized (scripts) {
+                cached = scripts.get(scriptText);
+                if (null == cached) {
+                    scripts.put(scriptText, script);
+                }
+            }
+            if (null == cached) {
+                return script.scriptClass;
+            }
+            // Outside the monitor: removeClass takes Groovy's own locks.
+            script.unregister();
+            return cached.scriptClass;
+        }
+
+        private void clear() {
+            final List<CompiledScript> dropped;
+            synchronized (scripts) {
+                dropped = new ArrayList<CompiledScript>(scripts.values());
+                scripts.clear();
+            }
+            for (CompiledScript script : dropped) {
+                script.unregister();
+            }
+        }
     }
 }
