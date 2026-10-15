@@ -812,27 +812,33 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      * imports. It resolves the classes of the script roots through the engine, as the engine's own
      * compilations do, but keeps the new classes out of the engine's class cache. No lock is held
      * while compiling, so a cached script does not wait for another script to compile.
+     * <p>
+     * While the customizer runs, or when a subclass builds the engine without super, there is no
+     * cache: the text is compiled by the engine's loader, with the engine's configuration, and is
+     * not cached.
      */
     Class getScriptOnConnectorClass(String scriptText) {
         final GroovyScriptEngine engine;
         final ScriptOnConnectorCache cache;
         synchronized (this) {
             engine = getGroovyScriptEngine();
-            // Null while the customizer runs, or when a subclass builds the engine without super:
-            // what it compiles here is not cached.
             cache = scriptOnConnectorCache;
         }
-        if (null != cache) {
-            final Class cached = cache.get(scriptText);
-            if (null != cached) {
-                return cached;
-            }
+        if (null == cache) {
+            return engine.getGroovyClassLoader().parseClass(newCodeSource(scriptText), false);
+        }
+        final Class cached = cache.get(scriptText);
+        if (null != cached) {
+            return cached;
         }
         final GroovyClassLoader loader =
                 new ScriptOnConnectorLoader(engine, newCompilerConfiguration(), scriptRootLock);
-        final Class scriptClass = loader.parseClass(new GroovyCodeSource(scriptText,
-                "Script" + System.currentTimeMillis() + ".groovy", "fix"), false);
-        return null == cache ? scriptClass : cache.put(scriptText, new CompiledScript(scriptClass, loader));
+        final Class scriptClass = loader.parseClass(newCodeSource(scriptText), false);
+        return cache.put(scriptText, new CompiledScript(scriptClass, loader));
+    }
+
+    private static GroovyCodeSource newCodeSource(String scriptText) {
+        return new GroovyCodeSource(scriptText, "Script" + System.currentTimeMillis() + ".groovy", "fix");
     }
 
     /**
@@ -895,7 +901,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     /** The runScriptOnConnector scripts of the published engine. Guarded by {@code this}. */
     private ScriptOnConnectorCache scriptOnConnectorCache = null;
 
-    /** Held while a runScriptOnConnector compilation loads a class of the script roots. */
+    /**
+     * Held while a runScriptOnConnector compilation looks up a class name in the script roots,
+     * found or not, and while the engine compiles the class it found.
+     */
     private final Object scriptRootLock = new Object();
 
     /**
@@ -1017,6 +1026,12 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return safeRoots.toArray(new URL[safeRoots.size()]);
     }
 
+    /**
+     * Returns the import customizer of one compilation: the engine's, or one runScriptOnConnector
+     * text's. Called once per compilation, possibly from several threads at once. Return a new
+     * customizer, or add to {@code parent}, on every call: the compiler resolves the class nodes of
+     * its imports in place.
+     */
     protected ImportCustomizer getImportCustomizer(ImportCustomizer parent) {
         final ImportCustomizer ic = null != parent ? parent : new ImportCustomizer();
         for (final String imp : getImports()) {
@@ -1026,6 +1041,10 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return ic;
     }
 
+    /**
+     * Returns the star imports of one compilation. Called once per compilation, possibly from
+     * several threads at once.
+     */
     protected String[] getImports() {
         return new String[] { ConnectorObject.class.getPackage().getName() + ".*" };
     }
@@ -1046,13 +1065,17 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      * Compiles one runScriptOnConnector text and holds its classes in its own class cache. A class
      * with a source in the script roots resolves to the engine's class, compiled by the engine if
      * needed, as in the engine's own compilations; other classes resolve through the engine's
-     * loader.
+     * loader. The text runs against the classes it was compiled against, even when the engine has
+     * since recompiled a script-root class whose source changed.
      */
     private static final class ScriptOnConnectorLoader extends GroovyClassLoader {
 
         private final GroovyScriptEngine engine;
 
         private final Object scriptRootLock;
+
+        /** The classes the compiler resolved for the text, by name. */
+        private final Map<String, Class> resolvedClasses = new ConcurrentHashMap<String, Class>();
 
         private ScriptOnConnectorLoader(GroovyScriptEngine engine, CompilerConfiguration configuration,
                 Object scriptRootLock) {
@@ -1068,12 +1091,30 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 @Override
                 public LookupResult findClassNode(String name, CompilationUnit compilationUnit) {
                     final Class scriptRootClass = loadScriptRootClass(name, compilationUnit.getConfiguration());
-                    return null != scriptRootClass
+                    final LookupResult result = null != scriptRootClass
                             ? new LookupResult(null, new ClassNode(scriptRootClass))
                             : super.findClassNode(name, compilationUnit);
+                    if (null != result && result.isClassNode() && result.getClassNode().isResolved()) {
+                        final Class resolved = result.getClassNode().getTypeClass();
+                        resolvedClasses.put(resolved.getName(), resolved);
+                    }
+                    return result;
                 }
             });
             return unit;
+        }
+
+        /**
+         * Returns the class the compiler resolved for the name, if any. The text's code links a class
+         * by name when it first runs; without this, it would get the engine's current class.
+         */
+        @Override
+        public Class loadClass(String name, boolean lookupScriptFiles, boolean preferClassOverScript,
+                boolean resolve) throws ClassNotFoundException {
+            final Class resolved = resolvedClasses.get(name);
+            return null != resolved
+                    ? resolved
+                    : super.loadClass(name, lookupScriptFiles, preferClassOverScript, resolve);
         }
 
         /**

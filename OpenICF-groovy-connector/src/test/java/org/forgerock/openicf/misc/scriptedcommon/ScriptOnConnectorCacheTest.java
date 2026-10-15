@@ -18,10 +18,13 @@ package org.forgerock.openicf.misc.scriptedcommon;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.testng.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -37,6 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.reflection.ClassInfo;
@@ -48,9 +52,11 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import groovy.lang.Binding;
+import groovy.lang.Closure;
 import groovy.lang.ExpandoMetaClass;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovySystem;
+import groovy.util.GroovyScriptEngine;
 
 /**
  * Tests how {@link ScriptedConfiguration} compiles, caches and releases the scripts of
@@ -81,9 +87,7 @@ public class ScriptOnConnectorCacheTest {
     @BeforeMethod
     public void setUp() throws Exception {
         scriptRoot = Files.createTempDirectory("script-on-connector").toFile();
-        final File helper = write("Helper.groovy", "class Helper { static String greet() { 'hello' } }\n");
-        // In the past, so that an edit is newer whatever the file system's time resolution.
-        assertThat(helper.setLastModified(System.currentTimeMillis() - 60000L)).isTrue();
+        writeHelper("class Helper { static String greet() { 'hello' } }\n");
         configuration = withScriptRoot(new ScriptedConfiguration());
         executor = Executors.newCachedThreadPool();
     }
@@ -182,6 +186,24 @@ public class ScriptOnConnectorCacheTest {
     }
 
     @Test
+    public void testCachedScriptLinksTheScriptRootClassesItWasCompiledAgainst() throws Exception {
+        writeHelper("class Helper { static String greet() { 'hello' }\n"
+                + "static class Greeting { static String text() { 'hello' } } }\n");
+        write("op.groovy", "return Helper.greet() + ' ' + Helper.Greeting.text()\n");
+        final String text = "return useHelper ? Helper.greet() + ' ' + Helper.Greeting.text() : 'not run'";
+        // Compiled and cached, but the code that refers to Helper has not run yet.
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(false))).isEqualTo("not run");
+
+        editHelper("class Helper { static String greet() { 'hi' }\n"
+                + "static class Greeting { static String text() { 'hi' } } }\n");
+        // The engine recompiles Helper for the operation script.
+        assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("hi hi");
+
+        // The cached text refers to Helper and to its nested class for the first time.
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(true))).isEqualTo("hello hello");
+    }
+
+    @Test
     public void testNewScriptSharesTheEditedScriptRootClassWithOperationScripts() throws Exception {
         write("op.groovy", "return Helper\n");
         assertThat(configuration.evaluateScriptOnConnector("return Helper.greet()", new Binding())).isEqualTo("hello");
@@ -211,6 +233,47 @@ public class ScriptOnConnectorCacheTest {
         assertThat(recompiled).isNotSameAs(released);
         assertThat(compilingLoader(recompiled).getParent())
                 .isSameAs(configuration.getGroovyScriptEngine().getGroovyClassLoader());
+    }
+
+    @Test
+    public void testReleaseUnregistersTheCachedClassesWhenTheReleaseClosureThrows() {
+        final Class released = configuration.getScriptOnConnectorClass("return 1");
+        registerMetaClass(released);
+        configuration.setReleaseClosure(new Closure<Void>(this) {
+            public Void doCall() {
+                throw new IllegalStateException("release failed");
+            }
+        });
+        try {
+            configuration.release();
+            fail("release() did not rethrow the failure of the release closure");
+        } catch (IllegalStateException expected) {
+            // The cache is cleared anyway.
+        } finally {
+            configuration.setReleaseClosure(null);
+        }
+        assertThat(ClassInfo.getClassInfo(released).getStrongMetaClass()).isNull();
+    }
+
+    @Test
+    public void testEngineBuiltByASubclassCompilesTheScriptWithItsOwnConfiguration() {
+        configuration = withScriptRoot(new ScriptedConfiguration() {
+            private GroovyScriptEngine engine;
+
+            @Override
+            protected synchronized GroovyScriptEngine getGroovyScriptEngine() {
+                if (null == engine) {
+                    final CompilerConfiguration own = new CompilerConfiguration();
+                    own.addCompilationCustomizers(
+                            new ImportCustomizer().addImport("EngineList", ArrayList.class.getName()));
+                    engine = new GroovyScriptEngine(new URL[] { toUrl(scriptRoot) },
+                            new GroovyClassLoader(ScriptOnConnectorCacheTest.class.getClassLoader(), own));
+                }
+                return engine;
+            }
+        });
+        assertThat(configuration.evaluateScriptOnConnector("return new EngineList()", new Binding()))
+                .isInstanceOf(ArrayList.class);
     }
 
     @Test
@@ -309,9 +372,11 @@ public class ScriptOnConnectorCacheTest {
 
     @Test
     public void testConnectorScriptSeesItsArgumentsAndTheLogger() {
-        final ScriptContext request = new ScriptContext("Groovy", "return [a + 1, null != log]",
+        // log.@clazz is the class the logger reports for.
+        final ScriptContext request = new ScriptContext("Groovy", "return [a + 1, log.@clazz]",
                 Collections.<String, Object>singletonMap("a", 41));
-        assertThat(connector().runScriptOnConnector(request, null)).isEqualTo(Arrays.asList(42, true));
+        assertThat(connector().runScriptOnConnector(request, null))
+                .isEqualTo(Arrays.<Object>asList(42, ScriptedConnectorBase.class));
     }
 
     @Test
@@ -337,6 +402,14 @@ public class ScriptOnConnectorCacheTest {
 
     private void writeBrokenClass() throws IOException {
         write("Broken.groovy", "class Broken { static int x() { return 1 +  } }\n");
+    }
+
+    private static URL toUrl(File file) {
+        try {
+            return file.toURI().toURL();
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private File write(String fileName, String text) throws IOException {
@@ -378,6 +451,19 @@ public class ScriptOnConnectorCacheTest {
             results.add(future.get(10, SECONDS));
         }
         return results;
+    }
+
+    private static Binding useHelper(boolean useHelper) {
+        final Binding binding = new Binding();
+        binding.setVariable("useHelper", useHelper);
+        return binding;
+    }
+
+    /** Writes Helper.groovy before the engine first loads it. */
+    private void writeHelper(String text) throws IOException {
+        final File helper = write("Helper.groovy", text);
+        // In the past, so that an edit is newer whatever the file system's time resolution.
+        assertThat(helper.setLastModified(System.currentTimeMillis() - 60000L)).isTrue();
     }
 
     /** Rewrites Helper.groovy so that the engine sees it as changed on its next check. */
