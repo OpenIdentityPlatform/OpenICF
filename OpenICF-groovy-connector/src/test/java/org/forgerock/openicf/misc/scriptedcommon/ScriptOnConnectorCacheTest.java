@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.reflection.ClassInfo;
@@ -246,6 +247,23 @@ public class ScriptOnConnectorCacheTest {
         // Evicted through the configuration, so the connector code runs no other script after it.
         configuration.getScriptOnConnectorClass("return 2");
         assertThat(isCollected(evicted)).isTrue();
+    }
+
+    @Test(expectedExceptions = CompilationFailedException.class)
+    public void testBrokenScriptRootClassFailsAsACompilationError() throws Exception {
+        writeBrokenClass();
+        configuration.evaluateScriptOnConnector("return Broken.x()", new Binding());
+    }
+
+    @Test(expectedExceptions = RuntimeException.class)
+    public void testConnectorReportsABrokenScriptRootClassAsARuntimeException() throws Exception {
+        writeBrokenClass();
+        connector().runScriptOnConnector(groovy("return Broken.x()"), null);
+    }
+
+    private void writeBrokenClass() throws IOException {
+        Files.write(new File(scriptRoot, "Broken.groovy").toPath(),
+                "class Broken { static int x() { return 1 +  } }\n".getBytes(StandardCharsets.UTF_8));
     }
 
     private ScriptedConfiguration withScriptRoot(ScriptedConfiguration result) {

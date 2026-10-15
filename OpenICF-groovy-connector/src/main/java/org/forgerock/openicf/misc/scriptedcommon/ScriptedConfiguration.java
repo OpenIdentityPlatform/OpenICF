@@ -43,6 +43,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.codehaus.groovy.GroovyBugError;
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -823,8 +825,18 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
             }
         }
         final GroovyClassLoader loader = new GroovyClassLoader(engineLoader);
-        final Class scriptClass = loader.parseClass(new GroovyCodeSource(scriptText,
-                "Script" + System.currentTimeMillis() + ".groovy", "fix"), false);
+        final Class scriptClass;
+        try {
+            scriptClass = loader.parseClass(new GroovyCodeSource(scriptText,
+                    "Script" + System.currentTimeMillis() + ".groovy", "fix"), false);
+        } catch (GroovyBugError e) {
+            // The child's resolver reports a failed compile of a script-root class as a bug; report it as the
+            // compilation failure it is, as the engine's resolver does.
+            if (e.getCause() instanceof CompilationFailedException) {
+                throw (CompilationFailedException) e.getCause();
+            }
+            throw e;
+        }
         return null == cache ? scriptClass : cache.put(scriptText, new CompiledScript(scriptClass, loader));
     }
 
