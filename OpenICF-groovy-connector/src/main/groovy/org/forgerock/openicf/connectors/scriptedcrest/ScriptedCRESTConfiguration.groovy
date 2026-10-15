@@ -27,6 +27,7 @@
 package org.forgerock.openicf.connectors.scriptedcrest
 
 import org.apache.http.HttpHost
+import org.apache.http.client.AuthCache
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.concurrent.FutureCallback
@@ -190,6 +191,10 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
 
     private CloseableHttpAsyncClient httpClient = null;
 
+    // Filled by the first successful BASIC challenge, so that later requests send their
+    // credentials up front instead of each taking a 401 first.
+    private final AuthCache sharedAuthCache = new SharedBasicAuthCache()
+
     boolean isClosed() {
         return null == httpClient || !httpClient.isRunning();
     }
@@ -205,6 +210,9 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
             Closure beforeRequestClone = beforeRequest.rehydrate(this, this, this);
             beforeRequestClone.setResolveStrategy(Closure.DELEGATE_FIRST);
             beforeRequestClone(context, localContext, request)
+        }
+        if (null == localContext.getAuthCache()) {
+            localContext.setAuthCache(sharedAuthCache)
         }
 
         return getHttpAsyncClient().execute(
@@ -225,6 +233,8 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
                     Closure clone = init.rehydrate(this, this, this);
                     clone.setResolveStrategy(Closure.DELEGATE_FIRST);
                     HttpAsyncClientBuilder builder = HttpAsyncClients.custom();
+                    // Set before the customizer runs, so that a customizer can still replace it.
+                    builder.setKeepAliveStrategy(IdleKeepAliveStrategy.INSTANCE);
                     clone(builder);
                     httpClient = builder.build();
                     httpClient.start();

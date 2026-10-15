@@ -20,17 +20,27 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.connectors;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.security.*;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.server.handler.HandlerWrapper;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.security.Constraint;
@@ -66,6 +76,48 @@ public abstract class RESTTestBase {
 
     private ConnectorFacade facade = null;
     private Server server = null;
+
+    /** Counts what reaches the server, so that tests can pin connection reuse and authentication. */
+    protected static final class RequestCounter extends HandlerWrapper {
+        private final AtomicInteger requests = new AtomicInteger();
+        private final AtomicInteger unauthorized = new AtomicInteger();
+        private final Set<Integer> clientPorts = ConcurrentHashMap.newKeySet();
+
+        @Override
+        public void handle(String target, Request baseRequest, HttpServletRequest request,
+                HttpServletResponse response) throws IOException, ServletException {
+            requests.incrementAndGet();
+            clientPorts.add(request.getRemotePort());
+            try {
+                super.handle(target, baseRequest, request, response);
+            } finally {
+                if (response.getStatus() == HttpServletResponse.SC_UNAUTHORIZED) {
+                    unauthorized.incrementAndGet();
+                }
+            }
+        }
+
+        public void reset() {
+            requests.set(0);
+            unauthorized.set(0);
+            clientPorts.clear();
+        }
+
+        public int requests() {
+            return requests.get();
+        }
+
+        public int unauthorized() {
+            return unauthorized.get();
+        }
+
+        /** The number of distinct client ports seen, that is, of TCP connections used. */
+        public int connections() {
+            return clientPorts.size();
+        }
+    }
+
+    protected static final RequestCounter requestCounter = new RequestCounter();
 
     private SecurityHandler getSecurityHandler() throws IOException {
         Constraint constraint = new Constraint(Constraint.__BASIC_AUTH, "user");
@@ -117,7 +169,8 @@ public abstract class RESTTestBase {
         SecurityHandler sh = getSecurityHandler();
         sh.setHandler(handler);
 
-        server.setHandler(sh);
+        requestCounter.setHandler(sh);
+        server.setHandler(requestCounter);
         server.start();
 
         logger.info("Jetty Server Started: " + server.getState() + ", " + server.isRunning());
