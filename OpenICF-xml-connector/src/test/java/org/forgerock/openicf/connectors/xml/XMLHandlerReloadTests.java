@@ -893,8 +893,7 @@ public class XMLHandlerReloadTests {
     private static List<String> lastNames(Collection<ConnectorObject> objects) {
         List<String> values = new ArrayList<String>();
         for (ConnectorObject object : objects) {
-            Attribute lastName = object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME);
-            values.add(lastName == null ? null : AttributeUtil.getStringValue(lastName));
+            values.add(stringValue(object, ATTR_ACCOUNT_LAST_NAME));
         }
         return values;
     }
@@ -903,12 +902,15 @@ public class XMLHandlerReloadTests {
     private static List<String> firstAndLastNames(Collection<ConnectorObject> objects) {
         List<String> values = new ArrayList<String>();
         for (ConnectorObject object : objects) {
-            Attribute firstName = object.getAttributeByName(ATTR_ACCOUNT_FIRST_NAME);
-            Attribute lastName = object.getAttributeByName(ATTR_ACCOUNT_LAST_NAME);
-            values.add((firstName == null ? null : AttributeUtil.getStringValue(firstName)) + "|"
-                    + (lastName == null ? null : AttributeUtil.getStringValue(lastName)));
+            values.add(stringValue(object, ATTR_ACCOUNT_FIRST_NAME) + "|" + stringValue(object, ATTR_ACCOUNT_LAST_NAME));
         }
         return values;
+    }
+
+    /** The attribute's value, or null if the object has no such attribute. */
+    private static String stringValue(ConnectorObject object, String name) {
+        Attribute attribute = object.getAttributeByName(name);
+        return attribute == null ? null : AttributeUtil.getStringValue(attribute);
     }
 
     private static List<String> firstAndLastNamesIn(File file) {

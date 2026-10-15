@@ -43,7 +43,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -308,7 +307,7 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
-        List<Map.Entry<String, List<String>>> checkedAttributes = new ArrayList<Map.Entry<String, List<String>>>();
+        List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
         for (Attribute attribute : replaceAttributes) {
 
             if (!objAttributes.containsKey(attribute.getName())) {
@@ -322,8 +321,9 @@ public class XMLHandlerImpl implements XMLHandler {
                 throw new IllegalArgumentException(attributeName + " is not updatable.");
             }
 
+            List<String> values = null;
             if (attributeInfo.isRequired()) {
-                List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+                values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
                 if (values.isEmpty()) {
                     throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
                 }
@@ -342,19 +342,22 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
 
-            List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+            // A required attribute's values were read above; reading them again would decrypt a password twice.
+            if (values == null) {
+                values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+            }
 
             if (!attributeInfo.isMultiValued() && values.size() > 1) {
                 throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
             }
 
-            checkedAttributes.add(new AbstractMap.SimpleImmutableEntry<String, List<String>>(attributeName, values));
+            checkedAttributes.add(new CheckedAttribute(attributeName, values));
         }
 
         try {
-            for (Map.Entry<String, List<String>> checkedAttribute : checkedAttributes) {
-                String attributeName = checkedAttribute.getKey();
-                List<String> values = checkedAttribute.getValue();
+            for (CheckedAttribute checkedAttribute : checkedAttributes) {
+                String attributeName = checkedAttribute.name;
+                List<String> values = checkedAttribute.values;
 
                 // Remove existing nodes from entry
                 markDirty();
@@ -800,5 +803,19 @@ public class XMLHandlerImpl implements XMLHandler {
             throw new ConnectorException("Data file does not exists: " + config.getXmlFilePath().toString());
         }
         return document;
+    }
+
+    /**
+     * An attribute of an update that passed every check, with the values to write. Kept in a list, not a map, so a
+     * name given twice is applied twice, in order.
+     */
+    private static final class CheckedAttribute {
+        final String name;
+        final List<String> values;
+
+        CheckedAttribute(String name, List<String> values) {
+            this.name = name;
+            this.values = values;
+        }
     }
 }
