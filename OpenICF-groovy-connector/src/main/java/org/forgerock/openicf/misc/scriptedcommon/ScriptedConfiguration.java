@@ -36,6 +36,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,6 +96,17 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     private static final Log logger = Log.getLog(ScriptedConfiguration.class);
     private static final String DOT_STAR = ".*";
     private static final String EMPTY_STRING = "";
+
+    /**
+     * System property with the number of runScriptOnConnector classes that each script engine keeps
+     * compiled, 64 by default. It is read when the engine is created; a value that is not a positive
+     * integer is ignored with a warning.
+     */
+    public static final String SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY =
+            "org.identityconnectors.framework.groovy.scriptOnConnectorCacheSize";
+
+    /** The number of runScriptOnConnector classes kept when the system property is not set. */
+    static final int DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE = 64;
     private final CompilerConfiguration config;
 
     {
@@ -825,6 +837,29 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return InvokerHelper.createScript(getScriptOnConnectorClass(scriptText), binding).run();
     }
 
+    /**
+     * Returns the number of runScriptOnConnector classes a new engine keeps: the value of
+     * {@link #SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY}, or the default when it is not set or not a
+     * positive integer.
+     */
+    static int getScriptOnConnectorCacheSize() {
+        final String value = System.getProperty(SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY);
+        if (null == value) {
+            return DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE;
+        }
+        try {
+            final int size = Integer.parseInt(value.trim());
+            if (size > 0) {
+                return size;
+            }
+        } catch (NumberFormatException e) {
+            // Warned about below.
+        }
+        logger.warn("Ignoring {0}={1}: not a positive integer, keeping {2} scripts",
+                SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, value, DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE);
+        return DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE;
+    }
+
     protected Log getLogger(final Class<?> clazz) {
         final String key = clazz.getName();
         Log logger = loggerCache.get(key);
@@ -884,7 +919,7 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 customizingGroovyScriptEngine = null;
             }
             publishedCustomizerClass = customizerClass;
-            scriptOnConnectorCache = new ScriptOnConnectorCache();
+            scriptOnConnectorCache = new ScriptOnConnectorCache(getScriptOnConnectorCacheSize());
             groovyScriptEngine = engine;
         }
         return groovyScriptEngine;
@@ -1010,12 +1045,21 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         }
     }
 
-    /** The runScriptOnConnector classes compiled for one engine, keyed by the script text. */
+    /**
+     * The runScriptOnConnector classes compiled for one engine, keyed by the script text. Holds at
+     * most {@code maxSize} scripts and unregisters the least recently used one beyond that.
+     */
     private static final class ScriptOnConnectorCache {
+
+        private final int maxSize;
 
         /** Least recently used first. Guarded by itself. */
         private final LinkedHashMap<String, CompiledScript> scripts =
                 new LinkedHashMap<String, CompiledScript>(16, 0.75f, true);
+
+        private ScriptOnConnectorCache(int maxSize) {
+            this.maxSize = maxSize;
+        }
 
         private Class get(String scriptText) {
             synchronized (scripts) {
@@ -1025,23 +1069,32 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         }
 
         /**
-         * Caches the script unless another thread cached the same text first, and returns the
-         * class to run.
+         * Caches the script unless another thread cached the same text first, evicts the least
+         * recently used scripts beyond the size, and returns the class to run.
          */
         private Class put(String scriptText, CompiledScript script) {
-            final CompiledScript cached;
+            final List<CompiledScript> dropped = new ArrayList<CompiledScript>(1);
+            final Class result;
             synchronized (scripts) {
-                cached = scripts.get(scriptText);
-                if (null == cached) {
+                final CompiledScript cached = scripts.get(scriptText);
+                if (null != cached) {
+                    dropped.add(script);
+                    result = cached.scriptClass;
+                } else {
                     scripts.put(scriptText, script);
+                    final Iterator<CompiledScript> eldest = scripts.values().iterator();
+                    while (scripts.size() > maxSize) {
+                        dropped.add(eldest.next());
+                        eldest.remove();
+                    }
+                    result = script.scriptClass;
                 }
             }
-            if (null == cached) {
-                return script.scriptClass;
-            }
             // Outside the monitor: removeClass takes Groovy's own locks.
-            script.unregister();
-            return cached.scriptClass;
+            for (CompiledScript d : dropped) {
+                d.unregister();
+            }
+            return result;
         }
 
         private void clear() {

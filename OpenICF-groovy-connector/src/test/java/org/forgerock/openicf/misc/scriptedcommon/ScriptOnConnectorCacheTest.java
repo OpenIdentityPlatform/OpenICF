@@ -21,6 +21,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.concurrent.CountDownLatch;
@@ -81,6 +82,7 @@ public class ScriptOnConnectorCacheTest {
 
     @AfterMethod
     public void tearDown() {
+        System.clearProperty(ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY);
         customizer = null;
         final CountDownLatch gate = compileGate;
         compileGate = null;
@@ -166,6 +168,56 @@ public class ScriptOnConnectorCacheTest {
         assertThat(compiling.get(10, SECONDS)).isNotSameAs(cached);
     }
 
+    @Test
+    public void testCacheSizeComesFromTheSystemProperty() {
+        final String property = ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY;
+        assertThat(property).isEqualTo("org.identityconnectors.framework.groovy.scriptOnConnectorCacheSize");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(64);
+        System.setProperty(property, "5");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(5);
+        System.setProperty(property, " 7 ");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(7);
+        System.setProperty(property, "0");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(64);
+        System.setProperty(property, "-3");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(64);
+        System.setProperty(property, "many");
+        assertThat(ScriptedConfiguration.getScriptOnConnectorCacheSize()).isEqualTo(64);
+    }
+
+    @Test
+    public void testLeastRecentlyUsedScriptIsEvicted() {
+        System.setProperty(ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, "2");
+        final Class a = configuration.getScriptOnConnectorClass("return 'a'");
+        final Class b = configuration.getScriptOnConnectorClass("return 'b'");
+        assertThat(configuration.getScriptOnConnectorClass("return 'a'")).isSameAs(a);
+        configuration.getScriptOnConnectorClass("return 'c'");
+        assertThat(configuration.getScriptOnConnectorClass("return 'a'")).isSameAs(a);
+        assertThat(configuration.getScriptOnConnectorClass("return 'b'")).isNotSameAs(b);
+    }
+
+    @Test
+    public void testEvictedScriptClassesAreUnregistered() {
+        System.setProperty(ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, "1");
+        final String text = "def c = { -> 1 }; return c.getClass()";
+        final Class scriptClass = configuration.getScriptOnConnectorClass(text);
+        final Class closureClass = (Class) configuration.evaluateScriptOnConnector(text, new Binding());
+        assertThat(closureClass).isNotSameAs(scriptClass);
+        registerMetaClass(scriptClass);
+        registerMetaClass(closureClass);
+        configuration.getScriptOnConnectorClass("return 2");
+        assertThat(ClassInfo.getClassInfo(scriptClass).getStrongMetaClass()).isNull();
+        assertThat(ClassInfo.getClassInfo(closureClass).getStrongMetaClass()).isNull();
+    }
+
+    @Test
+    public void testEvictedScriptClassCanBeUnloaded() throws Exception {
+        System.setProperty(ScriptedConfiguration.SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, "1");
+        final WeakReference<Class> evicted = compileAndRun("def c = { it + 1 }; return c(1)");
+        configuration.getScriptOnConnectorClass("return 2");
+        assertThat(isCollected(evicted)).isTrue();
+    }
+
     private ScriptedConfiguration withScriptRoot(ScriptedConfiguration result) {
         result.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
         return result;
@@ -213,5 +265,20 @@ public class ScriptOnConnectorCacheTest {
     /** The loader whose class cache holds a compiled script class: the parent of its InnerLoader. */
     private static ClassLoader compilingLoader(Class scriptClass) {
         return scriptClass.getClassLoader().getParent();
+    }
+
+    /** Compiles and runs the script, keeping no strong reference to its class. */
+    private WeakReference<Class> compileAndRun(String scriptText) {
+        configuration.evaluateScriptOnConnector(scriptText, new Binding());
+        return new WeakReference<Class>(configuration.getScriptOnConnectorClass(scriptText));
+    }
+
+    /** Runs full collections, which unload classes, until the referent is gone. */
+    private static boolean isCollected(WeakReference<?> reference) throws InterruptedException {
+        for (int i = 0; i < 20 && null != reference.get(); i++) {
+            System.gc();
+            Thread.sleep(50);
+        }
+        return null == reference.get();
     }
 }
