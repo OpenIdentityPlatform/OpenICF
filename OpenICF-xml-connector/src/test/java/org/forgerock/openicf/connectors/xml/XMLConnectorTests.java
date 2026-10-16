@@ -50,6 +50,7 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -195,6 +196,27 @@ public class XMLConnectorTests {
         Uid updatedUid = facade.update(ObjectClass.ACCOUNT, insertedUid, attributes, null);
 
         AssertJUnit.assertEquals(insertedUid.getUidValue(), updatedUid.getUidValue());
+    }
+
+    @Test
+    public void renamingAGroupReturnsItsNewNameAsUid() {
+        // __GROUP__ has no __UID__: its uid is the name.
+        facade.create(ObjectClass.GROUP, getRequiredGroupAttributes(), null);
+        Set<Attribute> rebels = new HashSet<Attribute>();
+        rebels.add(AttributeBuilder.build(ATTR_NAME, "Rebels"));
+        rebels.add(AttributeBuilder.build(ATTR_DESCRIPTION, ATTR_GROUP_VALUE_DESCRIPTION));
+        rebels.add(AttributeBuilder.build(ATTR_SHORT_NAME, ATTR_GROUP_VALUE_SHORT_NAME));
+        facade.create(ObjectClass.GROUP, rebels, null);
+
+        Uid uid = facade.update(ObjectClass.GROUP, new Uid("Rebels"),
+                Collections.singleton(AttributeBuilder.build(ATTR_NAME, "Alliance")), null);
+
+        AssertJUnit.assertEquals("Alliance", uid.getUidValue());
+        AssertJUnit.assertNull(facade.getObject(ObjectClass.GROUP, new Uid("Rebels"), null));
+        AssertJUnit.assertEquals("Alliance",
+                facade.getObject(ObjectClass.GROUP, new Uid("Alliance"), null).getName().getNameValue());
+        expectThrows(AlreadyExistsException.class, () -> facade.update(ObjectClass.GROUP, new Uid("Alliance"),
+                Collections.singleton(AttributeBuilder.build(ATTR_NAME, ATTR_GROUP_VALUE_NAME)), null));
     }
 
     @Test

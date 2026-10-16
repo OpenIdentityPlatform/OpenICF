@@ -75,6 +75,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -308,6 +309,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
+        Uid newUid = null;
         for (Attribute attribute : replaceAttributes) {
 
             if (!objAttributes.containsKey(attribute.getName())) {
@@ -351,6 +353,21 @@ public class XMLHandlerImpl implements XMLHandler {
                 throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
             }
 
+            if (Name.NAME.equals(attributeName)) {
+                for (String value : values) {
+                    if (nameTakenByAnother(objClass, entry, value)) {
+                        throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
+                                + value + " already exists.");
+                    }
+                    // Without a __UID__ element the uid is the name, as create() makes it, so even an optional
+                    // __NAME__ cannot be cleared: no entry could be read back without a uid.
+                    if (!isSupportUid(objClass)) {
+                        Assertions.blankCheck(value, attributeName);
+                        newUid = new Uid(value);
+                    }
+                }
+            }
+
             checkedAttributes.add(new CheckedAttribute(attributeName, values));
         }
 
@@ -382,7 +399,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         log.info("Exit {0}", method);
 
-        return uid;
+        return newUid != null ? newUid : uid;
     }
 
     @Override
@@ -733,6 +750,18 @@ public class XMLHandlerImpl implements XMLHandler {
 
     private boolean entryExists(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
         return getEntry(objClass, uid, identifierField) != null;
+    }
+
+    /** An entry that already has {@code name} keeps it, even when another entry has it too. */
+    private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
+        if (StringUtil.isBlank(name)) {
+            // create() refuses a blank name, so it is no entry's: in a class with __UID__, an optional __NAME__
+            // may be cleared on several entries.
+            return false;
+        }
+        List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
+                identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
+        return !holders.isEmpty() && !holders.contains(entry);
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {

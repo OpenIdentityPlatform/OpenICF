@@ -52,6 +52,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -184,6 +185,25 @@ public class XMLHandlerReloadTests {
         assertEquals(Files.readAllBytes(file.toPath()), before);
         // The file is unchanged, so the next call keeps the document in memory: it must be unchanged as well.
         assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
+    }
+
+    @Test
+    public void renameIntoATakenNameLeavesTheEntryAndTheFileAlone() throws Exception {
+        writeAccounts(file, "alice", "bob");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        // The name comes after an attribute that would be applied first.
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> call(h -> h.update(ObjectClass.ACCOUNT,
+                new Uid("uid-alice"), attributes(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"),
+                        AttributeBuilder.build(Name.NAME, "bob")))));
+
+        assertEquals(e.getMessage(), "Could not update entry. An entry with the __NAME__ of bob already exists.");
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))),
+                List.of("null|Last-alice", "null|Last-bob"));
     }
 
     @Test
