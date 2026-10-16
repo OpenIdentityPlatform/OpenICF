@@ -163,6 +163,32 @@ public class XMLHandlerIndexTests {
         assertEquals(kept.getUidValue(), "no-uid");
     }
 
+    @Test
+    public void clearingAnOptionalNameOfTwoEntriesIsAllowed() throws Exception {
+        // Next to the original, so that its import of resource-schema-1.xsd resolves.
+        File optionalNameXsd = getTestFile("optional-name.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        // The first __NAME__ reference is __ACCOUNT__'s.
+        Files.write(optionalNameXsd.toPath(), xsd.replaceFirst("<xsd:element ref=\"icf:__NAME__\"/>",
+                "<xsd:element ref=\"icf:__NAME__\" minOccurs=\"0\"/>").getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            writeAccounts(file, "alice", "bob");
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(optionalNameXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, optionalNameXsd);
+            XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            optional.init();
+
+            // create() refuses a blank name, so a cleared name is no other entry's.
+            optional.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, "")));
+            optional.update(ObjectClass.ACCOUNT, new Uid("uid-bob"), Collections.singleton(AttributeBuilder.build(Name.NAME, "")));
+        } finally {
+            Files.delete(optionalNameXsd.toPath());
+        }
+    }
+
     /**
      * Renames to {@code newName} along with an unknown attribute. update() rejects the unknown attribute
      * before it changes the entry, so the rename is not applied. A two-valued __NAME__ cannot be used:

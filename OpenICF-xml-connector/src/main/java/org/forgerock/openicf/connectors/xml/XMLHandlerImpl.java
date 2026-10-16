@@ -75,6 +75,7 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.common.Assertions;
+import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -751,6 +752,10 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /** An entry that already has {@code name} keeps it, even when another entry has it too. */
     private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
+        if (StringUtil.isBlank(name)) {
+            // create() refuses a blank name, so it is no entry's: an optional __NAME__ may be cleared on several entries.
+            return false;
+        }
         List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
                 identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
         return !holders.isEmpty() && !holders.contains(entry);
