@@ -351,6 +351,15 @@ public class XMLHandlerImpl implements XMLHandler {
                 throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
             }
 
+            if (Name.NAME.equals(attributeName)) {
+                for (String value : values) {
+                    if (nameTakenByAnother(objClass, entry, value)) {
+                        throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
+                                + value + " already exists.");
+                    }
+                }
+            }
+
             checkedAttributes.add(new CheckedAttribute(attributeName, values));
         }
 
@@ -733,6 +742,13 @@ public class XMLHandlerImpl implements XMLHandler {
 
     private boolean entryExists(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
         return getEntry(objClass, uid, identifierField) != null;
+    }
+
+    /** An entry that already has {@code name} keeps it, even when another entry has it too. */
+    private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
+        List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
+                identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
+        return !holders.isEmpty() && !holders.contains(entry);
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {

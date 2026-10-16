@@ -94,7 +94,7 @@ public class XMLHandlerIndexTests {
         expectThrows(AlreadyExistsException.class, () -> handler.create(ObjectClass.ACCOUNT, account("renamed")));
 
         handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
-                Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed-again")));
         handler.create(ObjectClass.ACCOUNT, account("renamed"));
     }
 
@@ -120,6 +120,41 @@ public class XMLHandlerIndexTests {
         assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "dup"), Arrays.asList("u1|dup", "u2|dup"));
         assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
                 Arrays.asList("u1|dup", "u2|dup"));
+    }
+
+    @Test
+    public void renameIntoANameAnotherEntryHasIsRefused() {
+        Uid fresh = handler.create(ObjectClass.ACCOUNT, account("fresh"));
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                fresh, Collections.singleton(AttributeBuilder.build(Name.NAME, "dup"))));
+        assertEquals(e.getMessage(), "Could not update entry. An entry with the __NAME__ of dup already exists.");
+
+        // Only a GROUP has the name The Empire.
+        handler.create(ObjectClass.GROUP, getRequiredGroupAttributes());
+        expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.GROUP,
+                new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, ATTR_GROUP_VALUE_NAME))));
+
+        // u10's name is "" in the index: a blank name is refused as blank, not as taken.
+        IllegalArgumentException blank = expectThrows(IllegalArgumentException.class, () -> handler.update(
+                ObjectClass.ACCOUNT, new Uid("u1"), Collections.singleton(AttributeBuilder.build(Name.NAME, ""))));
+        assertEquals(blank.getMessage(), "Parameter '__NAME__' must not be blank.");
+    }
+
+    @Test
+    public void keepingANameAnotherEntryAlsoHasIsAllowed() {
+        Set<Attribute> keepName = new LinkedHashSet<Attribute>();
+        keepName.add(AttributeBuilder.build(Name.NAME, "dup"));
+        keepName.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L2b"));
+        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), keepName);
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
+                Arrays.asList("u1|dup", "u2|dup"));
+
+        // Only __NAME__ is checked: another attribute may have a value that is someone's name.
+        handler.update(ObjectClass.ACCOUNT, new Uid("u4"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "dup")));
+
+        // Only an ACCOUNT has the name no-uid.
+        handler.update(ObjectClass.GROUP, new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, "no-uid")));
     }
 
     /**
@@ -281,9 +316,8 @@ public class XMLHandlerIndexTests {
         assertIndexAgreesWithXQuery("loaded");
         handler.create(ObjectClass.ACCOUNT, account("dup-new"));
         assertIndexAgreesWithXQuery("created");
-        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed")));
-        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
-        assertIndexAgreesWithXQuery("renamed back to a duplicate");
+        handler.update(ObjectClass.ACCOUNT, new Uid("u1"), Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
+        assertIndexAgreesWithXQuery("first duplicate re-keyed");
         handler.delete(ObjectClass.ACCOUNT, new Uid("u1"));
         assertIndexAgreesWithXQuery("first duplicate deleted");
         handler.update(ObjectClass.ACCOUNT, new Uid("u11"), Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L11")));
