@@ -89,8 +89,9 @@ public class XMLHandlerIndexTests {
 
     @Test
     public void renamedEntryIsFoundByItsNewNameOnly() {
-        handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
+        Uid uid = handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
                 Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed")));
+        assertEquals(uid.getUidValue(), "u1"); // __ACCOUNT__ has a __UID__: the rename keeps it
         expectThrows(AlreadyExistsException.class, () -> handler.create(ObjectClass.ACCOUNT, account("renamed")));
 
         handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
@@ -153,8 +154,13 @@ public class XMLHandlerIndexTests {
         handler.update(ObjectClass.ACCOUNT, new Uid("u4"),
                 Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "dup")));
 
-        // Only an ACCOUNT has the name no-uid.
-        handler.update(ObjectClass.GROUP, new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, "no-uid")));
+        // Only an ACCOUNT has the name no-uid. __GROUP__ has no __UID__: its uid is the name, so the rename changes it.
+        Uid renamed = handler.update(ObjectClass.GROUP, new Uid("dup"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "no-uid")));
+        assertEquals(renamed.getUidValue(), "no-uid");
+        Uid kept = handler.update(ObjectClass.GROUP, new Uid("no-uid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_DESCRIPTION, "D2")));
+        assertEquals(kept.getUidValue(), "no-uid");
     }
 
     /**

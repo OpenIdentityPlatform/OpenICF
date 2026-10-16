@@ -308,6 +308,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
+        Uid newUid = null;
         for (Attribute attribute : replaceAttributes) {
 
             if (!objAttributes.containsKey(attribute.getName())) {
@@ -357,6 +358,10 @@ public class XMLHandlerImpl implements XMLHandler {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
                     }
+                    // Without a __UID__ element the uid is the name, as create() makes it.
+                    if (!isSupportUid(objClass)) {
+                        newUid = new Uid(value);
+                    }
                 }
             }
 
@@ -391,7 +396,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         log.info("Exit {0}", method);
 
-        return uid;
+        return newUid != null ? newUid : uid;
     }
 
     @Override
