@@ -100,6 +100,13 @@ public class ReflectionUtilTests {
         newInstance(MethodHandles.publicLookup(), PrivateConstructor.class);
     }
 
+    @Test(expectedExceptions = IllegalAccessException.class)
+    public void newInstanceFailsOnInaccessibleClass() throws Exception {
+        // findConstructor reports a class the lookup cannot see without a cause,
+        // which must not become a NullPointerException
+        newInstance(MethodHandles.publicLookup(), PackagePrivate.class);
+    }
+
     @Test
     public void newInstanceThrowsLinkageErrorOfClassWithMissingDependency() throws Exception {
         // A connector configuration class whose dependency is missing from the
@@ -174,6 +181,9 @@ public class ReflectionUtilTests {
     public static class PrivateConstructor {
         private PrivateConstructor() {
         }
+    }
+
+    static class PackagePrivate {
     }
 
     public static class Base {

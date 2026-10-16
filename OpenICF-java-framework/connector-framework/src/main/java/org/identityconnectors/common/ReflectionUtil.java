@@ -139,8 +139,11 @@ public final class ReflectionUtil {
      * A class that cannot be linked, typically because a class it refers to is
      * missing from the connector bundle, fails with that {@link LinkageError}
      * (e.g. {@link NoClassDefFoundError}), as it did with
-     * {@link Class#newInstance()}: the connector info managers skip such a
-     * connector instead of failing the whole bundle.
+     * {@link Class#newInstance()}: on a {@link NoClassDefFoundError} the
+     * connector info managers skip the connector instead of failing the whole
+     * bundle. A link failure that is an {@link IllegalAccessError} cannot be
+     * told from an inaccessible constructor and is reported as
+     * {@link IllegalAccessException}.
      *
      * @param <T>
      *            the type of the instance.
@@ -163,7 +166,10 @@ public final class ReflectionUtil {
             // A missing or inaccessible constructor comes with a NoSuchMethodError
             // or IllegalAccessError as the cause; any other LinkageError means the
             // class itself failed to link, which findConstructor reports as an
-            // IllegalAccessException "no such constructor"
+            // IllegalAccessException "no such constructor". A link failure that is
+            // an IllegalAccessError looks the same as an inaccessible constructor
+            // and stays an IllegalAccessException; a class the lookup cannot see
+            // comes without a cause
             final Throwable cause = e.getCause();
             if (cause instanceof LinkageError && !(cause instanceof NoSuchMethodError)
                     && !(cause instanceof IllegalAccessError)) {

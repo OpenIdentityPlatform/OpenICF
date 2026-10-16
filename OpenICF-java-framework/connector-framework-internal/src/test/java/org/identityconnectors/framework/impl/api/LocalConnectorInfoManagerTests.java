@@ -23,6 +23,7 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -68,6 +69,7 @@ import org.identityconnectors.framework.spi.Connector;
 import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
 import org.identityconnectors.framework.api.operations.batch.BatchTask;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoManagerImpl;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -223,7 +225,8 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             out.close();
         }
         // and hidden from the parent class loader, which has it on the test
-        // class path
+        // class path, as a dependency missing from the class path would be
+        // (BundleClassLoader refuses it anyway, as an internal framework class)
         ClassLoader parent = new ClassLoader(ConnectorInfoManagerFactory.class.getClassLoader()) {
             @Override
             protected Class<?> loadClass(String name, boolean resolve)
@@ -234,14 +237,23 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
                 return super.loadClass(name, resolve);
             }
         };
+        List<ConnectorInfo> infos = null;
         try {
-            List<ConnectorInfo> infos =
-                    new LocalConnectorInfoManagerImpl(Collections.singletonList(bundle.toURI()
-                            .toURL()), parent).getConnectorInfos();
+            infos = new LocalConnectorInfoManagerImpl(Collections.singletonList(bundle.toURI()
+                    .toURL()), parent).getConnectorInfos();
             assertEquals(infos.size(), 1, String.valueOf(infos));
             assertEquals(infos.get(0).getConnectorKey().getConnectorName(),
                     LinkableConnector.class.getName());
         } finally {
+            // the bundle class loader keeps the jar open, and Windows cannot
+            // delete an open file
+            if (infos != null && !infos.isEmpty()) {
+                ClassLoader loader = ((LocalConnectorInfoImpl) infos.get(0)).getConnectorClass()
+                        .getClassLoader();
+                if (loader instanceof Closeable) {
+                    ((Closeable) loader).close();
+                }
+            }
             bundle.delete();
         }
     }
