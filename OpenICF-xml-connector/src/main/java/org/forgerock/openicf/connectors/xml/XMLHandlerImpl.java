@@ -359,8 +359,10 @@ public class XMLHandlerImpl implements XMLHandler {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
                     }
-                    // Without a __UID__ element the uid is the name, as create() makes it.
+                    // Without a __UID__ element the uid is the name, as create() makes it, so even an optional
+                    // __NAME__ cannot be cleared: no entry could be read back without a uid.
                     if (!isSupportUid(objClass)) {
+                        Assertions.blankCheck(value, attributeName);
                         newUid = new Uid(value);
                     }
                 }
@@ -753,7 +755,8 @@ public class XMLHandlerImpl implements XMLHandler {
     /** An entry that already has {@code name} keeps it, even when another entry has it too. */
     private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
         if (StringUtil.isBlank(name)) {
-            // create() refuses a blank name, so it is no entry's: an optional __NAME__ may be cleared on several entries.
+            // create() refuses a blank name, so it is no entry's: in a class with __UID__, an optional __NAME__
+            // may be cleared on several entries.
             return false;
         }
         List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),

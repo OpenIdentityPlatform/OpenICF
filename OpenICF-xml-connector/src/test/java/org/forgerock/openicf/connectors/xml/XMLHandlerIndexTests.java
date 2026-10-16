@@ -189,6 +189,38 @@ public class XMLHandlerIndexTests {
         }
     }
 
+    @Test
+    public void clearingTheOptionalNameOfAnEntryWithoutUidIsRefused() throws Exception {
+        File optionalNameXsd = getTestFile("optional-group-name.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String ref = "<xsd:element ref=\"icf:__NAME__\"/>";
+        // The second __NAME__ reference is __GROUP__'s, a class without __UID__.
+        int group = xsd.indexOf(ref, xsd.indexOf(ref) + 1);
+        Files.write(optionalNameXsd.toPath(), (xsd.substring(0, group) + "<xsd:element ref=\"icf:__NAME__\" minOccurs=\"0\"/>"
+                + xsd.substring(group + ref.length())).getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            Files.copy(getTestFile("index-fixture.xml").toPath(), file.toPath());
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(optionalNameXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, optionalNameXsd);
+            XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            optional.init();
+
+            // The uid is the name, so a cleared name would leave an entry that no search could read back.
+            for (String blank : Arrays.asList("", "   ")) {
+                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                        ObjectClass.GROUP, new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
+                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            }
+            assertEquals(describe(optional.search(equalsQuery(Name.NAME, "dup"), ObjectClass.GROUP)),
+                    Collections.singletonList("dup|dup"));
+        } finally {
+            Files.delete(optionalNameXsd.toPath());
+        }
+    }
+
     /**
      * Renames to {@code newName} along with an unknown attribute. update() rejects the unknown attribute
      * before it changes the entry, so the rename is not applied. A two-valued __NAME__ cannot be used:
