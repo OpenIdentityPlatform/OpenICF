@@ -75,7 +75,6 @@ import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.common.Assertions;
-import org.identityconnectors.common.StringUtil;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
@@ -324,7 +323,9 @@ public class XMLHandlerImpl implements XMLHandler {
             }
 
             List<String> values = null;
-            if (attributeInfo.isRequired()) {
+            // create() requires __NAME__ whatever the XSD says, and an object without a name cannot be built, so a
+            // cleared __NAME__ would leave an entry that no search of the class can read back.
+            if (attributeInfo.isRequired() || Name.NAME.equals(attributeName)) {
                 values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
                 if (values.isEmpty()) {
                     throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
@@ -344,7 +345,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
 
-            // A required attribute's values were read above; reading them again would decrypt a password twice.
+            // Values read above are not read again: that would decrypt a password twice.
             if (values == null) {
                 values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
             }
@@ -359,10 +360,8 @@ public class XMLHandlerImpl implements XMLHandler {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
                     }
-                    // Without a __UID__ element the uid is the name, as create() makes it, so even an optional
-                    // __NAME__ cannot be cleared: no entry could be read back without a uid.
+                    // Without a __UID__ element the uid is the name, as create() makes it.
                     if (!isSupportUid(objClass)) {
-                        Assertions.blankCheck(value, attributeName);
                         newUid = new Uid(value);
                     }
                 }
@@ -754,11 +753,6 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /** An entry that already has {@code name} keeps it, even when another entry has it too. */
     private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
-        if (StringUtil.isBlank(name)) {
-            // create() refuses a blank name, so it is no entry's: in a class with __UID__, an optional __NAME__
-            // may be cleared on several entries.
-            return false;
-        }
         List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
                 identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
         return !holders.isEmpty() && !holders.contains(entry);

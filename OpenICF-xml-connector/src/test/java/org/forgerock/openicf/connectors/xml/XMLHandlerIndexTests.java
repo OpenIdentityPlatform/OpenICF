@@ -164,7 +164,7 @@ public class XMLHandlerIndexTests {
     }
 
     @Test
-    public void clearingAnOptionalNameOfTwoEntriesIsAllowed() throws Exception {
+    public void clearingAnOptionalNameIsRefused() throws Exception {
         // Next to the original, so that its import of resource-schema-1.xsd resolves.
         File optionalNameXsd = getTestFile("optional-name.xsd");
         String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
@@ -181,9 +181,15 @@ public class XMLHandlerIndexTests {
             XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
             optional.init();
 
-            // create() refuses a blank name, so a cleared name is no other entry's.
-            optional.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, "")));
-            optional.update(ObjectClass.ACCOUNT, new Uid("uid-bob"), Collections.singleton(AttributeBuilder.build(Name.NAME, "")));
+            // create() requires a name whatever the XSD says, and an object without one cannot be built:
+            // a cleared entry would fail every search of the class.
+            for (String blank : Arrays.asList("", "   ")) {
+                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                        ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
+                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            }
+            assertEquals(describe(optional.search((Query) null, ObjectClass.ACCOUNT)),
+                    Arrays.asList("uid-alice|alice", "uid-bob|bob"));
         } finally {
             Files.delete(optionalNameXsd.toPath());
         }
