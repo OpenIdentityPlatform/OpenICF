@@ -205,6 +205,9 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
             final HttpAsyncResponseConsumer<T> responseConsumer,
             final FutureCallback<T> callback) {
 
+        // Built first: the customizer's init closure fills the propertyBag that beforeRequest
+        // reads, such as the BASIC_PREEMPTIVE AuthCache and the cookie store.
+        HttpAsyncClient client = getHttpAsyncClient()
         HttpClientContext localContext = HttpClientContext.create();
         if (null != beforeRequest) {
             Closure beforeRequestClone = beforeRequest.rehydrate(this, this, this);
@@ -215,7 +218,7 @@ class ScriptedCRESTConfiguration extends ScriptedConfiguration {
             localContext.setAuthCache(sharedAuthCache)
         }
 
-        return getHttpAsyncClient().execute(
+        return client.execute(
                 HttpAsyncMethods.create(getHttpHost(), request),
                 responseConsumer,
                 localContext, callback);

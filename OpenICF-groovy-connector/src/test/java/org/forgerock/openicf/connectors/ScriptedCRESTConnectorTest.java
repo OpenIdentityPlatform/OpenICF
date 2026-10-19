@@ -40,8 +40,11 @@ import org.forgerock.json.resource.NotFoundException;
 import org.forgerock.json.resource.ResourceException;
 
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -58,6 +61,8 @@ import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
+import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -384,6 +389,28 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
             Assert.assertEquals(requestCounter.unauthorized(), 0);
             Assert.assertEquals(requestCounter.requests(), 20);
         } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    @Test
+    public void testPreemptiveBasicNeverTakesA401() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Preempt0001"), null);
+        final APIConfiguration config = TestHelpers.createTestConfiguration(ScriptedCRESTConnector.class,
+                TestHelpers.getProperties(ScriptedConnectorBase.class, TEST_NAME), "configuration");
+        config.getConfigurationProperties().setPropertyValue("defaultAuthMethod", "BASIC_PREEMPTIVE");
+        final ConnectorFacade preemptive = ConnectorFacadeFactory.getInstance().newInstance(config);
+        try {
+            requestCounter.reset();
+            // A new client: its first request already carries the credentials.
+            for (int i = 0; i < 3; i++) {
+                Assert.assertNotNull(preemptive.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.unauthorized(), 0);
+            Assert.assertEquals(requestCounter.requests(), 3);
+        } finally {
+            ((LocalConnectorFacadeImpl) preemptive).dispose();
             facade.delete(ObjectClass.ACCOUNT, uid, null);
         }
     }
