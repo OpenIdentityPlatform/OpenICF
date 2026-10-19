@@ -23,13 +23,16 @@
  */
 package org.identityconnectors.framework.impl.api;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -60,8 +63,13 @@ import org.identityconnectors.framework.common.objects.OperationOptions;
 import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Subscription;
 import org.identityconnectors.framework.common.objects.Uid;
+import org.identityconnectors.framework.spi.AbstractConfiguration;
+import org.identityconnectors.framework.spi.Configuration;
+import org.identityconnectors.framework.spi.Connector;
+import org.identityconnectors.framework.spi.ConnectorClass;
 import org.identityconnectors.framework.api.operations.batch.BatchBuilder;
 import org.identityconnectors.framework.api.operations.batch.BatchTask;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoImpl;
 import org.identityconnectors.framework.impl.api.local.LocalConnectorInfoManagerImpl;
 import org.testng.Assert;
 import org.testng.SkipException;
@@ -182,6 +190,72 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             }
         }
         return names;
+    }
+
+    /**
+     * A connector whose configuration class cannot be linked, because a class
+     * it refers to is missing from the bundle, is left out of the list, and
+     * the other connectors of the bundle are still listed.
+     */
+    @Test
+    public void testSkipsConnectorWithUnlinkableConfiguration() throws Exception {
+        File bundle = File.createTempFile("unlinkable-bundle", ".jar");
+        Manifest manifest = new Manifest();
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
+        manifest.getMainAttributes().putValue("ConnectorBundle-FrameworkVersion", "1.0");
+        manifest.getMainAttributes().putValue("ConnectorBundle-Name", "unlinkable");
+        manifest.getMainAttributes().putValue("ConnectorBundle-Version", "1.0");
+        JarOutputStream out = new JarOutputStream(new FileOutputStream(bundle), manifest);
+        try {
+            // MissingDependency is left out of the bundle
+            for (Class<?> clazz : new Class<?>[] { LinkableConnector.class,
+                LinkableConfiguration.class, UnlinkableConnector.class,
+                UnlinkableConfiguration.class }) {
+                String entry = clazz.getName().replace('.', '/') + ".class";
+                out.putNextEntry(new JarEntry(entry));
+                InputStream in = clazz.getClassLoader().getResourceAsStream(entry);
+                try {
+                    out.write(in.readAllBytes());
+                } finally {
+                    in.close();
+                }
+                out.closeEntry();
+            }
+        } finally {
+            out.close();
+        }
+        // and hidden from the parent class loader, which has it on the test
+        // class path, as a dependency missing from the class path would be
+        // (BundleClassLoader refuses it anyway, as an internal framework class)
+        ClassLoader parent = new ClassLoader(ConnectorInfoManagerFactory.class.getClassLoader()) {
+            @Override
+            protected Class<?> loadClass(String name, boolean resolve)
+                    throws ClassNotFoundException {
+                if (name.equals(MissingDependency.class.getName())) {
+                    throw new ClassNotFoundException(name);
+                }
+                return super.loadClass(name, resolve);
+            }
+        };
+        List<ConnectorInfo> infos = null;
+        try {
+            infos = new LocalConnectorInfoManagerImpl(Collections.singletonList(bundle.toURI()
+                    .toURL()), parent).getConnectorInfos();
+            assertEquals(infos.size(), 1, String.valueOf(infos));
+            assertEquals(infos.get(0).getConnectorKey().getConnectorName(),
+                    LinkableConnector.class.getName());
+        } finally {
+            // the bundle class loader keeps the jar open, and Windows cannot
+            // delete an open file
+            if (infos != null && !infos.isEmpty()) {
+                ClassLoader loader = ((LocalConnectorInfoImpl) infos.get(0)).getConnectorClass()
+                        .getClassLoader();
+                if (loader instanceof Closeable) {
+                    ((Closeable) loader).close();
+                }
+            }
+            bundle.delete();
+        }
     }
 
     /**
@@ -641,5 +715,53 @@ public class LocalConnectorInfoManagerTests extends ConnectorInfoManagerTestBase
             // the subscription holds a pooled connector until it is closed
             sub.close();
         }
+    }
+
+    // =======================================================================
+    // Connectors of testSkipsConnectorWithUnlinkableConfiguration
+    // =======================================================================
+
+    @ConnectorClass(configurationClass = LinkableConfiguration.class,
+            displayNameKey = "linkable.connector.display")
+    public static class LinkableConnector implements Connector {
+        private Configuration configuration;
+
+        public Configuration getConfiguration() {
+            return configuration;
+        }
+
+        public void init(Configuration configuration) {
+            this.configuration = configuration;
+        }
+
+        public void dispose() {
+        }
+    }
+
+    public static class LinkableConfiguration extends AbstractConfiguration {
+        public void validate() {
+        }
+    }
+
+    @ConnectorClass(configurationClass = UnlinkableConfiguration.class,
+            displayNameKey = "unlinkable.connector.display")
+    public static class UnlinkableConnector extends LinkableConnector {
+    }
+
+    /**
+     * Verifying {@link #widen} checks that {@link MissingDependency} is an
+     * {@link Exception}, so the class cannot be linked without it.
+     */
+    public static class UnlinkableConfiguration extends AbstractConfiguration {
+        public void validate() {
+        }
+
+        static Exception widen(MissingDependency e) {
+            return e;
+        }
+    }
+
+    public static class MissingDependency extends Exception {
+        private static final long serialVersionUID = 1L;
     }
 }

@@ -32,6 +32,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.invoke.MethodHandles;
 import java.util.Set;
 
@@ -92,6 +93,37 @@ public class ReflectionUtilTests {
         newInstance(MethodHandles.lookup(), NoNoArgConstructor.class);
     }
 
+    @Test(expectedExceptions = IllegalAccessException.class)
+    public void newInstanceFailsOnInaccessibleConstructor() throws Exception {
+        // publicLookup() is no nestmate: the private constructor fails the access
+        // check with an IllegalAccessError cause, which must not escape as an Error
+        newInstance(MethodHandles.publicLookup(), PrivateConstructor.class);
+    }
+
+    @Test(expectedExceptions = IllegalAccessException.class)
+    public void newInstanceFailsOnInaccessibleClass() throws Exception {
+        // findConstructor reports a class the lookup cannot see without a cause,
+        // which must not become a NullPointerException
+        newInstance(MethodHandles.publicLookup(), PackagePrivate.class);
+    }
+
+    @Test
+    public void newInstanceThrowsLinkageErrorOfClassWithMissingDependency() throws Exception {
+        // A connector configuration class whose dependency is missing from the
+        // bundle: the callers skip such a connector on NoClassDefFoundError, as
+        // Class.newInstance() threw it, so it must not become a "no such
+        // constructor" IllegalAccessException.
+        final Class<?> clazz = new HidingClassLoader().loadClass(LinksAgainstHidden.class.getName());
+        try {
+            newInstance(MethodHandles.lookup(), clazz);
+            fail("NoClassDefFoundError expected");
+        } catch (NoClassDefFoundError e) {
+            // the missing dependency, not the class that refers to it
+            assertTrue(e.getMessage().contains(Hidden.class.getName().replace('.', '/')),
+                    e.getMessage());
+        }
+    }
+
     // =======================================================================
     // Helper Classes/Interfaces
     // =======================================================================
@@ -143,6 +175,64 @@ public class ReflectionUtilTests {
 
     public static class NoNoArgConstructor {
         public NoNoArgConstructor(String value) {
+        }
+    }
+
+    public static class PrivateConstructor {
+        private PrivateConstructor() {
+        }
+    }
+
+    static class PackagePrivate {
+    }
+
+    public static class Base {
+
+    }
+
+    public static class Hidden extends Base {
+
+    }
+
+    /**
+     * Verifying {@link #widen} checks that {@link Hidden} is a {@link Base},
+     * so the class cannot be linked when {@link Hidden} is not loadable.
+     */
+    public static class LinksAgainstHidden {
+        public static Base widen(Hidden hidden) {
+            return hidden;
+        }
+    }
+
+    /**
+     * Defines {@link LinksAgainstHidden} itself and cannot load {@link Hidden},
+     * like a connector bundle that lacks one of its dependencies.
+     */
+    private static class HidingClassLoader extends ClassLoader {
+        HidingClassLoader() {
+            super(ReflectionUtilTests.class.getClassLoader());
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (name.equals(Hidden.class.getName())) {
+                throw new ClassNotFoundException(name);
+            }
+            if (!name.equals(LinksAgainstHidden.class.getName())) {
+                return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+                Class<?> loaded = findLoadedClass(name);
+                if (loaded == null) {
+                    try (InputStream in = getParent().getResourceAsStream(name.replace('.', '/') + ".class")) {
+                        final byte[] bytes = in.readAllBytes();
+                        loaded = defineClass(name, bytes, 0, bytes.length);
+                    } catch (IOException e) {
+                        throw new ClassNotFoundException(name, e);
+                    }
+                }
+                return loaded;
+            }
         }
     }
 }
