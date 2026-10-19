@@ -22,7 +22,11 @@ import java.net.URI;
 import java.nio.file.Files;
 
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScheme;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.impl.auth.BasicScheme;
 import org.forgerock.openicf.misc.scriptedcommon.ScriptedConfiguration;
 import org.identityconnectors.common.security.GuardedString;
 import org.testng.Assert;
@@ -36,12 +40,18 @@ public class ScriptedCRESTConfigurationTest {
 
     /** A configuration whose default customizer has run and whose HTTP client is built. */
     static ScriptedCRESTConfiguration newConfiguration(final URI proxyAddress) throws Exception {
+        return newConfiguration(proxyAddress, ScriptedCRESTConfiguration.AuthMethod.BASIC);
+    }
+
+    static ScriptedCRESTConfiguration newConfiguration(final URI proxyAddress,
+            final ScriptedCRESTConfiguration.AuthMethod authMethod) throws Exception {
         final ScriptedCRESTConfiguration configuration = new ScriptedCRESTConfiguration();
         final File scriptRoot = Files.createTempDirectory("crest-configuration").toFile();
         scriptRoot.deleteOnExit();
         configuration.setScriptRoots(new String[] { scriptRoot.getAbsolutePath() });
         configuration.setServiceAddress(URI.create("http://localhost:28080/test/crest/"));
         configuration.setProxyAddress(proxyAddress);
+        configuration.setDefaultAuthMethod(authMethod.name());
         configuration.setUsername("admin");
         configuration.setPassword(new GuardedString("Passw0rd".toCharArray()));
         // getGroovyScriptEngine() is protected in another package; it runs the default customizer.
@@ -100,6 +110,25 @@ public class ScriptedCRESTConfigurationTest {
             // InternalHttpAsyncClient.exec is a MainClientExec, which holds the keep-alive strategy.
             final Object exec = field(configuration.getHttpAsyncClient(), "exec");
             Assert.assertSame(field(exec, "keepaliveStrategy"), IdleKeepAliveStrategy.INSTANCE);
+        } finally {
+            configuration.release();
+        }
+    }
+
+    @Test
+    public void testPreemptiveBasicGivesEachRequestItsOwnScheme() throws Exception {
+        final ScriptedCRESTConfiguration configuration =
+                newConfiguration(null, ScriptedCRESTConfiguration.AuthMethod.BASIC_PREEMPTIVE);
+        try {
+            // The cache that the default customizer's beforeRequest puts into every request context.
+            final AuthCache cache =
+                    (AuthCache) configuration.getPropertyBag().get(HttpClientContext.AUTH_CACHE);
+            final HttpHost host = new HttpHost("localhost", 28080, "http");
+            final AuthScheme first = cache.get(host);
+            final AuthScheme second = cache.get(host);
+            Assert.assertTrue(first instanceof BasicScheme, String.valueOf(first));
+            Assert.assertTrue(second instanceof BasicScheme, String.valueOf(second));
+            Assert.assertNotSame(first, second);
         } finally {
             configuration.release();
         }

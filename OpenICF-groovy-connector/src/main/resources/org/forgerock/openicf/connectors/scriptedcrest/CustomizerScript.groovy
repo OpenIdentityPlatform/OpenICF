@@ -39,7 +39,6 @@ import org.apache.http.conn.routing.HttpRoute
 import org.apache.http.conn.ssl.SSLContexts
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.impl.auth.BasicScheme
-import org.apache.http.impl.client.BasicAuthCache
 import org.apache.http.impl.client.BasicCookieStore
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder
@@ -132,9 +131,11 @@ customize {
         switch (AuthMethod.valueOf(c.defaultAuthMethod)) {
             case AuthMethod.BASIC_PREEMPTIVE:
 
-                // Create AuthCache instance
-                def authCache = new BasicAuthCache();
-                // Generate BASIC scheme object and add it to the local auth cache
+                // All requests share this AuthCache. A SharedBasicAuthCache gives each of them its
+                // own copy of the BASIC scheme and is thread-safe; a BasicAuthCache is neither
+                // before HttpClient 4.4.
+                def authCache = new SharedBasicAuthCache();
+                // Generate BASIC scheme object and add it to the shared auth cache
                 authCache.put(httpHost, new BasicScheme());
                 c.propertyBag.put(HttpClientContext.AUTH_CACHE, authCache)
 
