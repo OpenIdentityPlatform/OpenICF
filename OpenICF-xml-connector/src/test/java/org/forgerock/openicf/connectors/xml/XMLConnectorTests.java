@@ -459,7 +459,7 @@ public class XMLConnectorTests {
     }
 
     @Test(timeOut = 60_000L)
-    public void initOnOneFileDoesNotWaitForAnotherFile()throws Exception {
+    public void initOnOneFileDoesNotWaitForAnotherFile() throws Exception {
         File slowFile = getRandomXMLFile();
         String key = slowFile.getCanonicalPath();
         BlockingHandler blocking = new BlockingHandler();
