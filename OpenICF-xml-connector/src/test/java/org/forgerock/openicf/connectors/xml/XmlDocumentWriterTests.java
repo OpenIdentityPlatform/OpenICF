@@ -33,6 +33,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFileAttributeView;
@@ -171,8 +172,68 @@ public class XmlDocumentWriterTests {
         assertEquals(copiesOf(link), Collections.emptyList());
     }
 
+    private static void createLink(Path link, Path to) {
+        try {
+            Files.createSymbolicLink(link, to);
+        } catch (IOException | UnsupportedOperationException e) {
+            throw new SkipException("Cannot create a symbolic link here: " + e);
+        }
+    }
+
     @Test
-    public void followingIsTheNextSibling() throws Exception {
+    public void danglingLinkKeepsTheLinkAndCreatesTheFileBehindIt() throws Exception {
+        Path real = newStoreDir().resolve("store.xml");
+        Path link = newStoreDir().resolve("link.xml");
+        createLink(link, real);
+        XmlDocumentWriter.write(parse("<r><a>x</a></r>"), link.toFile());
+        assertTrue(Files.isSymbolicLink(link));
+        assertTrue(Files.exists(real));
+        assertTrue(new String(Files.readAllBytes(real), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(real), Collections.emptyList());
+        assertEquals(copiesOf(link), Collections.emptyList());
+    }
+
+    @Test
+    public void danglingLinkIntoAMissingDirectoryFailsAndKeepsTheLink() throws Exception {
+        Path missing = newStoreDir().resolve("missing");
+        Path real = missing.resolve("store.xml");
+        Path link = newStoreDir().resolve("link.xml");
+        createLink(link, real);
+        expectThrows(IOException.class, () -> XmlDocumentWriter.write(parse("<r/>"), link.toFile()));
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals(Files.readSymbolicLink(link), real);
+        assertEquals(copiesOf(link), Collections.emptyList());
+        assertFalse(Files.exists(missing));
+    }
+
+    @Test(timeOut = 10_000L)
+    public void linkCycleIsRefused() throws Exception {
+        Path dir = newStoreDir();
+        Path a = dir.resolve("a.xml");
+        Path b = dir.resolve("b.xml");
+        createLink(a, b);
+        createLink(b, a);
+        expectThrows(FileSystemException.class, () -> XmlDocumentWriter.write(parse("<r/>"), a.toFile()));
+        assertTrue(Files.isSymbolicLink(a));
+        assertTrue(Files.isSymbolicLink(b));
+        assertEquals(copiesOf(a), Collections.emptyList());
+        assertEquals(copiesOf(b), Collections.emptyList());
+    }
+
+    @Test
+    public void failedRenameLeavesNoCopy() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.createDirectory(store);
+        expectThrows(IOException.class, () -> XmlDocumentWriter.write(parse("<r><a>x</a></r>"), store.toFile()));
+        assertTrue(Files.isDirectory(store));
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(store)) {
+            assertFalse(entries.iterator().hasNext());
+        }
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
+    public void followingIsTheNextSibling()throws Exception {
         Document document = parse("<r><a><x/></a><b/></r>");
         assertSame(following(only(document, "a"), document), only(document, "b"));
     }

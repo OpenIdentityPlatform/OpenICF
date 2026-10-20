@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -66,6 +67,9 @@ final class XmlDocumentWriter {
     private static final Log log = Log.getLog(XmlDocumentWriter.class);
 
     private static final String XMLNS = "xmlns";
+
+    /** The number of links followed to a file that does not exist before the path is refused. */
+    private static final int MAX_LINK_HOPS = 40;
 
     private XmlDocumentWriter() {
     }
@@ -129,7 +133,8 @@ final class XmlDocumentWriter {
      * the factory methods of newer JDKs and whose DOM classes the JDK's own transformer cannot take.
      * <p>
      * The document goes to a copy {@code <name>.<digits>.tmp} in the directory of the real file (a
-     * link is followed), which only its owner can read while it is written. The copy is synced to
+     * link is followed, also when its target does not exist yet), which only its owner can read
+     * while it is written. The copy is synced to
      * disk, takes the group and the mode of the file, and replaces it by a rename, so the file is
      * either as it was or complete. Whatever the write throws, nothing at {@code file} has changed
      * and no copy is left. A new file is readable by its owner only. A file that is not writable is
@@ -139,6 +144,14 @@ final class XmlDocumentWriter {
      */
     static long write(Document document, File file) throws IOException, TransformerException, SAXException {
         Path target = file.toPath().toAbsolutePath();
+        // a link to a file that does not exist yet is followed too, as a stream opened on it would
+        for (int hops = 0; Files.isSymbolicLink(target) && !Files.exists(target); hops++) {
+            if (hops == MAX_LINK_HOPS) {
+                throw new FileSystemException(file.toPath().toAbsolutePath().toString(), null,
+                        "Too many levels of symbolic links");
+            }
+            target = target.resolveSibling(Files.readSymbolicLink(target));
+        }
         if (Files.exists(target)) {
             target = target.toRealPath();
             if (!Files.isWritable(target)) {
