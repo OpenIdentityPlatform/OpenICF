@@ -369,7 +369,7 @@ public class XMLConnectorTests {
         AssertJUnit.assertTrue(xmlFile.mkdir()); // a directory cannot be written, whoever runs the test
         try {
             String errors = captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: java.io.FileNotFoundException"));
+            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: "));
         } finally {
             AssertJUnit.assertTrue(xmlFile.delete());
         }

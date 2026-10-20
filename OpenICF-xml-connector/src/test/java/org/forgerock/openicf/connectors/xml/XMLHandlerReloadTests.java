@@ -31,10 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -471,22 +468,6 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
-    public void retryAfterAFailedSaveDoesNotReportItsOwnPartialWrite() throws Exception {
-        writeAccounts(file, "alice");
-        setModified(file, now() - HOUR);
-        byte[] before = Files.readAllBytes(file.toPath());
-        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
-        impl.init();
-        Set<Attribute> bob = account("bob");
-        bob.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
-        impl.create(ObjectClass.ACCOUNT, bob);
-        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        assertFalse(Arrays.equals(Files.readAllBytes(file.toPath()), before)); // the failed save truncated the file
-        String errors = captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        assertFalse(errors.contains("UPDATE COLLISION"), errors);
-    }
-
-    @Test
     public void ownSaveIsNotParsedAgain() throws Exception {
         writeAccounts(file, "alice");
         setModified(file, now() - HOUR);
@@ -637,61 +618,19 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
-    public void ownPartialWriteOfANewDocumentIsSavedAgain() throws Exception {
+    public void failedSaveOfANewDocumentWritesNoFile() throws Exception {
         XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
-        impl.init(); // no file: a new document in memory
-        Set<Attribute> bob = account("bob");
-        bob.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
-        impl.create(ObjectClass.ACCOUNT, bob);
-        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        assertTrue(file.exists()); // the failed save left a partial file
-        captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose)); // not a file that appeared: saved again
-    }
-
-    @Test
-    public void ownPartialWriteOfAnUnchangedNewDocumentIsNotLoaded() throws Exception {
-        writeAccounts(file, "alice");
-        setModified(file, now() - HOUR);
-        XMLHandlerImpl impl = new XMLHandlerImpl(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
-        impl.init(); // the checksum is now the loaded file's, which no partial write matches
-        Files.delete(file.toPath());
-        impl.init(); // no file: a new document in memory, with no change to save but the file itself
+        impl.init(); // no file: a new document in memory, which dispose() saves
         org.w3c.dom.Element root = impl.getDocument().getDocumentElement();
         // An unpaired surrogate: no encoder can write it
         org.w3c.dom.Node unwritable = root.appendChild(impl.getDocument().createTextNode("x\uD800y"));
         captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        assertTrue(file.exists()); // the failed save left a partial file
+        assertFalse(file.exists()); // master left a partial file here
         root.removeChild(unwritable);
 
-        impl.init(); // not a file that appeared: not parsed
+        impl.init();
         impl.dispose();
         assertEquals(namesInFile(file), List.of());
-    }
-
-    @Test
-    public void ownPartialWriteBehindAnUnreadableStampIsSavedAgain() throws Exception {
-        StatFailingFile store = new StatFailingFile(file);
-        XMLHandlerImpl impl = new XMLHandlerImpl(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
-        impl.init(); // no file: a new document in memory
-        impl.create(ObjectClass.ACCOUNT, account("bob"));
-        org.w3c.dom.Element root = impl.getDocument().getDocumentElement();
-        // An unpaired surrogate: no encoder can write it
-        org.w3c.dom.Node unwritable = root.appendChild(impl.getDocument().createTextNode("x\uD800y"));
-        store.statFails = true; // the stamp the failed save takes cannot be read
-        try {
-            captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        } finally {
-            store.statFails = false;
-        }
-        assertTrue(file.exists()); // the failed save left a partial file
-        root.removeChild(unwritable);
-
-        String errors = captureStdErr(() -> {
-            impl.init(); // not a file that appeared: neither dropped nor parsed
-            impl.dispose();
-        });
-        assertFalse(errors.contains("appeared before the new document was saved"), errors);
-        assertEquals(namesInFile(file), List.of("bob"));
     }
 
     @Test
@@ -751,42 +690,6 @@ public class XMLHandlerReloadTests {
                 throw new UncheckedIOException(e);
             }
             return false;
-        }
-    }
-
-    /**
-     * A store path whose stamp cannot be read while {@code statFails} is set: the stamp is then read through a link to itself.
-     * Only callers of {@code toPath()} are diverted, such as {@code FileStamp}. {@code isFile()} and
-     * {@code XmlDocumentWriter.write}, which opens a {@code FileOutputStream} on the path string, still reach the store.
-     * A writer that opened {@code toPath()} would fail on the link before writing a byte, and the test would find no
-     * partial file.
-     */
-    private static final class StatFailingFile extends File {
-
-        boolean statFails;
-        private final File loop;
-
-        StatFailingFile(File file) {
-            super(file.getPath());
-            loop = new File(file.getPath() + ".loop");
-            try {
-                Files.createSymbolicLink(loop.toPath(), loop.toPath().getFileName());
-            } catch (IOException | UnsupportedOperationException e) {
-                throw new SkipException("Cannot create a symbolic link here: " + e);
-            }
-            try {
-                Files.readAttributes(loop.toPath(), BasicFileAttributes.class);
-                throw new SkipException("The file system resolves a link to itself");
-            } catch (NoSuchFileException e) {
-                throw new SkipException("The file system reports a link to itself as missing");
-            } catch (IOException expected) {
-                // ELOOP: the path is neither readable nor known to be missing
-            }
-        }
-
-        @Override
-        public Path toPath() {
-            return statFails ? loop.toPath() : super.toPath();
         }
     }
 

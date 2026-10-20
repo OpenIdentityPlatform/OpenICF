@@ -19,11 +19,20 @@ package org.forgerock.openicf.connectors.xml;
 import static org.forgerock.openicf.connectors.xml.util.XmlHandlerUtil.following;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.channels.FileChannel;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 
@@ -34,6 +43,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.identityconnectors.common.logging.Log;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -52,6 +62,8 @@ import org.xml.sax.helpers.NamespaceSupport;
  * scope is kept; the old serializer put the element's own namespace first and dropped those.
  */
 final class XmlDocumentWriter {
+
+    private static final Log log = Log.getLog(XmlDocumentWriter.class);
 
     private static final String XMLNS = "xmlns";
 
@@ -111,30 +123,122 @@ final class XmlDocumentWriter {
 
     /**
      * Writes {@code document} to {@code file} through Saxon's serializer with the output settings
-     * used before, and returns the CRC-32 of the bytes written.
+     * used before, and returns the CRC-32 of the bytes now in the file.
      * <p>
      * Saxon's factory is created directly: the connector bundle embeds an old xml-apis, which lacks
      * the factory methods of newer JDKs and whose DOM classes the JDK's own transformer cannot take.
+     * <p>
+     * The document goes to a copy {@code <name>.<digits>.tmp} in the directory of the real file (a
+     * link is followed), which only its owner can read while it is written. The copy is synced to
+     * disk, takes the group and the mode of the file, and replaces it by a rename, so the file is
+     * either as it was or complete. Whatever the write throws, nothing at {@code file} has changed
+     * and no copy is left. A new file is readable by its owner only. A file that is not writable is
+     * refused with an {@link AccessDeniedException} before anything is written. The directory must
+     * be writable. Hard links to the file, its owner and its ACLs are not kept. A copy left behind
+     * by a process that was killed while writing is not removed automatically.
      */
     static long write(Document document, File file) throws IOException, TransformerException, SAXException {
-        SAXTransformerFactory factory = new net.sf.saxon.TransformerFactoryImpl();
-        TransformerHandler handler = factory.newTransformerHandler();
-        Transformer serializer = handler.getTransformer();
-        serializer.setOutputProperty(OutputKeys.INDENT, "yes");
-        serializer.setOutputProperty(OutputKeys.METHOD, "xml");
-        serializer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        serializer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-        CRC32 crc = new CRC32();
-        try (OutputStream out = new CheckedOutputStream(new FileOutputStream(file), crc)) {
-            handler.setResult(new StreamResult(out));
-            NamespaceSupport namespaces = new NamespaceSupport();
-            handler.startDocument();
-            for (Node child = document.getFirstChild(); child != null; child = child.getNextSibling()) {
-                send(child, handler, namespaces);
+        Path target = file.toPath().toAbsolutePath();
+        if (Files.exists(target)) {
+            target = target.toRealPath();
+            if (!Files.isWritable(target)) {
+                throw new AccessDeniedException(target.toString(), null, "the file is read-only");
             }
-            handler.endDocument();
         }
-        return crc.getValue();
+        Path copy = Files.createTempFile(target.getParent(), target.getFileName() + ".", ".tmp");
+        boolean replaced = false;
+        try {
+            SAXTransformerFactory factory = new net.sf.saxon.TransformerFactoryImpl();
+            TransformerHandler handler = factory.newTransformerHandler();
+            Transformer serializer = handler.getTransformer();
+            serializer.setOutputProperty(OutputKeys.INDENT, "yes");
+            serializer.setOutputProperty(OutputKeys.METHOD, "xml");
+            serializer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            serializer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+            CRC32 crc = new CRC32();
+            try (OutputStream out = new CheckedOutputStream(Files.newOutputStream(copy), crc)) {
+                handler.setResult(new StreamResult(out));
+                NamespaceSupport namespaces = new NamespaceSupport();
+                handler.startDocument();
+                for (Node child = document.getFirstChild(); child != null; child = child.getNextSibling()) {
+                    send(child, handler, namespaces);
+                }
+                handler.endDocument();
+            }
+            // on disk before the rename, so that a crash can not leave the store name pointing to
+            // a copy whose data was never written
+            try (FileChannel channel = FileChannel.open(copy, StandardOpenOption.WRITE)) {
+                channel.force(true);
+            }
+            if (Files.exists(target)) {
+                copyGroupAndMode(target, copy);
+            }
+            try {
+                Files.move(copy, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(copy, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+            replaced = true;
+            syncDirectory(target.getParent());
+            return crc.getValue();
+        } finally {
+            if (!replaced) {
+                deleteCopy(copy);
+            }
+        }
+    }
+
+    /**
+     * The copy takes over the group of the store if the process may set it and the store's mode bits
+     * (the owner becomes the process's user). When the group can not be set, the copy keeps the
+     * process's group and gets no group permissions. When the mode bits can not be set (a file
+     * system whose modes are fixed by the mount), the copy keeps the mode it was created with.
+     */
+    private static void copyGroupAndMode(Path store, Path copy) throws IOException {
+        try {
+            // EnumSet.copyOf would reject the empty mode of a 000 file
+            Set<PosixFilePermission> mode = EnumSet.noneOf(PosixFilePermission.class);
+            mode.addAll(Files.getPosixFilePermissions(store));
+            try {
+                Files.setAttribute(copy, "posix:group", Files.getAttribute(store, "posix:group"));
+            } catch (IOException e) {
+                // not a member of the store's group: the copy keeps the process's group,
+                // which must not get the access the store grants to its own group
+                mode.removeAll(EnumSet.of(PosixFilePermission.GROUP_READ,
+                        PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE));
+            }
+            try {
+                Files.setPosixFilePermissions(copy, mode);
+            } catch (IOException e) {
+                // the owner of the copy can always chmod it on a POSIX file system;
+                // this fails only where the mount fixes the modes of every file
+                log.warn(e, "Could not copy the permissions of {0}: the new file keeps"
+                        + " the mode it was created with", store);
+            }
+        } catch (UnsupportedOperationException e) {
+            // not a POSIX file system: the copy inherits the directory's ACL
+        }
+    }
+
+    private static void deleteCopy(Path copy) {
+        try {
+            Files.deleteIfExists(copy);
+        } catch (IOException e) {
+            log.warn(e, "Could not delete {0}", copy);
+        }
+    }
+
+    /**
+     * Makes the rename of the copy over the store durable. Best effort: not every platform can open
+     * a directory (Windows can not), and the store is consistent either way - the crash would only
+     * undo the operation.
+     */
+    private static void syncDirectory(Path dir) {
+        try (FileChannel channel = FileChannel.open(dir, StandardOpenOption.READ)) {
+            channel.force(true);
+        } catch (IOException e) {
+            log.ok(e, "Could not sync directory {0}", dir);
+        }
     }
 
     private static void send(Node node, TransformerHandler out, NamespaceSupport namespaces) throws SAXException {

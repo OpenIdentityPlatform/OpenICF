@@ -40,7 +40,17 @@ import org.w3c.dom.NodeList;
 final class CountingDom {
 
     private final Map<Object, Object> proxies = new IdentityHashMap<Object, Object>();
+    private final Runnable onCall;
     private long calls;
+
+    CountingDom() {
+        this(() -> { });
+    }
+
+    /** Runs {@code onCall} before each DOM call, for a test that looks at the file system while the DOM is read. */
+    CountingDom(Runnable onCall) {
+        this.onCall = onCall;
+    }
 
     Document wrap(Document document) {
         return (Document) wrap((Object) document);
@@ -94,6 +104,7 @@ final class CountingDom {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             calls++;
+            onCall.run();
             if (args != null) {
                 for (int i = 0; i < args.length; i++) {
                     args[i] = unwrap(args[i]);
