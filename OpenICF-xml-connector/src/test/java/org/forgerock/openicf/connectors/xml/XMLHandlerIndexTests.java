@@ -89,12 +89,13 @@ public class XMLHandlerIndexTests {
 
     @Test
     public void renamedEntryIsFoundByItsNewNameOnly() {
-        handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
+        Uid uid = handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
                 Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed")));
+        assertEquals(uid.getUidValue(), "u1"); // __ACCOUNT__ has a __UID__: the rename keeps it
         expectThrows(AlreadyExistsException.class, () -> handler.create(ObjectClass.ACCOUNT, account("renamed")));
 
         handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
-                Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed-again")));
         handler.create(ObjectClass.ACCOUNT, account("renamed"));
     }
 
@@ -120,6 +121,110 @@ public class XMLHandlerIndexTests {
         assertEquals(byXQuery(ObjectClass.ACCOUNT, Name.NAME, "dup"), Arrays.asList("u1|dup", "u2|dup"));
         assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
                 Arrays.asList("u1|dup", "u2|dup"));
+    }
+
+    @Test
+    public void renameIntoANameAnotherEntryHasIsRefused() {
+        Uid fresh = handler.create(ObjectClass.ACCOUNT, account("fresh"));
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                fresh, Collections.singleton(AttributeBuilder.build(Name.NAME, "dup"))));
+        assertEquals(e.getMessage(), "Could not update entry. An entry with the __NAME__ of dup already exists.");
+
+        // Only a GROUP has the name The Empire.
+        handler.create(ObjectClass.GROUP, getRequiredGroupAttributes());
+        expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.GROUP,
+                new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, ATTR_GROUP_VALUE_NAME))));
+
+        // u10's name is "" in the index: a blank name is refused as blank, not as taken.
+        IllegalArgumentException blank = expectThrows(IllegalArgumentException.class, () -> handler.update(
+                ObjectClass.ACCOUNT, new Uid("u1"), Collections.singleton(AttributeBuilder.build(Name.NAME, ""))));
+        assertEquals(blank.getMessage(), "Parameter '__NAME__' must not be blank.");
+    }
+
+    @Test
+    public void keepingANameAnotherEntryAlsoHasIsAllowed() {
+        Set<Attribute> keepName = new LinkedHashSet<Attribute>();
+        keepName.add(AttributeBuilder.build(Name.NAME, "dup"));
+        keepName.add(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L2b"));
+        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), keepName);
+        assertEquals(describe(handler.search(equalsQuery(Name.NAME, "dup"), ObjectClass.ACCOUNT)),
+                Arrays.asList("u1|dup", "u2|dup"));
+
+        // Only __NAME__ is checked: another attribute may have a value that is someone's name.
+        handler.update(ObjectClass.ACCOUNT, new Uid("u4"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "dup")));
+
+        // Only an ACCOUNT has the name no-uid. __GROUP__ has no __UID__: its uid is the name, so the rename changes it.
+        Uid renamed = handler.update(ObjectClass.GROUP, new Uid("dup"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "no-uid")));
+        assertEquals(renamed.getUidValue(), "no-uid");
+        Uid kept = handler.update(ObjectClass.GROUP, new Uid("no-uid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_DESCRIPTION, "D2")));
+        assertEquals(kept.getUidValue(), "no-uid");
+    }
+
+    @Test
+    public void clearingAnOptionalNameIsRefused() throws Exception {
+        // Next to the original, so that its import of resource-schema-1.xsd resolves.
+        File optionalNameXsd = getTestFile("optional-name.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        // The first __NAME__ reference is __ACCOUNT__'s.
+        Files.write(optionalNameXsd.toPath(), xsd.replaceFirst("<xsd:element ref=\"icf:__NAME__\"/>",
+                "<xsd:element ref=\"icf:__NAME__\" minOccurs=\"0\"/>").getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            writeAccounts(file, "alice", "bob");
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(optionalNameXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, optionalNameXsd);
+            XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            optional.init();
+
+            // create() requires a name whatever the XSD says, and an object without one cannot be built:
+            // a cleared entry would fail every search of the class.
+            for (String blank : Arrays.asList("", "   ")) {
+                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                        ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
+                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            }
+            assertEquals(describe(optional.search((Query) null, ObjectClass.ACCOUNT)),
+                    Arrays.asList("uid-alice|alice", "uid-bob|bob"));
+        } finally {
+            Files.delete(optionalNameXsd.toPath());
+        }
+    }
+
+    @Test
+    public void clearingTheOptionalNameOfAnEntryWithoutUidIsRefused() throws Exception {
+        File optionalNameXsd = getTestFile("optional-group-name.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String ref = "<xsd:element ref=\"icf:__NAME__\"/>";
+        // The second __NAME__ reference is __GROUP__'s, a class without __UID__.
+        int group = xsd.indexOf(ref, xsd.indexOf(ref) + 1);
+        Files.write(optionalNameXsd.toPath(), (xsd.substring(0, group) + "<xsd:element ref=\"icf:__NAME__\" minOccurs=\"0\"/>"
+                + xsd.substring(group + ref.length())).getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            Files.copy(getTestFile("index-fixture.xml").toPath(), file.toPath());
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(optionalNameXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, optionalNameXsd);
+            XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            optional.init();
+
+            // The uid is the name, so a cleared name would leave an entry that no search could read back.
+            for (String blank : Arrays.asList("", "   ")) {
+                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                        ObjectClass.GROUP, new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
+                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            }
+            assertEquals(describe(optional.search(equalsQuery(Name.NAME, "dup"), ObjectClass.GROUP)),
+                    Collections.singletonList("dup|dup"));
+        } finally {
+            Files.delete(optionalNameXsd.toPath());
+        }
     }
 
     /**
@@ -281,9 +386,8 @@ public class XMLHandlerIndexTests {
         assertIndexAgreesWithXQuery("loaded");
         handler.create(ObjectClass.ACCOUNT, account("dup-new"));
         assertIndexAgreesWithXQuery("created");
-        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed")));
-        handler.update(ObjectClass.ACCOUNT, new Uid("u2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
-        assertIndexAgreesWithXQuery("renamed back to a duplicate");
+        handler.update(ObjectClass.ACCOUNT, new Uid("u1"), Collections.singleton(AttributeBuilder.build(Name.NAME, "dup")));
+        assertIndexAgreesWithXQuery("first duplicate re-keyed");
         handler.delete(ObjectClass.ACCOUNT, new Uid("u1"));
         assertIndexAgreesWithXQuery("first duplicate deleted");
         handler.update(ObjectClass.ACCOUNT, new Uid("u11"), Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L11")));

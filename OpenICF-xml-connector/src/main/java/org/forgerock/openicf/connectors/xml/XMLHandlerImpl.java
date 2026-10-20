@@ -308,6 +308,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
+        Uid newUid = null;
         for (Attribute attribute : replaceAttributes) {
 
             if (!objAttributes.containsKey(attribute.getName())) {
@@ -322,7 +323,9 @@ public class XMLHandlerImpl implements XMLHandler {
             }
 
             List<String> values = null;
-            if (attributeInfo.isRequired()) {
+            // create() requires __NAME__ whatever the XSD says, and an object without a name cannot be built, so a
+            // cleared __NAME__ would leave an entry that no search of the class can read back.
+            if (attributeInfo.isRequired() || Name.NAME.equals(attributeName)) {
                 values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
                 if (values.isEmpty()) {
                     throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
@@ -342,13 +345,26 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
 
-            // A required attribute's values were read above; reading them again would decrypt a password twice.
+            // Values read above are not read again: that would decrypt a password twice.
             if (values == null) {
                 values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
             }
 
             if (!attributeInfo.isMultiValued() && values.size() > 1) {
                 throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
+            }
+
+            if (Name.NAME.equals(attributeName)) {
+                for (String value : values) {
+                    if (nameTakenByAnother(objClass, entry, value)) {
+                        throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
+                                + value + " already exists.");
+                    }
+                    // Without a __UID__ element the uid is the name, as create() makes it.
+                    if (!isSupportUid(objClass)) {
+                        newUid = new Uid(value);
+                    }
+                }
             }
 
             checkedAttributes.add(new CheckedAttribute(attributeName, values));
@@ -382,7 +398,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         log.info("Exit {0}", method);
 
-        return uid;
+        return newUid != null ? newUid : uid;
     }
 
     @Override
@@ -733,6 +749,13 @@ public class XMLHandlerImpl implements XMLHandler {
 
     private boolean entryExists(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
         return getEntry(objClass, uid, identifierField) != null;
+    }
+
+    /** An entry that already has {@code name} keeps it, even when another entry has it too. */
+    private boolean nameTakenByAnother(ObjectClass objClass, Element entry, String name) {
+        List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
+                identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
+        return !holders.isEmpty() && !holders.contains(entry);
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
