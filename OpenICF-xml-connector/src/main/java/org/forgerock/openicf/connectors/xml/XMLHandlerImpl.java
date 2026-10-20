@@ -100,7 +100,7 @@ public class XMLHandlerImpl implements XMLHandler {
     private boolean dirty;
     /** Whether the document was created in memory because the file did not exist, and is not saved yet. */
     private boolean unsavedNewFile;
-    /** The file as last seen: at the last load, save attempt, new document, or content-confirmed check. */
+    /** The file as last seen: at the last load, successful save, new document, or content-confirmed check. */
     private FileStamp stamp = FileStamp.MISSING;
     /** The CRC-32 of the bytes last parsed or written. */
     private long checksum;
@@ -588,7 +588,10 @@ public class XMLHandlerImpl implements XMLHandler {
     /** Drops what the file does not have: reads the file again, or starts a new document if there is none. */
     private void revert() {
         dirty = false;
-        unsavedNewFile = false; // without a document, dispose() has nothing to save and the next init() builds one
+        // If the reload fails there is no document: dispose() has nothing to save and the next init()
+        // builds one. If the file is missing and createFileIfNotExists is set, buildDocument() starts
+        // a new document (unsavedNewFile is true again) and the last dispose() saves it as an empty store.
+        unsavedNewFile = false;
         document = null;
         buildDocument();
     }

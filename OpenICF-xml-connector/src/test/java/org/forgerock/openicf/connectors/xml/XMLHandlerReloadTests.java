@@ -661,7 +661,7 @@ public class XMLHandlerReloadTests {
         // An unpaired surrogate: no encoder can write it
         org.w3c.dom.Node unwritable = root.appendChild(impl.getDocument().createTextNode("x\uD800y"));
         captureStdErr(() -> expectThrows(ConnectorException.class, impl::dispose));
-        assertFalse(file.exists()); // master left a partial file here
+        assertFalse(file.exists()); // an in-place write left a partial file here
         root.removeChild(unwritable);
 
         impl.init();

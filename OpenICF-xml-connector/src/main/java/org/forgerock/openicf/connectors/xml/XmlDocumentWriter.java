@@ -133,14 +133,16 @@ final class XmlDocumentWriter {
      * the factory methods of newer JDKs and whose DOM classes the JDK's own transformer cannot take.
      * <p>
      * The document goes to a copy {@code <name>.<digits>.tmp} in the directory of the real file (a
-     * link is followed, also when its target does not exist yet), which only its owner can read
-     * while it is written. The copy is synced to
-     * disk, takes the group and the mode of the file, and replaces it by a rename, so the file is
-     * either as it was or complete. Whatever the write throws, nothing at {@code file} has changed
-     * and no copy is left. A new file is readable by its owner only. A file that is not writable is
-     * refused with an {@link AccessDeniedException} before anything is written. The directory must
-     * be writable. Hard links to the file, its owner and its ACLs are not kept. A copy left behind
-     * by a process that was killed while writing is not removed automatically.
+     * link is followed, also when its target does not exist yet). On POSIX file systems the copy
+     * can be read by its owner only while it is written; elsewhere it takes the directory's
+     * inherited permissions. The copy is synced to disk, takes the group and the mode of the file,
+     * and replaces it by a rename, so the file is either as it was or complete. Whatever the write
+     * throws, nothing at {@code file} has changed and the copy is deleted; a copy that can not be
+     * deleted is logged. On POSIX file systems a new file can be read by its owner only; elsewhere
+     * it takes the directory's inherited permissions. A file that is not writable is refused with
+     * an {@link AccessDeniedException} before anything is written. The directory must be writable.
+     * Hard links to the file, its owner, its ACLs and its extended attributes are not kept. A copy
+     * left behind by a process that was killed while writing is not removed automatically.
      */
     static long write(Document document, File file) throws IOException, TransformerException, SAXException {
         Path target = file.toPath().toAbsolutePath();
