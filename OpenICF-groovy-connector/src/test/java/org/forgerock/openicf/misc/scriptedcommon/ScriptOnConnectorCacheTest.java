@@ -21,10 +21,14 @@ import static org.fest.assertions.api.Assertions.assertThat;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -35,14 +39,17 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.classgen.GeneratorContext;
 import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
 import org.codehaus.groovy.reflection.ClassInfo;
 import org.forgerock.openicf.connectors.groovy.ScriptedPoolableConnector;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -57,6 +64,7 @@ import groovy.lang.ExpandoMetaClass;
 import groovy.lang.GroovyClassLoader;
 import groovy.lang.GroovySystem;
 import groovy.util.GroovyScriptEngine;
+import groovy.util.ScriptException;
 
 /**
  * Tests how {@link ScriptedConfiguration} compiles, caches and releases the scripts of
@@ -77,6 +85,12 @@ public class ScriptOnConnectorCacheTest {
 
     /** Counted down when a compilation starts waiting for {@link #compileGate}. */
     private static volatile CountDownLatch compileWaiting;
+
+    /** While set, a lookup of Trigger.groovy in a {@link #blockingRoot()} waits for it. */
+    private static volatile CountDownLatch lookupGate;
+
+    /** Counted down when a lookup starts waiting for {@link #lookupGate}. */
+    private static volatile CountDownLatch lookupWaiting;
 
     private File scriptRoot;
 
@@ -100,6 +114,11 @@ public class ScriptOnConnectorCacheTest {
         compileGate = null;
         if (null != gate) {
             gate.countDown();
+        }
+        final CountDownLatch lookup = lookupGate;
+        lookupGate = null;
+        if (null != lookup) {
+            lookup.countDown();
         }
         executor.shutdownNow();
         configuration.release();
@@ -161,6 +180,28 @@ public class ScriptOnConnectorCacheTest {
         }
     }
 
+    @Test(timeOut = 60000)
+    public void testTextAndOperationScriptThatLoadAScriptRootClassTogetherShareIt() throws Exception {
+        configuration = withBlockingRoot();
+        write("op.groovy", "def h = Helper\nif (false) { Trigger.x() }\nreturn h\n");
+        lookupWaiting = new CountDownLatch(1);
+        lookupGate = new CountDownLatch(1);
+        final Future<Object> operation =
+                executor.submit(() -> configuration.evaluate("op.groovy", new Binding(), null));
+        // The engine compiles Helper together with the operation script, and stops before the end.
+        assertThat(lookupWaiting.await(10, SECONDS)).isTrue();
+
+        final FutureTask<Object> text = new FutureTask<Object>(
+                () -> configuration.evaluateScriptOnConnector("return Helper", new Binding()));
+        final Thread textThread = new Thread(text);
+        textThread.setDaemon(true);
+        textThread.start();
+        awaitBlocked(textThread);
+        lookupGate.countDown();
+
+        assertThat(text.get(10, SECONDS)).isSameAs(operation.get(10, SECONDS));
+    }
+
     @Test
     public void testScriptRootClassShadowsAClassOfTheConnectorLoader() throws Exception {
         final String name = ShadowedByScriptRoot.class.getName();
@@ -204,6 +245,45 @@ public class ScriptOnConnectorCacheTest {
     }
 
     @Test
+    public void testCachedScriptLinksTheEngineClassesItWasCompiledAgainst() throws Exception {
+        writeHelper("class Helper { static String greet() { 'hello' } }\n"
+                + "class Farewell { static String text() { 'bye' } }\n");
+        write("op.groovy", "return Helper.greet() + ' ' + Farewell.text()\n");
+        assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("hello bye");
+        // Farewell has no source of its own: the text gets it from the engine, without Helper.
+        final String text = "return useHelper ? Farewell.text() : 'not run'";
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(false))).isEqualTo("not run");
+
+        editHelper("class Helper { static String greet() { 'hi' } }\n"
+                + "class Farewell { static String text() { 'ciao' } }\n");
+        assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("hi ciao");
+
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(true))).isEqualTo("bye");
+    }
+
+    @Test
+    public void testCachedStaticScriptLinksTheClassesCompiledWithAScriptRootClass() throws Exception {
+        writeHelper("class Helper { static Greeting make() { new Greeting() }\n"
+                + "static Farewell leave() { new Farewell() }\n"
+                + "static class Greeting { String text() { 'hello' } } }\n"
+                + "class Farewell { String text() { 'bye' } }\n");
+        write("op.groovy", "return Helper.make().text() + ' ' + Helper.leave().text()\n");
+        // The text names neither Greeting nor Farewell: the compiler takes them from Helper's methods.
+        final String text = "@groovy.transform.CompileStatic\n"
+                + "String use(boolean b) { b ? Helper.make().text() + ' ' + Helper.leave().text() : 'not run' }\n"
+                + "return use((boolean) useHelper)\n";
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(false))).isEqualTo("not run");
+
+        editHelper("class Helper { static Greeting make() { new Greeting() }\n"
+                + "static Farewell leave() { new Farewell() }\n"
+                + "static class Greeting { String text() { 'hi' } } }\n"
+                + "class Farewell { String text() { 'ciao' } }\n");
+        assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("hi ciao");
+
+        assertThat(configuration.evaluateScriptOnConnector(text, useHelper(true))).isEqualTo("hello bye");
+    }
+
+    @Test
     public void testNewScriptSharesTheEditedScriptRootClassWithOperationScripts() throws Exception {
         write("op.groovy", "return Helper\n");
         assertThat(configuration.evaluateScriptOnConnector("return Helper.greet()", new Binding())).isEqualTo("hello");
@@ -214,6 +294,25 @@ public class ScriptOnConnectorCacheTest {
         final Class fromText = (Class) configuration.evaluateScriptOnConnector("return Helper", new Binding());
         assertThat(fromText.getMethod("greet").invoke(null)).isEqualTo("hi");
         assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isSameAs(fromText);
+    }
+
+    @Test
+    public void testUrlThatATextAddsToItsLoaderReachesTheOperationScripts() throws Exception {
+        final File lib = Files.createTempDirectory("script-on-connector-lib").toFile();
+        try {
+            final CompilerConfiguration libConfiguration = new CompilerConfiguration();
+            libConfiguration.setTargetDirectory(lib);
+            final CompilationUnit unit = new CompilationUnit(libConfiguration);
+            unit.addSource("Driver.groovy", "package drv\nclass Driver { static String id() { 'drv' } }\n");
+            unit.compile();
+
+            configuration.evaluateScriptOnConnector(
+                    "this.class.classLoader.addURL(new URL('" + toUrl(lib) + "'))", new Binding());
+            write("op.groovy", "return this.class.classLoader.loadClass('drv.Driver').id()\n");
+            assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("drv");
+        } finally {
+            delete(lib);
+        }
     }
 
     @Test
@@ -274,6 +373,29 @@ public class ScriptOnConnectorCacheTest {
         });
         assertThat(configuration.evaluateScriptOnConnector("return new EngineList()", new Binding()))
                 .isInstanceOf(ArrayList.class);
+    }
+
+    @Test
+    public void testScriptCompilesWithWhatASubclassAddsToTheEngineConfiguration() throws Exception {
+        configuration = withScriptRoot(new ScriptedConfiguration() {
+            @Override
+            protected URL[] getRoots(CompilerConfiguration compilerConfiguration, GroovyClassLoader loader) {
+                compilerConfiguration.addCompilationCustomizers(
+                        new ImportCustomizer().addImport("RootsList", ArrayList.class.getName()));
+                final SecureASTCustomizer secure = new SecureASTCustomizer();
+                secure.setMethodDefinitionAllowed(false);
+                compilerConfiguration.addCompilationCustomizers(secure);
+                return super.getRoots(compilerConfiguration, loader);
+            }
+        });
+        assertThat(configuration.evaluateScriptOnConnector("return new RootsList()", new Binding()))
+                .isInstanceOf(ArrayList.class);
+        try {
+            configuration.evaluateScriptOnConnector("def f() { 1 }\nreturn f()", new Binding());
+            fail("A text defined a method that the engine's SecureASTCustomizer does not allow");
+        } catch (CompilationFailedException expected) {
+            assertThat(expected.getMessage()).contains("Method definitions are not allowed");
+        }
     }
 
     @Test
@@ -400,6 +522,34 @@ public class ScriptOnConnectorCacheTest {
         connector().runScriptOnConnector(groovy("return Broken.x()"), null);
     }
 
+    @Test
+    public void testScriptExceptionFromTheEngineFailsAsACompilationError() {
+        configuration = withScriptRoot(new ScriptedConfiguration() {
+            private GroovyScriptEngine failing;
+
+            @Override
+            protected synchronized GroovyScriptEngine getGroovyScriptEngine() {
+                final GroovyScriptEngine engine = super.getGroovyScriptEngine();
+                if (null == failing) {
+                    // A GroovyScriptEngine subclass may throw what loadScriptByName declares.
+                    failing = new GroovyScriptEngine(new URL[] { toUrl(scriptRoot) }, engine.getGroovyClassLoader()) {
+                        @Override
+                        public Class loadScriptByName(String scriptName) throws ScriptException {
+                            throw new ScriptException("Cannot load " + scriptName);
+                        }
+                    };
+                }
+                return failing;
+            }
+        });
+        try {
+            configuration.evaluateScriptOnConnector("return Helper.greet()", new Binding());
+            fail("The text compiled although the engine could not load the script-root classes");
+        } catch (CompilationFailedException expected) {
+            assertThat(expected.getCause()).isInstanceOf(ScriptException.class);
+        }
+    }
+
     private void writeBrokenClass() throws IOException {
         write("Broken.groovy", "class Broken { static int x() { return 1 +  } }\n");
     }
@@ -472,6 +622,63 @@ public class ScriptOnConnectorCacheTest {
         Thread.sleep(200);
         write("Helper.groovy", text);
         Thread.sleep(200);
+    }
+
+    /** A configuration with a {@link #blockingRoot()} after the script root. */
+    private ScriptedConfiguration withBlockingRoot() {
+        return withScriptRoot(new ScriptedConfiguration() {
+            @Override
+            protected URL[] getRoots(CompilerConfiguration compilerConfiguration, GroovyClassLoader loader) {
+                final URL[] roots = super.getRoots(compilerConfiguration, loader);
+                final URL[] result = Arrays.copyOf(roots, roots.length + 1);
+                result[roots.length] = blockingRoot();
+                return result;
+            }
+        });
+    }
+
+    /** Waits until the thread has been blocked on a monitor for a while, for at most 10 s. */
+    private static void awaitBlocked(Thread thread) throws InterruptedException {
+        for (int i = 0, blocked = 0; i < 1000 && blocked < 5; i++) {
+            Thread.sleep(10);
+            blocked = Thread.State.BLOCKED == thread.getState() ? blocked + 1 : 0;
+        }
+    }
+
+    /**
+     * A script root without sources. While {@link #lookupGate} is set, a lookup of Trigger.groovy
+     * in it waits for the gate.
+     */
+    private static URL blockingRoot() {
+        try {
+            return new URL(null, "blocking:/", new URLStreamHandler() {
+                @Override
+                protected URLConnection openConnection(final URL url) {
+                    return new URLConnection(url) {
+                        @Override
+                        public void connect() throws IOException {
+                            throw new FileNotFoundException(url.toString());
+                        }
+
+                        @Override
+                        public InputStream getInputStream() throws IOException {
+                            final CountDownLatch gate = lookupGate;
+                            if (null != gate && "/Trigger.groovy".equals(url.getPath())) {
+                                lookupWaiting.countDown();
+                                try {
+                                    gate.await();
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            throw new FileNotFoundException(url.toString());
+                        }
+                    };
+                }
+            });
+        } catch (MalformedURLException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private ScriptedConfiguration withScriptRoot(ScriptedConfiguration result) {
