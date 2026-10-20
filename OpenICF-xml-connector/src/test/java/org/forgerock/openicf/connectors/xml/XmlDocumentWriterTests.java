@@ -233,7 +233,7 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
-    public void followingIsTheNextSibling()throws Exception {
+    public void followingIsTheNextSibling() throws Exception {
         Document document = parse("<r><a><x/></a><b/></r>");
         assertSame(following(only(document, "a"), document), only(document, "b"));
     }
