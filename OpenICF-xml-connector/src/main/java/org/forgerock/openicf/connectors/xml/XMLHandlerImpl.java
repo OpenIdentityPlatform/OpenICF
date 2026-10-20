@@ -76,6 +76,7 @@ import org.identityconnectors.framework.common.objects.ObjectClassInfo;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.common.Assertions;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.w3c.dom.*;
@@ -139,14 +140,11 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /**
      * Whether a file appeared where a new document is not saved yet. Such a file wins over the
-     * document: the connector never loaded it, so a save would replace a whole store. This is the
-     * only reload of a new document: a partial write of its failed save is not such a file,
-     * because the save takes the stamp again. If that stamp could not be read, the file is still
-     * taken for the partial write: only a save leaves a new document with such a stamp.
+     * document: the connector never loaded it, so a save would replace a whole store. A failed
+     * save writes nothing at the path, so any file there is not the connector's.
      */
     private boolean fileAppearedOverNewDocument() {
-        File xmlFile = config.getXmlFilePath();
-        return unsavedNewFile && stamp.isKnown() && xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile));
+        return unsavedNewFile && config.getXmlFilePath().isFile();
     }
 
     /** Drops the new document with its changes: the next init() loads the file, or starts a new document if the file is gone. */
@@ -285,6 +283,7 @@ public class XMLHandlerImpl implements XMLHandler {
         markDirty();
         getDocument().getDocumentElement().appendChild(objElement);
         entryIndex.added(objElement);
+        saveChange();
 
         log.info("Exit {0}", method);
 
@@ -395,6 +394,7 @@ public class XMLHandlerImpl implements XMLHandler {
             // so report the change either way.
             entryIndex.rekeyed(entry);
         }
+        saveChange();
 
         log.info("Exit {0}", method);
 
@@ -415,6 +415,7 @@ public class XMLHandlerImpl implements XMLHandler {
         getDocument().getDocumentElement().removeChild(elementToRemove);
         markDirty();
         entryIndex.removed(elementToRemove);
+        saveChange();
         log.info("Deleting entry: " + elementToRemove.toString());
 
         log.info("Exit {0}", method);
@@ -526,28 +527,70 @@ public class XMLHandlerImpl implements XMLHandler {
             log.info("Exit {0}: {1} appeared before the new document was saved; not overwriting it", method, xmlFile);
             return;
         }
-        // A path that holds no file has nothing to overwrite: the save creates the file.
+        save();
+
+        log.info("Exit {0}", method);
+    }
+
+    /**
+     * Writes the document to the file, whole or not at all. A path that holds no file has nothing to overwrite: the
+     * save creates the file. Callers hold the handler's write lock.
+     */
+    private void save() {
+        File xmlFile = config.getXmlFilePath();
         if (xmlFile.isFile() && !stamp.sameState(FileStamp.read(xmlFile))) {
             log.error("UPDATE COLLISION: {0} has changed since it was loaded or saved; overwriting it with the data in memory.", xmlFile);
         }
-        // Callers hold the handler's write lock.
         Document saved = getDocument();
         try {
             if (XmlDocumentWriter.normalizeText(saved)) {
                 entryIndex.rebuild(saved); // a whitespace-only identifier may have just become empty
             }
             checksum = XmlDocumentWriter.write(saved, xmlFile);
+            stamp = FileStamp.read(xmlFile);
             dirty = false;
             unsavedNewFile = false;
             log.info("Saving changes to xml file");
-        } catch (TransformerException | SAXException | IOException ex) {
+        } catch (IOException ex) {
+            log.error("Failed saving changes to xml file: {0}", ex);
+            throw new ConnectorIOException(ex);
+        } catch (TransformerException | SAXException ex) {
             log.error("Failed saving changes to xml file: {0}", ex);
             throw ConnectorException.wrap(ex);
-        } finally {
-            stamp = FileStamp.read(xmlFile);
         }
+    }
 
-        log.info("Exit {0}", method);
+    /**
+     * Saves the change that create, update or delete has just made, before the call returns: the framework only logs
+     * what dispose() throws. A change that is not saved is undone, so the document again agrees with the file.
+     * Callers hold the handler's write lock.
+     */
+    private void saveChange() {
+        if (!dirty) {
+            return;
+        }
+        try {
+            if (fileAppearedOverNewDocument()) {
+                throw new ConnectorException(config.getXmlFilePath()
+                        + " appeared before the new document was saved; the change is not saved, and the file is loaded instead");
+            }
+            save();
+        } catch (RuntimeException e) {
+            try {
+                revert();
+            } catch (RuntimeException reloadFailure) {
+                e.addSuppressed(reloadFailure);
+            }
+            throw e;
+        }
+    }
+
+    /** Drops what the file does not have: reads the file again, or starts a new document if there is none. */
+    private void revert() {
+        dirty = false;
+        unsavedNewFile = false; // without a document, dispose() has nothing to save and the next init() builds one
+        document = null;
+        buildDocument();
     }
 
     @Override

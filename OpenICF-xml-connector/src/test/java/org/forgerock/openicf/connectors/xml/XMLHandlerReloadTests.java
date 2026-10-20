@@ -51,6 +51,7 @@ import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -437,15 +438,138 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void createIsInTheFileBeforeTheCallReturns() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        handler.init(); // holds the document: on master, nothing is saved until the last dispose()
+        try {
+            handler.create(ObjectClass.ACCOUNT, account("bob"));
+            assertEquals(namesInFile(file), List.of("alice", "bob"));
+        } finally {
+            handler.dispose();
+        }
+    }
+
+    @Test
+    public void updateIsInTheFileBeforeTheCallReturns() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        handler.init();
+        try {
+            handler.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW")));
+            assertEquals(firstAndLastNamesIn(file), List.of("null|NEW"));
+        } finally {
+            handler.dispose();
+        }
+    }
+
+    @Test
+    public void deleteIsInTheFileBeforeTheCallReturns() throws Exception {
+        writeAccounts(file, "alice", "bob");
+        setModified(file, now() - HOUR);
+        handler.init();
+        try {
+            handler.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"));
+            assertEquals(namesInFile(file), List.of("bob"));
+        } finally {
+            handler.dispose();
+        }
+    }
+
+    @Test
+    public void failedSaveUndoesTheChangeForEveryUser() throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+        Set<Attribute> bob = account("bob");
+        bob.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
+        handler.init(); // another user, who keeps the document across the failed call
+        try {
+            captureStdErr(() -> expectThrows(ConnectorException.class, () -> call(h -> h.create(ObjectClass.ACCOUNT, bob))));
+            assertEquals(lastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("Last-alice"));
+        } finally {
+            handler.dispose();
+        }
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past); // the last dispose() has nothing to save
+    }
+
+    @Test
+    public void saveFailureIsThrownWhenTheFileCannotBeReadAgain() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        ConnectorIOException failure;
+        handler.init();
+        try {
+            Files.delete(file.toPath());
+            assertTrue(file.mkdir()); // a directory can be neither replaced nor parsed, whoever runs the test
+            try {
+                failure = expectThrows(ConnectorIOException.class, () -> handler.create(ObjectClass.ACCOUNT, account("bob")));
+            } finally {
+                assertTrue(file.delete());
+            }
+        } finally {
+            handler.dispose(); // nothing to save: the document was dropped
+        }
+        assertEquals(failure.getSuppressed().length, 1, "the failed reload"); // the save's failure is the one thrown
+        writeAccounts(file, "carol");
+        setModified(file, now() - HOUR);
+        assertEquals(names(), List.of("carol"));
+    }
+
+    @Test
+    public void failedFirstSaveOfANewDocumentDropsTheChange() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        try {
+            assertTrue(file.mkdir());
+            try {
+                captureStdErr(() -> expectThrows(ConnectorException.class, () -> handler.create(ObjectClass.ACCOUNT, account("bob"))));
+            } finally {
+                assertTrue(file.delete());
+            }
+        } finally {
+            handler.dispose(); // must not throw: the dropped document leaves nothing to save
+        }
+        assertEquals(names(), List.of());
+        assertEquals(namesInFile(file), List.of());
+    }
+
+    @Test
+    public void changeToANewDocumentFailsWhenAFileAppeared() throws Exception {
+        assertFalse(file.exists());
+        handler.init(); // no file: a new document in memory
+        try {
+            // A store appears (a restore, a late mount): the connector never loaded it, so a save would replace all of it.
+            writeAccounts(file, "alice", "carol");
+            setModified(file, now() - HOUR);
+            byte[] appeared = Files.readAllBytes(file.toPath());
+            ConnectorException failure = expectThrows(ConnectorException.class,
+                    () -> handler.create(ObjectClass.ACCOUNT, account("bob")));
+            assertTrue(failure.getMessage().contains(file + " appeared before the new document was saved"), failure.getMessage());
+            assertEquals(Files.readAllBytes(file.toPath()), appeared);
+            assertEquals(lastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("Last-alice", "Last-carol"));
+        } finally {
+            handler.dispose();
+        }
+        Files.delete(file.toPath());
+        assertEquals(names(), List.of()); // bob stays dropped
+    }
+
+    @Test
     public void outsideEditDuringAChangeIsReportedAndOverwritten() throws Exception {
         writeAccounts(file, "alice");
         setModified(file, now() - 2 * HOUR);
         handler.init();
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        writeAccounts(file, "carol");
-        setModified(file, now() - HOUR);
-        String errors = captureStdErr(handler::dispose);
-        assertTrue(errors.contains("UPDATE COLLISION: " + file + " has changed since it was loaded or saved"), errors);
+        try {
+            writeAccounts(file, "carol");
+            setModified(file, now() - HOUR);
+            String errors = captureStdErr(() -> handler.create(ObjectClass.ACCOUNT, account("bob")));
+            assertTrue(errors.contains("UPDATE COLLISION: " + file + " has changed since it was loaded or saved"), errors);
+        } finally {
+            handler.dispose();
+        }
         assertEquals(namesInFile(file), List.of("alice", "bob"));
     }
 
@@ -477,28 +601,6 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
-    public void failedSaveKeepsTheChangeInMemoryAndRetriesIt() throws Exception {
-        writeAccounts(file, "alice");
-        setModified(file, now() - 2 * HOUR);
-        handler.init();
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        Files.delete(file.toPath());
-        assertTrue(file.mkdir()); // a directory cannot be written, whoever runs the test
-        try {
-            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-        } finally {
-            assertTrue(file.delete());
-        }
-
-        // An outside file appears: it must not replace the unsaved change, which overwrites it and says so.
-        writeAccounts(file, "carol");
-        setModified(file, now() - HOUR);
-        String errors = captureStdErr(() -> assertEquals(names(), List.of("alice", "bob")));
-        assertTrue(errors.contains("UPDATE COLLISION"), errors);
-        assertEquals(namesInFile(file), List.of("alice", "bob"));
-    }
-
-    @Test
     public void unsavedNewDocumentGivesWayToAFileThatAppears() throws Exception {
         assertFalse(file.exists());
         handler.init(); // no file: an empty document in memory
@@ -514,41 +616,6 @@ public class XMLHandlerReloadTests {
         byte[] appeared = Files.readAllBytes(file.toPath());
         assertEquals(names(), List.of("alice"));
         assertEquals(Files.readAllBytes(file.toPath()), appeared); // loaded, not written back
-    }
-
-    @Test
-    public void changedNewDocumentGivesWayToAFileThatAppears() throws Exception {
-        assertFalse(file.exists());
-        handler.init(); // no file: a new document in memory
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        assertTrue(file.mkdir());
-        try {
-            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-        } finally {
-            assertTrue(file.delete());
-        }
-
-        // A store appears (a restore, a late mount): the connector never loaded it, so a save would replace all of it.
-        writeAccounts(file, "alice", "carol");
-        setModified(file, now() - HOUR);
-        byte[] appeared = Files.readAllBytes(file.toPath());
-        String errors = captureStdErr(() -> assertEquals(names(), List.of("alice", "carol")));
-        assertEquals(Files.readAllBytes(file.toPath()), appeared);
-        assertTrue(errors.contains(file + " appeared before the new document was saved"), errors);
-    }
-
-    @Test
-    public void fileThatAppearsDuringAChangeToANewDocumentIsKept() throws Exception {
-        assertFalse(file.exists());
-        handler.init(); // no file: a new document in memory
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        writeAccounts(file, "alice", "carol");
-        setModified(file, now() - HOUR);
-        byte[] appeared = Files.readAllBytes(file.toPath());
-        String errors = captureStdErr(handler::dispose);
-        assertEquals(Files.readAllBytes(file.toPath()), appeared);
-        assertTrue(errors.contains(file + " appeared before the new document was saved"), errors);
-        assertEquals(names(), List.of("alice", "carol"));
     }
 
     @Test
@@ -584,37 +651,6 @@ public class XMLHandlerReloadTests {
         impl.dispose();
         assertEquals(Files.readAllBytes(file.toPath()), appeared);
         assertEquals(names(), List.of("alice"));
-    }
-
-    @Test
-    public void changeToANewDocumentIsSavedOnceThePathIsFree() throws Exception {
-        assertFalse(file.exists());
-        handler.init(); // no file: a new document in memory
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        assertTrue(file.mkdir());
-        try {
-            captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-        } finally {
-            assertTrue(file.delete());
-        }
-
-        // The stamp changed, but no file appeared: the change is saved, and no file is overwritten.
-        String errors = captureStdErr(() -> assertEquals(names(), List.of("bob")));
-        assertFalse(errors.contains("UPDATE COLLISION"), errors);
-        assertEquals(namesInFile(file), List.of("bob"));
-    }
-
-    @Test
-    public void changesDroppedForAFileThatAppearsStayDroppedWhenItGoes() throws Exception {
-        assertFalse(file.exists());
-        handler.init(); // no file: a new document in memory
-        handler.create(ObjectClass.ACCOUNT, account("bob"));
-        writeAccounts(file, "alice");
-        setModified(file, now() - HOUR);
-        captureStdErr(handler::dispose); // keeps the file and drops bob
-        Files.delete(file.toPath());
-        assertEquals(names(), List.of());
-        assertEquals(namesInFile(file), List.of());
     }
 
     @Test
