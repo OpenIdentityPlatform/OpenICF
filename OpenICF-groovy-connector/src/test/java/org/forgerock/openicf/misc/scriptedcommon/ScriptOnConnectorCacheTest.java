@@ -316,6 +316,41 @@ public class ScriptOnConnectorCacheTest {
     }
 
     @Test
+    public void testClassThatATextParsesReachesTheOperationScripts() throws Exception {
+        final GroovyClassLoader textLoader = (GroovyClassLoader) configuration.evaluateScriptOnConnector(
+                "return this.class.classLoader", new Binding());
+        textLoader.parseClass("class Parsed { static String id() { 'parsed' } }");
+        write("op.groovy", "return Parsed.id()\n");
+        assertThat(configuration.evaluate("op.groovy", new Binding(), null)).isEqualTo("parsed");
+    }
+
+    @Test(timeOut = 60000)
+    public void testClassThatATextParsesWaitsForTheEngineCompilation() throws Exception {
+        configuration = withBlockingRoot();
+        final GroovyClassLoader textLoader = (GroovyClassLoader) configuration.evaluateScriptOnConnector(
+                "return this.class.classLoader", new Binding());
+        write("op.groovy", "if (false) { Trigger.x() }\nreturn 1\n");
+        lookupWaiting = new CountDownLatch(1);
+        lookupGate = new CountDownLatch(1);
+        final Future<Object> operation =
+                executor.submit(() -> configuration.evaluate("op.groovy", new Binding(), null));
+        // The engine compiles the operation script, and stops before the end.
+        assertThat(lookupWaiting.await(10, SECONDS)).isTrue();
+
+        final FutureTask<Class> parsed = new FutureTask<Class>(
+                () -> textLoader.parseClass("class Parsed { static String id() { 'parsed' } }"));
+        final Thread parseThread = new Thread(parsed);
+        parseThread.setDaemon(true);
+        parseThread.start();
+        awaitBlocked(parseThread);
+        assertThat(parsed.isDone()).isFalse();
+        lookupGate.countDown();
+
+        assertThat(operation.get(10, SECONDS)).isEqualTo(1);
+        assertThat(parsed.get(10, SECONDS).getName()).isEqualTo("Parsed");
+    }
+
+    @Test
     public void testScriptSeesItsBinding() {
         final Binding binding = new Binding();
         binding.setVariable("a", 41);

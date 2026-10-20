@@ -841,13 +841,13 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         if (null != cached) {
             return cached;
         }
-        final GroovyClassLoader loader;
+        final ScriptOnConnectorLoader loader;
         final Class scriptClass;
         // Under the engine's compiler lock, as the engine compiles its own scripts: the engine
         // cannot recompile a script-root class while the text resolves the classes it uses.
         synchronized (getCompilerLock(engine.getGroovyClassLoader())) {
             loader = new ScriptOnConnectorLoader(engine, cache.configuration);
-            scriptClass = loader.parseClass(newCodeSource(scriptText), false);
+            scriptClass = loader.compileText(newCodeSource(scriptText));
         }
         return cache.put(scriptText, new CompiledScript(scriptClass, loader));
     }
@@ -1153,6 +1153,23 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         @Override
         public void addURL(URL url) {
             engine.getGroovyClassLoader().addURL(url);
+        }
+
+        /** Compiles the text into this loader's class cache. */
+        private Class compileText(GroovyCodeSource codeSource) {
+            return super.parseClass(codeSource, false);
+        }
+
+        /**
+         * Compiles the source with the engine's loader, which the text's loader delegates to: a
+         * class a text compiles at run time compiles under the engine's compiler lock and reaches
+         * the operation scripts and the other texts, as when texts compiled there. The other
+         * {@code parseClass} methods call this too.
+         */
+        @Override
+        public Class parseClass(GroovyCodeSource codeSource, boolean shouldCacheSource)
+                throws CompilationFailedException {
+            return engine.getGroovyClassLoader().parseClass(codeSource, shouldCacheSource);
         }
 
         /** Returns the class of the given name that the loader defined, or null. */
