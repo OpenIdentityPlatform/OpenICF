@@ -20,6 +20,8 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.connectors;
@@ -29,11 +31,20 @@ import static org.identityconnectors.framework.common.objects.filter.FilterBuild
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.forgerock.json.resource.InternalServerErrorException;
+import org.forgerock.json.resource.NotFoundException;
+import org.forgerock.json.resource.ResourceException;
 
 import org.forgerock.openicf.connectors.scriptedcrest.ScriptedCRESTConnector;
+import org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase;
 import org.identityconnectors.common.CollectionUtil;
+import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
+import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -50,6 +61,8 @@ import org.identityconnectors.framework.common.objects.SortKey;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilterBuilder;
+import org.identityconnectors.framework.impl.api.local.LocalConnectorFacadeImpl;
+import org.identityconnectors.test.common.TestHelpers;
 import org.identityconnectors.test.common.ToListResultsHandler;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -206,6 +219,217 @@ public class ScriptedCRESTConnectorTest extends RESTTestBase {
         builder.setScriptLanguage("crest");
         builder.setScriptText("UNKNOWN");
         Object response =  facade.runScriptOnResource(builder.build(), null);
+    }
+
+    @Test
+    public void testSearchHandlerRunsOnTheCallingThread() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Caller0001"), null);
+        try {
+            final List<Thread> handlerThreads = new ArrayList<Thread>();
+            facade.search(ObjectClass.ACCOUNT,
+                    FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "caller")),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            handlerThreads.add(Thread.currentThread());
+                            return true;
+                        }
+                    }, null);
+            Assert.assertFalse(handlerThreads.isEmpty());
+            for (Thread handlerThread : handlerThreads) {
+                Assert.assertSame(handlerThread, Thread.currentThread());
+            }
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    @Test(timeOut = 60000)
+    public void testNestedGetObjectFromTheSearchHandlerCompletes() throws Exception {
+        // On pre-fix code this test blocks an I/O dispatcher of the class-wide connector pool for
+        // good (facades with the same configuration share one pool), so check it red alone.
+        final ConnectorFacade facade = getFacade();
+        final List<Uid> uids = new ArrayList<Uid>();
+        try {
+            // More users than I/O dispatchers: new connections are assigned round-robin, so with a
+            // new connection per request a nested call eventually lands on the dispatcher that
+            // runs the handler. Pooled connections keep the nested calls on one connection off
+            // that dispatcher, so this case passes even when the handler runs on an I/O thread;
+            // testSearchHandlerRunsOnTheCallingThread is the one that catches that.
+            final int count = 2 * Runtime.getRuntime().availableProcessors() + 2;
+            for (int i = 0; i < count; i++) {
+                uids.add(facade.create(ObjectClass.ACCOUNT,
+                        createUserAttributes("John", String.format("Nested%04d", i)), null));
+            }
+            final AtomicInteger nested = new AtomicInteger();
+            facade.search(ObjectClass.ACCOUNT,
+                    FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "nested")),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT,
+                                    connectorObject.getUid(), null));
+                            nested.incrementAndGet();
+                            return true;
+                        }
+                    }, null);
+            Assert.assertEquals(nested.get(), count);
+        } finally {
+            deleteAll(facade, uids);
+        }
+    }
+
+    /** Pins kept behaviour: a handler's exception reaches the caller wrapped as before. */
+    @Test
+    public void testHandlerExceptionReachesTheCallerAsInternalServerError() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Boom0001"), null);
+        final IllegalStateException boom = new IllegalStateException("boom");
+        try {
+            facade.search(ObjectClass.ACCOUNT,
+                    FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "boom")),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            throw boom;
+                        }
+                    }, null);
+            Assert.fail("the handler's exception did not reach the caller");
+        } catch (RuntimeException e) {
+            final ResourceException first = firstResourceException(e);
+            Assert.assertTrue(first instanceof InternalServerErrorException, String.valueOf(first));
+            Assert.assertTrue(causedBy(first, boom), String.valueOf(first));
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    /** Pins kept behaviour: an HTTP error status reaches the caller as its own ResourceException. */
+    @Test
+    public void testQueryOfAMissingResourceFailsWithNotFound() throws Exception {
+        final ScriptContextBuilder builder = new ScriptContextBuilder();
+        builder.setScriptLanguage("Groovy");
+        builder.setScriptText("import org.forgerock.json.resource.Requests\n"
+                + "import org.forgerock.services.context.RootContext\n"
+                + "import org.forgerock.util.query.QueryFilter\n"
+                + "connection.query(new RootContext(),\n"
+                + "        Requests.newQueryRequest('missing').setQueryFilter(QueryFilter.alwaysTrue()), [])\n");
+        try {
+            getFacade().runScriptOnConnector(builder.build(), null);
+            Assert.fail("the query of a missing resource succeeded");
+        } catch (RuntimeException e) {
+            final ResourceException first = firstResourceException(e);
+            Assert.assertTrue(first instanceof NotFoundException, String.valueOf(first));
+        }
+    }
+
+    /** Deletes users a test created; see testQuery for why none may be left behind. */
+    private static void deleteAll(ConnectorFacade facade, List<Uid> uids) {
+        for (Uid uid : uids) {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    /** The outermost {@link ResourceException} in the cause chain of {@code t}, or null. */
+    private static ResourceException firstResourceException(Throwable t) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ResourceException) {
+                return (ResourceException) cause;
+            }
+        }
+        return null;
+    }
+
+    private static boolean causedBy(Throwable t, Throwable expected) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (cause == expected) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Test
+    public void testSearchStopsWhenTheHandlerReturnsFalse() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final List<Uid> uids = new ArrayList<Uid>();
+        try {
+            for (int i = 0; i < 3; i++) {
+                uids.add(facade.create(ObjectClass.ACCOUNT,
+                        createUserAttributes("John", String.format("Stop%04d", i)), null));
+            }
+            final AtomicInteger handled = new AtomicInteger();
+            final SearchResult result = facade.search(ObjectClass.ACCOUNT,
+                    FilterBuilder.startsWith(AttributeBuilder.build(Name.NAME, "stop")),
+                    new ResultsHandler() {
+                        public boolean handle(ConnectorObject connectorObject) {
+                            handled.incrementAndGet();
+                            return false;
+                        }
+                    }, new OperationOptionsBuilder().setPageSize(2)
+                            .setSortKeys(SortKey.ascendingOrder(Name.NAME)).build());
+            Assert.assertEquals(handled.get(), 1);
+            Assert.assertNotNull(result);
+            // The rest of the response, including the backend's cookie, is left unread.
+            Assert.assertNull(result.getPagedResultsCookie());
+        } finally {
+            deleteAll(facade, uids);
+        }
+    }
+
+    @Test
+    public void testOperationsAfterTheFirstDoNotTakeA401() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Auth0001"), null);
+        try {
+            // A fresh client takes one 401, which fills the shared AuthCache.
+            Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            requestCounter.reset();
+            for (int i = 0; i < 20; i++) {
+                Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.unauthorized(), 0);
+            Assert.assertEquals(requestCounter.requests(), 20);
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    @Test
+    public void testPreemptiveBasicNeverTakesA401() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Preempt0001"), null);
+        final APIConfiguration config = TestHelpers.createTestConfiguration(ScriptedCRESTConnector.class,
+                TestHelpers.getProperties(ScriptedConnectorBase.class, TEST_NAME), "configuration");
+        config.getConfigurationProperties().setPropertyValue("defaultAuthMethod", "BASIC_PREEMPTIVE");
+        final ConnectorFacade preemptive = ConnectorFacadeFactory.getInstance().newInstance(config);
+        try {
+            requestCounter.reset();
+            // A new client: its first request already carries the credentials.
+            for (int i = 0; i < 3; i++) {
+                Assert.assertNotNull(preemptive.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.unauthorized(), 0);
+            Assert.assertEquals(requestCounter.requests(), 3);
+        } finally {
+            ((LocalConnectorFacadeImpl) preemptive).dispose();
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
+    }
+
+    @Test
+    public void testOperationsReuseOneConnection() throws Exception {
+        final ConnectorFacade facade = getFacade();
+        final Uid uid = facade.create(ObjectClass.ACCOUNT, createUserAttributes("John", "Reuse0001"), null);
+        try {
+            Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            requestCounter.reset();
+            for (int i = 0; i < 20; i++) {
+                Assert.assertNotNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+            }
+            Assert.assertEquals(requestCounter.requests(), 20);
+            Assert.assertEquals(requestCounter.connections(), 1);
+        } finally {
+            facade.delete(ObjectClass.ACCOUNT, uid, null);
+        }
     }
 
     private Set<Attribute> createUserAttributes(String firstName, String lastName) {

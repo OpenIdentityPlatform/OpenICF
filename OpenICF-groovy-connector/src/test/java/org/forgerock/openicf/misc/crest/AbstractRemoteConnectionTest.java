@@ -25,8 +25,11 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
+import org.forgerock.json.JsonPointer;
 import org.forgerock.json.JsonValue;
+import org.forgerock.json.resource.InternalServerErrorException;
 import org.forgerock.json.resource.NotSupportedException;
+import org.forgerock.json.resource.QueryRequest;
 import org.forgerock.json.resource.QueryResourceHandler;
 import org.forgerock.json.resource.QueryResponse;
 import org.forgerock.json.resource.ReadRequest;
@@ -34,14 +37,17 @@ import org.forgerock.json.resource.RequestType;
 import org.forgerock.json.resource.Requests;
 import org.forgerock.json.resource.ResourceException;
 import org.forgerock.json.resource.ResourcePath;
+import org.forgerock.json.resource.ResourceResponse;
+import org.forgerock.json.resource.ServiceUnavailableException;
 import org.forgerock.services.context.Context;
 import org.forgerock.services.context.RootContext;
+import org.forgerock.util.query.QueryFilter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class AbstractRemoteConnectionTest {
 
-    private static final class StubConnection extends AbstractRemoteConnection {
+    private static class StubConnection extends AbstractRemoteConnection {
 
         StubConnection() {
             super(ResourcePath.valueOf("api"), new HttpHost("localhost", 8080));
@@ -67,6 +73,69 @@ public class AbstractRemoteConnectionTest {
         protected QueryResponse parseQueryResponse(HttpResponse response,
                 QueryResourceHandler handler) {
             throw new AssertionError();
+        }
+    }
+
+    private static QueryRequest usersQuery() {
+        return Requests.newQueryRequest("users").setQueryFilter(QueryFilter.<JsonPointer>alwaysTrue());
+    }
+
+    private static final QueryResourceHandler NO_RESOURCES_EXPECTED = new QueryResourceHandler() {
+        @Override
+        public boolean handleResource(ResourceResponse resource) {
+            throw new AssertionError("no resource expected, got " + resource);
+        }
+    };
+
+    /** Pins kept behaviour: a Throwable from execute() still becomes an InternalServerErrorException. */
+    @Test
+    public void testQueryWrapsAnErrorFromExecuteInInternalServerError() {
+        try {
+            new StubConnection().query(new RootContext(), usersQuery(), NO_RESOURCES_EXPECTED);
+            Assert.fail("InternalServerErrorException expected");
+        } catch (ResourceException e) {
+            Assert.assertTrue(e instanceof InternalServerErrorException, String.valueOf(e));
+            Assert.assertTrue(e.getCause() instanceof AssertionError, String.valueOf(e.getCause()));
+        }
+    }
+
+    /** Pins kept behaviour: an interrupted caller gets ServiceUnavailableException. */
+    @Test(timeOut = 10000)
+    public void testInterruptedQueryFailsWithServiceUnavailable() {
+        final StubConnection pending = new StubConnection() {
+            @Override
+            public <T> Future<T> execute(Context context, HttpUriRequest request,
+                    HttpAsyncResponseConsumer<T> responseConsumer, FutureCallback<T> callback) {
+                return null; // the response never arrives
+            }
+        };
+        Thread.currentThread().interrupt();
+        try {
+            pending.query(new RootContext(), usersQuery(), NO_RESOURCES_EXPECTED);
+            Assert.fail("ServiceUnavailableException expected");
+        } catch (ResourceException e) {
+            Assert.assertTrue(e instanceof ServiceUnavailableException, String.valueOf(e));
+        } finally {
+            Thread.interrupted();
+        }
+    }
+
+    /** Pins kept behaviour: a ResourceException from the transport reaches the caller unwrapped. */
+    @Test
+    public void testQueryPassesATransportResourceExceptionThrough() {
+        final StubConnection cancelling = new StubConnection() {
+            @Override
+            public <T> Future<T> execute(Context context, HttpUriRequest request,
+                    HttpAsyncResponseConsumer<T> responseConsumer, FutureCallback<T> callback) {
+                callback.cancelled(); // InternalFutureCallback fails the promise with ServiceUnavailableException
+                return null;
+            }
+        };
+        try {
+            cancelling.query(new RootContext(), usersQuery(), NO_RESOURCES_EXPECTED);
+            Assert.fail("ServiceUnavailableException expected");
+        } catch (ResourceException e) {
+            Assert.assertTrue(e instanceof ServiceUnavailableException, String.valueOf(e));
         }
     }
 
