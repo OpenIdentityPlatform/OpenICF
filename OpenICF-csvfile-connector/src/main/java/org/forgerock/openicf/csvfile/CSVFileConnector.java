@@ -509,9 +509,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         // we now have a read-lock unless the above block threw an Exception
         boolean completed = false;
         try {
-            // under the read lock, writers in this JVM still wait for the copy, but searches do not;
-            // the mtime is read before the copy is taken: named after a later mtime, a copy that misses
-            // a change would be kept over the fresh copy of that mtime, and every sync would report the change again
+            // under the read lock, writers in this JVM wait for the copy, and so do readers that start after a writer
+            // queued; the mtime is read before the copy is taken: named after a later mtime, a copy that misses a
+            // change would be kept over the fresh copy of that mtime, and every sync would report the change again
             final long nextTimestamp = config.getCsvFile().lastModified();
             try {
                 next = copyCsvFile();
