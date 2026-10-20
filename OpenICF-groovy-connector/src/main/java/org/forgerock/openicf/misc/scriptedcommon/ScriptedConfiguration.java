@@ -30,17 +30,26 @@ import static org.forgerock.openicf.misc.scriptedcommon.ScriptedConnectorBase.LO
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.control.ClassNodeResolver;
+import org.codehaus.groovy.control.CompilationFailedException;
+import org.codehaus.groovy.control.CompilationUnit;
 import org.codehaus.groovy.control.CompilerConfiguration;
 import org.codehaus.groovy.control.customizers.ImportCustomizer;
 import org.codehaus.groovy.runtime.InvokerHelper;
@@ -94,6 +103,25 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
     private static final Log logger = Log.getLog(ScriptedConfiguration.class);
     private static final String DOT_STAR = ".*";
     private static final String EMPTY_STRING = "";
+
+    /**
+     * System property with the number of runScriptOnConnector scripts that each script engine keeps
+     * compiled, 64 by default; a script counts with its closures and the classes it declares. It is
+     * read when the engine is created; a value that is not a positive integer is ignored with a
+     * warning.
+     */
+    public static final String SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY =
+            "org.identityconnectors.framework.groovy.scriptOnConnectorCacheSize";
+
+    /** The number of runScriptOnConnector scripts kept when the system property is not set. */
+    static final int DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE = 64;
+
+    /**
+     * {@code GroovyClassLoader.sourceCache}, whose monitor a loader holds while it compiles: the
+     * engine compiles its scripts, and the script-root classes they use, under its loader's. Null
+     * if it cannot be read; runScriptOnConnector scripts are then not cached.
+     */
+    private static final Field SOURCE_CACHE_FIELD = getSourceCacheField();
     private final CompilerConfiguration config;
 
     {
@@ -677,6 +705,12 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                     publishedCustomizerClass = null;
                 }
                 groovyScriptEngine = null;
+                final ScriptOnConnectorCache cache = scriptOnConnectorCache;
+                scriptOnConnectorCache = null;
+                if (null != cache) {
+                    // Last, so that a failure here cannot leave the engine published.
+                    cache.clear();
+                }
             }
             propertyBag.clear();
             loggerCache.clear();
@@ -780,6 +814,100 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
         return null;
     }
 
+    /**
+     * Returns the class compiled from the text of a runScriptOnConnector request.
+     * <p>
+     * Each text is compiled once per engine, by its own child loader of the engine's loader. As in
+     * the engine's own compilations, the child compiles with the engine's configuration, under the
+     * engine's compiler lock, and resolves the classes of the script roots through the engine; but
+     * it keeps the new classes out of the engine's class cache. A cached script does not wait for
+     * the lock.
+     * <p>
+     * While the customizer runs, when a subclass builds the engine without super, or when the
+     * engine's compiler lock cannot be read, there is no cache: the text is compiled by the
+     * engine's loader and is not cached.
+     */
+    Class getScriptOnConnectorClass(String scriptText) {
+        final GroovyScriptEngine engine;
+        final ScriptOnConnectorCache cache;
+        synchronized (this) {
+            engine = getGroovyScriptEngine();
+            cache = scriptOnConnectorCache;
+        }
+        if (null == cache) {
+            return engine.getGroovyClassLoader().parseClass(newCodeSource(scriptText), false);
+        }
+        final Class cached = cache.get(scriptText);
+        if (null != cached) {
+            return cached;
+        }
+        final ScriptOnConnectorLoader loader;
+        final Class scriptClass;
+        // Under the engine's compiler lock, as the engine compiles its own scripts: the engine
+        // cannot recompile a script-root class while the text resolves the classes it uses.
+        synchronized (getCompilerLock(engine.getGroovyClassLoader())) {
+            loader = new ScriptOnConnectorLoader(engine, cache.configuration);
+            scriptClass = loader.compileText(newCodeSource(scriptText));
+        }
+        return cache.put(scriptText, new CompiledScript(scriptClass, loader));
+    }
+
+    private static GroovyCodeSource newCodeSource(String scriptText) {
+        return new GroovyCodeSource(scriptText, "Script" + System.currentTimeMillis() + ".groovy", "fix");
+    }
+
+    private static Field getSourceCacheField() {
+        try {
+            final Field field = GroovyClassLoader.class.getDeclaredField("sourceCache");
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException | RuntimeException e) {
+            logger.warn(e, "runScriptOnConnector scripts are not cached: cannot read GroovyClassLoader.sourceCache");
+            return null;
+        }
+    }
+
+    /** Returns the monitor the loader holds while it compiles. */
+    private static Object getCompilerLock(GroovyClassLoader loader) {
+        try {
+            return SOURCE_CACHE_FIELD.get(loader);
+        } catch (IllegalAccessException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Runs the text of a runScriptOnConnector request with the given binding.
+     */
+    Object evaluateScriptOnConnector(String scriptText, Binding binding) {
+        // Runs from Java: a Groovy call site would keep the metaclass of the last class it ran,
+        // and with it the class.
+        return InvokerHelper.createScript(getScriptOnConnectorClass(scriptText), binding).run();
+    }
+
+    /**
+     * Returns the number of runScriptOnConnector scripts a new engine keeps: the value of
+     * {@link #SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY}, or the default when it is not set or not a
+     * positive integer.
+     */
+    static int getScriptOnConnectorCacheSize() {
+        final String value = System.getProperty(SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY);
+        if (null == value) {
+            return DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE;
+        }
+        try {
+            final int size = Integer.parseInt(value.trim());
+            if (size > 0) {
+                return size;
+            }
+        } catch (NumberFormatException e) {
+            // Warned about below.
+        }
+        logger.warn("Ignoring {0}={1}: not a positive integer, keeping {2} scripts",
+                SCRIPT_ON_CONNECTOR_CACHE_SIZE_PROPERTY, value, DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE);
+        return DEFAULT_SCRIPT_ON_CONNECTOR_CACHE_SIZE;
+    }
+
     protected Log getLogger(final Class<?> clazz) {
         final String key = clazz.getName();
         Log logger = loggerCache.get(key);
@@ -804,6 +932,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     /** The customizer class of the published engine; {@link #release()} unregisters it. Guarded by {@code this}. */
     private Class publishedCustomizerClass = null;
+
+    /** The runScriptOnConnector scripts of the published engine. Guarded by {@code this}. */
+    private ScriptOnConnectorCache scriptOnConnectorCache = null;
 
     /**
      * Synchronised for the whole initialisation, not double-checked: the
@@ -836,6 +967,9 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
                 customizingGroovyScriptEngine = null;
             }
             publishedCustomizerClass = customizerClass;
+            scriptOnConnectorCache = null != SOURCE_CACHE_FIELD
+                    ? new ScriptOnConnectorCache(getScriptOnConnectorCacheSize(), compilerConfiguration)
+                    : null;
             groovyScriptEngine = engine;
         }
         return groovyScriptEngine;
@@ -845,7 +979,8 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
      * This must be called once from thread-safe location and inside the
      * synchronized to avoid deadlock. The customizer runs while this
      * configuration's monitor is held: it must not wait for another thread
-     * that calls getGroovyScriptEngine(), evaluate() or loadScript().
+     * that calls getGroovyScriptEngine(), evaluate(), loadScript(),
+     * getScriptOnConnectorClass() or evaluateScriptOnConnector().
      * Returns the customizer class, or null if there is none.
      */
     private Class initializeCustomizer() {
@@ -935,5 +1070,227 @@ public class ScriptedConfiguration extends AbstractConfiguration implements Stat
 
     protected String[] getImports() {
         return new String[] { ConnectorObject.class.getPackage().getName() + ".*" };
+    }
+
+    /**
+     * Compiles one runScriptOnConnector text and holds its classes in its own class cache. A class
+     * with a source in the script roots resolves to the engine's class, compiled by the engine if
+     * needed, as in the engine's own compilations; other classes resolve through the engine's
+     * loader. The text runs against the classes it was compiled against, even when the engine has
+     * since recompiled a script-root class whose source changed.
+     */
+    private static final class ScriptOnConnectorLoader extends GroovyClassLoader {
+
+        private final GroovyScriptEngine engine;
+
+        /** The classes the compiler resolved for the text, by name. */
+        private final Map<String, Class> resolvedClasses = new ConcurrentHashMap<String, Class>();
+
+        /**
+         * The loaders of the script-root classes the compiler resolved for the text. Each defined
+         * the classes compiled with its class too: nested classes, closures, the other classes of
+         * its source.
+         */
+        private final CopyOnWriteArrayList<GroovyClassLoader> scriptRootLoaders =
+                new CopyOnWriteArrayList<GroovyClassLoader>();
+
+        private ScriptOnConnectorLoader(GroovyScriptEngine engine, CompilerConfiguration configuration) {
+            super(engine.getGroovyClassLoader(), configuration, false);
+            this.engine = engine;
+        }
+
+        @Override
+        protected CompilationUnit createCompilationUnit(CompilerConfiguration configuration, CodeSource source) {
+            final CompilationUnit unit = super.createCompilationUnit(configuration, source);
+            unit.setClassNodeResolver(new ClassNodeResolver() {
+                @Override
+                public LookupResult findClassNode(String name, CompilationUnit compilationUnit) {
+                    final Class scriptRootClass = loadScriptRootClass(name, compilationUnit);
+                    if (null != scriptRootClass && scriptRootClass.getClassLoader() instanceof GroovyClassLoader) {
+                        scriptRootLoaders.addIfAbsent((GroovyClassLoader) scriptRootClass.getClassLoader());
+                    }
+                    final LookupResult result = null != scriptRootClass
+                            ? new LookupResult(null, new ClassNode(scriptRootClass))
+                            : super.findClassNode(name, compilationUnit);
+                    if (null != result && result.isClassNode() && result.getClassNode().isResolved()) {
+                        final Class resolved = result.getClassNode().getTypeClass();
+                        resolvedClasses.put(resolved.getName(), resolved);
+                    }
+                    return result;
+                }
+            });
+            return unit;
+        }
+
+        /**
+         * Returns the class the compiler resolved for the name, or the class of that name compiled
+         * with a script-root class the compiler resolved, if any. The text's code links a class by
+         * name when it first runs; without this, it would get the engine's current class. Statically
+         * compiled code also links classes it reached only through the methods of a script-root
+         * class, such as their return types.
+         */
+        @Override
+        public Class loadClass(String name, boolean lookupScriptFiles, boolean preferClassOverScript,
+                boolean resolve) throws ClassNotFoundException {
+            final Class resolved = resolvedClasses.get(name);
+            if (null != resolved) {
+                return resolved;
+            }
+            for (GroovyClassLoader scriptRootLoader : scriptRootLoaders) {
+                final Class compiledWith = findDefinedClass(scriptRootLoader, name);
+                if (null != compiledWith) {
+                    return compiledWith;
+                }
+            }
+            return super.loadClass(name, lookupScriptFiles, preferClassOverScript, resolve);
+        }
+
+        /**
+         * Adds the URL to the engine's loader, which the text's loader delegates to: a URL a text
+         * adds reaches the operation scripts and the other texts, as when texts compiled there.
+         * {@code addClasspath} calls this too.
+         */
+        @Override
+        public void addURL(URL url) {
+            engine.getGroovyClassLoader().addURL(url);
+        }
+
+        /** Compiles the text into this loader's class cache. */
+        private Class compileText(GroovyCodeSource codeSource) {
+            return super.parseClass(codeSource, false);
+        }
+
+        /**
+         * Compiles the source with the engine's loader, which the text's loader delegates to: a
+         * class a text compiles at run time compiles under the engine's compiler lock and reaches
+         * the operation scripts and the other texts, as when texts compiled there. The other
+         * {@code parseClass} methods call this too.
+         */
+        @Override
+        public Class parseClass(GroovyCodeSource codeSource, boolean shouldCacheSource)
+                throws CompilationFailedException {
+            return engine.getGroovyClassLoader().parseClass(codeSource, shouldCacheSource);
+        }
+
+        /** Returns the class of the given name that the loader defined, or null. */
+        private static Class findDefinedClass(GroovyClassLoader loader, String name) {
+            try {
+                // Without looking up scripts: returns the loader's own class, or else the engine's.
+                final Class c = loader.loadClass(name, false, true, false);
+                return c.getClassLoader() == loader ? c : null;
+            } catch (ClassNotFoundException e) {
+                return null;
+            }
+        }
+
+        /**
+         * Returns the engine's class for the source of the given class in the script roots, or null
+         * if no script root has one.
+         */
+        private Class loadScriptRootClass(String className, CompilationUnit compilationUnit) {
+            final String path = className.replace('.', '/');
+            for (String extension : compilationUnit.getConfiguration().getScriptExtensions()) {
+                try {
+                    return engine.loadScriptByName(path + "." + extension);
+                } catch (ResourceException e) {
+                    // No such source in the script roots.
+                } catch (ScriptException e) {
+                    // The compiler reports any other exception from the resolver as a GroovyBugError.
+                    throw new CompilationFailedException(compilationUnit.getPhase(), compilationUnit, e);
+                }
+            }
+            return null;
+        }
+    }
+
+    /** A compiled runScriptOnConnector script and the loader whose class cache holds its classes. */
+    private static final class CompiledScript {
+
+        private final Class scriptClass;
+
+        private final GroovyClassLoader loader;
+
+        private CompiledScript(Class scriptClass, GroovyClassLoader loader) {
+            this.scriptClass = scriptClass;
+            this.loader = loader;
+        }
+
+        /**
+         * Drops the metaclasses of every class the script compiled, closures and declared classes
+         * included, so that the classes can be unloaded once nothing else uses them.
+         */
+        private void unregister() {
+            for (Class c : loader.getLoadedClasses()) {
+                InvokerHelper.removeClass(c);
+            }
+        }
+    }
+
+    /**
+     * The runScriptOnConnector scripts compiled for one engine, keyed by the script text. Holds at
+     * most {@code maxSize} scripts and unregisters the least recently used one beyond that.
+     */
+    private static final class ScriptOnConnectorCache {
+
+        private final int maxSize;
+
+        /** The configuration of the engine, which its scripts compile with. */
+        private final CompilerConfiguration configuration;
+
+        /** Least recently used first. Guarded by itself. */
+        private final LinkedHashMap<String, CompiledScript> scripts =
+                new LinkedHashMap<String, CompiledScript>(16, 0.75f, true);
+
+        private ScriptOnConnectorCache(int maxSize, CompilerConfiguration configuration) {
+            this.maxSize = maxSize;
+            this.configuration = configuration;
+        }
+
+        private Class get(String scriptText) {
+            synchronized (scripts) {
+                final CompiledScript script = scripts.get(scriptText);
+                return null == script ? null : script.scriptClass;
+            }
+        }
+
+        /**
+         * Caches the script unless another thread cached the same text first, evicts the least
+         * recently used scripts beyond the size, and returns the class to run.
+         */
+        private Class put(String scriptText, CompiledScript script) {
+            final List<CompiledScript> dropped = new ArrayList<CompiledScript>(1);
+            final Class result;
+            synchronized (scripts) {
+                final CompiledScript cached = scripts.get(scriptText);
+                if (null != cached) {
+                    dropped.add(script);
+                    result = cached.scriptClass;
+                } else {
+                    scripts.put(scriptText, script);
+                    final Iterator<CompiledScript> eldest = scripts.values().iterator();
+                    while (scripts.size() > maxSize) {
+                        dropped.add(eldest.next());
+                        eldest.remove();
+                    }
+                    result = script.scriptClass;
+                }
+            }
+            // Outside the monitor: removeClass takes Groovy's own locks.
+            for (CompiledScript d : dropped) {
+                d.unregister();
+            }
+            return result;
+        }
+
+        private void clear() {
+            final List<CompiledScript> dropped;
+            synchronized (scripts) {
+                dropped = new ArrayList<CompiledScript>(scripts.values());
+                scripts.clear();
+            }
+            for (CompiledScript script : dropped) {
+                script.unregister();
+            }
+        }
     }
 }
