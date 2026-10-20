@@ -19,6 +19,7 @@ package org.forgerock.openicf.connectors.xml;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
@@ -31,14 +32,17 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -670,6 +674,46 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void errorDuringASaveUndoesTheChange() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] before = Files.readAllBytes(file.toPath());
+        ErrorFile store = new ErrorFile(file);
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        Error saveError = new OutOfMemoryError("injected into the save");
+        store.failIn("save", saveError);
+
+        Error thrown = expectThrows(OutOfMemoryError.class, () -> impl.create(ObjectClass.ACCOUNT, account("bob")));
+
+        assertSame(thrown, saveError);
+        assertEquals(lastNames(impl.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("Last-alice"));
+        impl.dispose(); // nothing left to save
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
+    public void errorWhileTheFileIsReadAgainIsAddedToTheSaveError() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] before = Files.readAllBytes(file.toPath());
+        ErrorFile store = new ErrorFile(file);
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        Error saveError = new OutOfMemoryError("injected into the save");
+        Error reloadError = new OutOfMemoryError("injected into the reload");
+        store.failIn("save", saveError);
+        store.failIn("revert", reloadError);
+
+        Error thrown = expectThrows(OutOfMemoryError.class, () -> impl.create(ObjectClass.ACCOUNT, account("bob")));
+
+        assertSame(thrown, saveError);
+        assertEquals(Arrays.asList(thrown.getSuppressed()), List.of(reloadError));
+        impl.dispose(); // nothing left to save, although the reload failed
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
     public void savedNewFileIsNotWrittenAgain() throws Exception {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));
@@ -726,6 +770,34 @@ public class XMLHandlerReloadTests {
                 throw new UncheckedIOException(e);
             }
             return false;
+        }
+    }
+
+    /** A store path whose {@link #toPath()} throws an Error once, when a given method of XMLHandlerImpl calls it. */
+    private static final class ErrorFile extends File {
+
+        private final Map<String, Error> errors = new HashMap<String, Error>();
+
+        ErrorFile(File file) {
+            super(file.getPath());
+        }
+
+        /** {@code error} is thrown the next time {@code method}, or a method it calls, asks for the path. */
+        void failIn(String method, Error error) {
+            errors.put(method, error);
+        }
+
+        @Override
+        public Path toPath() {
+            for (StackTraceElement frame : new Throwable().getStackTrace()) {
+                if (frame.getClassName().equals(XMLHandlerImpl.class.getName())) {
+                    Error error = errors.remove(frame.getMethodName());
+                    if (error != null) {
+                        throw error;
+                    }
+                }
+            }
+            return super.toPath();
         }
     }
 

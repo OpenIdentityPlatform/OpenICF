@@ -136,9 +136,11 @@ final class XmlDocumentWriter {
      * link is followed, also when its target does not exist yet). On POSIX file systems the copy
      * can be read by its owner only while it is written; elsewhere it takes the directory's
      * inherited permissions. The copy is synced to disk, takes the group and the mode of the file,
-     * and replaces it by a rename, so the file is either as it was or complete. Whatever the write
-     * throws, nothing at {@code file} has changed and the copy is deleted; a copy that can not be
-     * deleted is logged. On POSIX file systems a new file can be read by its owner only; elsewhere
+     * and replaces it by a rename, so the file is either as it was or complete. Where the file
+     * system can not rename atomically, the file is replaced by a move that removes it first, and a
+     * failure in that window loses it. Otherwise, whatever the write throws, nothing at
+     * {@code file} has changed and the copy is deleted; a copy that can not be deleted is logged.
+     * On POSIX file systems a new file can be read by its owner only; elsewhere
      * it takes the directory's inherited permissions. A file that is not writable is refused with
      * an {@link AccessDeniedException} before anything is written. The directory must be writable.
      * Hard links to the file, its owner, its ACLs and its extended attributes are not kept. A copy
@@ -206,7 +208,8 @@ final class XmlDocumentWriter {
     /**
      * The copy takes over the group of the store if the process may set it and the store's mode bits
      * (the owner becomes the process's user). When the group can not be set, the copy keeps the
-     * process's group and gets no group permissions. When the mode bits can not be set (a file
+     * group it was created with (the process's group, or the directory's on BSD and macOS and in a
+     * setgid directory) and gets no group permissions. When the mode bits can not be set (a file
      * system whose modes are fixed by the mount), the copy keeps the mode it was created with.
      */
     private static void copyGroupAndMode(Path store, Path copy) throws IOException {
@@ -217,7 +220,8 @@ final class XmlDocumentWriter {
             try {
                 Files.setAttribute(copy, "posix:group", Files.getAttribute(store, "posix:group"));
             } catch (IOException e) {
-                // not a member of the store's group: the copy keeps the process's group,
+                // not a member of the store's group: the copy keeps the group it was created with
+                // (the process's, or the directory's on BSD and macOS and in a setgid directory),
                 // which must not get the access the store grants to its own group
                 mode.removeAll(EnumSet.of(PosixFilePermission.GROUP_READ,
                         PosixFilePermission.GROUP_WRITE, PosixFilePermission.GROUP_EXECUTE));

@@ -156,6 +156,24 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void storeInADirectoryThatCannotBeWrittenIsRefusedAndLeftAlone() throws Exception {
+        Path dir = newStoreDir();
+        Path store = dir.resolve("store.xml");
+        Files.write(store, "<old/>".getBytes(StandardCharsets.UTF_8));
+        if (!dir.toFile().setWritable(false, false) || Files.isWritable(dir)) {
+            dir.toFile().setWritable(true, false);
+            throw new SkipException("Cannot make " + dir + " read-only here");
+        }
+        try {
+            expectThrows(AccessDeniedException.class, () -> XmlDocumentWriter.write(parse("<r/>"), store.toFile()));
+            assertEquals(new String(Files.readAllBytes(store), StandardCharsets.UTF_8), "<old/>");
+            assertEquals(copiesOf(store), Collections.emptyList());
+        } finally {
+            dir.toFile().setWritable(true, false);
+        }
+    }
+
+    @Test
     public void fileReachedThroughALinkIsReplacedBehindTheLink() throws Exception {
         Path real = newStoreDir().resolve("store.xml");
         Files.write(real, "<old/>".getBytes(StandardCharsets.UTF_8));
@@ -218,6 +236,21 @@ public class XmlDocumentWriterTests {
         assertTrue(Files.isSymbolicLink(b));
         assertEquals(copiesOf(a), Collections.emptyList());
         assertEquals(copiesOf(b), Collections.emptyList());
+    }
+
+    @Test
+    public void relativeDanglingLinksAreFollowedFromEachLinksDirectory() throws Exception {
+        Path dir = newStoreDir();
+        Path link = dir.resolve("link.xml");
+        Path middle = Files.createDirectory(dir.resolve("sub")).resolve("middle.xml");
+        Path real = middle.resolveSibling("store.xml");
+        createLink(link, dir.relativize(middle)); // "sub/middle.xml", relative to dir
+        createLink(middle, middle.getParent().relativize(real)); // "store.xml", relative to dir/sub
+        XmlDocumentWriter.write(parse("<r><a>x</a></r>"), link.toFile());
+        assertTrue(Files.isSymbolicLink(link));
+        assertTrue(Files.isSymbolicLink(middle));
+        assertTrue(new String(Files.readAllBytes(real), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(real), Collections.emptyList());
     }
 
     @Test

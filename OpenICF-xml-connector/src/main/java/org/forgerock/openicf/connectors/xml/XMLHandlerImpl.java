@@ -575,10 +575,10 @@ public class XMLHandlerImpl implements XMLHandler {
                         + " appeared before the new document was saved; the change is not saved, and the file is loaded instead");
             }
             save();
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | Error e) {
             try {
                 revert();
-            } catch (RuntimeException reloadFailure) {
+            } catch (RuntimeException | Error reloadFailure) {
                 e.addSuppressed(reloadFailure);
             }
             throw e;

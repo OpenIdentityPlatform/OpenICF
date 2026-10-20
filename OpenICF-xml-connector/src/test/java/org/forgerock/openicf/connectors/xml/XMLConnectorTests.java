@@ -373,7 +373,7 @@ public class XMLConnectorTests {
         AssertJUnit.assertTrue(xmlFile.mkdir()); // a directory cannot be written, whoever runs the test
         try {
             String errors = captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: "));
+            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: java.nio.file."));
         } finally {
             AssertJUnit.assertTrue(xmlFile.delete());
         }
