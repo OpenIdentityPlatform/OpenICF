@@ -266,6 +266,22 @@ public class XmlDocumentWriterTests {
     }
 
     @Test
+    public void writeOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.write(store, "<old/>\n".getBytes(StandardCharsets.UTF_8));
+        Document document = parse("<r><a>x</a></r>");
+        Thread.currentThread().interrupt();
+        try {
+            XmlDocumentWriter.write(document, store.toFile());
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+        assertTrue(new String(Files.readAllBytes(store), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
     public void followingIsTheNextSibling() throws Exception {
         Document document = parse("<r><a><x/></a><b/></r>");
         assertSame(following(only(document, "a"), document), only(document, "b"));

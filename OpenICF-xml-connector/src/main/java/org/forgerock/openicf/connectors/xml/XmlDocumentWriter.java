@@ -19,6 +19,7 @@ package org.forgerock.openicf.connectors.xml;
 import static org.forgerock.openicf.connectors.xml.util.XmlHandlerUtil.following;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
@@ -173,7 +174,8 @@ final class XmlDocumentWriter {
             serializer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
             serializer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
             CRC32 crc = new CRC32();
-            try (OutputStream out = new CheckedOutputStream(Files.newOutputStream(copy), crc)) {
+            try (FileOutputStream stream = new FileOutputStream(copy.toFile());
+                    OutputStream out = new CheckedOutputStream(stream, crc)) {
                 handler.setResult(new StreamResult(out));
                 NamespaceSupport namespaces = new NamespaceSupport();
                 handler.startDocument();
@@ -181,11 +183,10 @@ final class XmlDocumentWriter {
                     send(child, handler, namespaces);
                 }
                 handler.endDocument();
-            }
-            // on disk before the rename, so that a crash can not leave the store name pointing to
-            // a copy whose data was never written
-            try (FileChannel channel = FileChannel.open(copy, StandardOpenOption.WRITE)) {
-                channel.force(true);
+                // on disk before the rename, so that a crash can not leave the store name pointing to
+                // a copy whose data was never written; unlike FileChannel.force, FileDescriptor.sync
+                // does not fail on a thread whose interrupt flag is set
+                stream.getFD().sync();
             }
             if (Files.exists(target)) {
                 copyGroupAndMode(target, copy);
