@@ -42,7 +42,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -478,8 +477,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (token != null && token.getValue() != null) {
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
                         config.getCsvFile().getName() + "." + token.getValue());
-            }
-            if (syncOrigin == null || !syncOrigin.exists()) {
+                if (!syncOrigin.exists()) {
+                    // a baseline taken now would hide every delete since the token
+                    throw new ConnectorException("Snapshot " + syncOrigin + " of sync token " + token.getValue()
+                            + " does not exist, so the changes since that token cannot be reported;"
+                            + " reset the sync token");
+                }
+            } else {
                 long timestamp = config.getCsvFile().lastModified();
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
                         config.getCsvFile().getName() + "." + timestamp);
@@ -724,7 +728,15 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (!snapshots.isEmpty()) {
                 return new SyncToken(snapshots.lastKey());
             }
-            return new SyncToken(new Date().getTime());
+            // every token handed out has a snapshot, so the first sync from it reports every change made since
+            final long timestamp = config.getCsvFile().lastModified();
+            try {
+                takeSnapshot(new File(config.getCsvFile().getParentFile(),
+                        config.getCsvFile().getName() + "." + timestamp));
+            } catch (IOException e) {
+                throw new ConnectorException("Unable to copy CSV file for sync operation", e);
+            }
+            return new SyncToken(timestamp);
         } finally {
             lock.unlock();
         }

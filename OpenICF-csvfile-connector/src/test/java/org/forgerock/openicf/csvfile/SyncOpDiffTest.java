@@ -704,6 +704,32 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void syncFromATokenWhoseSnapshotIsGoneFails() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final File snapshot = new File(dir.toFile(), csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue());
+
+        ConnectorException e = expectThrows(ConnectorException.class, () -> sync(SNAPSHOT_TOKEN));
+
+        assertEquals(e.getMessage(), "Snapshot " + snapshot + " of sync token " + SNAPSHOT_TOKEN.getValue()
+                + " does not exist, so the changes since that token cannot be reported; reset the sync token");
+        assertEquals(deltas, Collections.emptyList());
+        assertEquals(snapshots(), Collections.emptyList());
+    }
+
+    @Test
+    public void latestSyncTokenWithoutASnapshotTakesOne() throws Exception {
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        assertEquals(token.getValue(), csvFile.lastModified());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + token.getValue()));
+        // the first sync from the token reports a change made after the call; the old code lost it
+        givenLive(HEADER, "k,Ann,Poe,pw3", "c,Jane,Doe,pw1");
+        assertEquals(sync(token), Collections.singletonList("CREATE c [Jane, Doe, pw1]"));
+    }
+
+    @Test
     public void snapshotThatCannotBeMovedInFailsSync() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("A read-only directory needs POSIX permissions");
