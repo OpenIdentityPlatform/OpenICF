@@ -714,6 +714,27 @@ public class XMLHandlerReloadTests {
     }
 
     @Test
+    public void saveErrorThrownAgainByTheReloadIsThrownAsItIs() throws Exception {
+        writeAccounts(file, "alice");
+        setModified(file, now() - HOUR);
+        byte[] before = Files.readAllBytes(file.toPath());
+        ErrorFile store = new ErrorFile(file);
+        XMLHandlerImpl impl = new XMLHandlerImpl(config(store), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        impl.init();
+        // Once its preallocated OutOfMemoryErrors are used up, HotSpot throws one shared instance
+        Error shared = new OutOfMemoryError("injected into the save and the reload");
+        store.failIn("save", shared);
+        store.failIn("revert", shared);
+
+        Error thrown = expectThrows(OutOfMemoryError.class, () -> impl.create(ObjectClass.ACCOUNT, account("bob")));
+
+        assertSame(thrown, shared); // not IllegalArgumentException: Self-suppression not permitted
+        assertEquals(Arrays.asList(thrown.getSuppressed()), List.of());
+        impl.dispose(); // nothing left to save, although the reload failed
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    @Test
     public void savedNewFileIsNotWrittenAgain() throws Exception {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));

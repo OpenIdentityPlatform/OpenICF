@@ -579,7 +579,9 @@ public class XMLHandlerImpl implements XMLHandler {
             try {
                 revert();
             } catch (RuntimeException | Error reloadFailure) {
-                e.addSuppressed(reloadFailure);
+                if (reloadFailure != e) { // the JVM may throw one shared instance twice, e.g. an OutOfMemoryError
+                    e.addSuppressed(reloadFailure);
+                }
             }
             throw e;
         }
