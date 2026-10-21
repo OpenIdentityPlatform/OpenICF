@@ -31,6 +31,7 @@ import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -893,6 +894,37 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void syncOfAFileNamedWithoutADirectoryKeepsTheSnapshotItReads() throws Exception {
+        // the name resolves against the working directory, but its File has no parent
+        final Path workingDir = Paths.get("").toAbsolutePath();
+        final String name = Files.createTempFile(workingDir, "csv-sync-", ".csv").getFileName().toString();
+        try {
+            csvFile = new File(name);
+            // the scrub reaches the snapshot the sync reads, so it has to recognise that snapshot in its own listing
+            retentionCount = 1;
+            Files.write(workingDir.resolve(name + "." + SNAPSHOT_TOKEN.getValue()),
+                    Arrays.asList(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2"), StandardCharsets.UTF_8);
+            Files.write(workingDir.resolve(name + ".1400000000000"), Arrays.asList(HEADER, "k,Ann,Poe,pw3"),
+                    StandardCharsets.UTF_8);
+            givenLive(HEADER, "k,Ann,Poe,pw3");
+
+            // the old code failed with a NullPointerException in the scrub, and so did getLatestSyncToken
+            assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+            assertEquals(connector.getLatestSyncToken(ObjectClass.ACCOUNT), resultToken);
+
+            assertEquals(snapshots(workingDir), Arrays.asList(name + "." + SNAPSHOT_TOKEN.getValue(),
+                    name + ".1400000000000", name + "." + resultToken.getValue()));
+        } finally {
+            try (Stream<Path> paths = Files.list(workingDir)) {
+                for (Path file : paths.filter(path -> path.getFileName().toString().startsWith(name))
+                        .collect(Collectors.toList())) {
+                    Files.delete(file);
+                }
+            }
+        }
+    }
+
+    @Test
     public void latestSyncTokenOfAnUnlistableDirectoryFails() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("An unlistable directory needs POSIX permissions");
@@ -1025,7 +1057,11 @@ public class SyncOpDiffTest {
     }
 
     private List<String> snapshots() throws IOException {
-        try (Stream<Path> paths = Files.list(dir)) {
+        return snapshots(dir);
+    }
+
+    private List<String> snapshots(Path in) throws IOException {
+        try (Stream<Path> paths = Files.list(in)) {
             return paths.map(path -> path.getFileName().toString())
                     .filter(name -> name.startsWith(csvFile.getName() + "."))
                     .sorted()

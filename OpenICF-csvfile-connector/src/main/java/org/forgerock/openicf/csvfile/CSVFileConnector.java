@@ -475,8 +475,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         rwLock.writeLock().lock();
         try {
             if (token != null && token.getValue() != null) {
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + token.getValue());
+                syncOrigin = snapshotFile(token.getValue());
                 if (!syncOrigin.exists()) {
                     // a baseline taken now would hide every delete since the token
                     throw new ConnectorException("Snapshot " + syncOrigin + " of sync token " + token.getValue()
@@ -485,8 +484,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             } else {
                 long timestamp = config.getCsvFile().lastModified();
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + timestamp);
+                syncOrigin = snapshotFile(timestamp);
                 try {
                     // a snapshot of this mtime taken by an earlier sync is the baseline, and not this call's to delete
                     if (takeSnapshot(syncOrigin)) {
@@ -679,8 +677,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
 
             if (changesProcessed) {
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + nextTimestamp);
+                syncOrigin = snapshotFile(nextTimestamp);
                 try {
                     Files.move(next.toPath(), syncOrigin.toPath());
                     // the name is free again, and createRewriteFile may hand it to a writer
@@ -732,8 +729,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // every token handed out has a snapshot, so the first sync from it reports every change made since
             final long timestamp = config.getCsvFile().lastModified();
             try {
-                takeSnapshot(new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + timestamp));
+                takeSnapshot(snapshotFile(timestamp));
             } catch (IOException e) {
                 throw new ConnectorException("Unable to copy CSV file for sync operation", e);
             }
@@ -1039,11 +1035,21 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     /**
+     * Returns the sync snapshot of the CSV file of the given mtime, {@code <csv>.<mtime>}. Its path is absolute, as are
+     * those {@link #listSnapshots()} lists, so that it equals its listed file even for a CSV file named without a
+     * directory, which has no parent file.
+     */
+    private File snapshotFile(Object mtime) {
+        final File csv = config.getCsvFile().getAbsoluteFile();
+        return new File(csv.getParentFile(), csv.getName() + "." + mtime);
+    }
+
+    /**
      * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, oldest first. The name is matched
      * exactly, so the snapshots of another CSV file in the same directory are never listed.
      */
     private TreeMap<Long, File> listSnapshots() {
-        final File dataDir = config.getCsvFile().getParentFile();
+        final File dataDir = config.getCsvFile().getAbsoluteFile().getParentFile();
         final String[] names = dataDir.list();
         if (names == null) {
             throw new ConnectorIOException("Unable to list the files of " + dataDir);
