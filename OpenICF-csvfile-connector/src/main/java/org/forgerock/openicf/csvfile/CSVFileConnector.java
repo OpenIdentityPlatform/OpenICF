@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -685,8 +686,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     copies.add(syncOrigin);
                     token = new SyncToken(nextTimestamp);
                 } catch (FileAlreadyExistsException e) {
-                    // taken by an earlier sync of the same changes, such as another consumer's; not added to copies
-                    token = new SyncToken(nextTimestamp);
+                    // taken by an earlier sync of the same changes, such as another consumer's; not added to copies.
+                    // Named after the mtime read before its copy, one taken in another JVM may also hold a later
+                    // write, which this sync has not reported: then the token stays, and the next sync reports these
+                    // changes again instead of never reporting that write
+                    if (sameBytes(syncOrigin, next)) {
+                        token = new SyncToken(nextTimestamp);
+                    }
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
@@ -1358,6 +1364,33 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
         }
         return moved;
+    }
+
+    /**
+     * Whether an existing snapshot holds the same bytes as a copy of the CSV file. A snapshot that cannot be read,
+     * such as one deleted meanwhile in another JVM, does not.
+     */
+    private static boolean sameBytes(File snapshot, File copy) {
+        if (snapshot.length() != copy.length()) {
+            return false;
+        }
+        try (InputStream in = Files.newInputStream(snapshot.toPath());
+                InputStream other = Files.newInputStream(copy.toPath())) {
+            final byte[] buffer = new byte[8192];
+            final byte[] otherBuffer = new byte[buffer.length];
+            int length;
+            do {
+                length = in.readNBytes(buffer, 0, buffer.length);
+                if (other.readNBytes(otherBuffer, 0, otherBuffer.length) != length
+                        || !Arrays.equals(buffer, 0, length, otherBuffer, 0, length)) {
+                    return false;
+                }
+            } while (length > 0);
+            return true;
+        } catch (IOException e) {
+            log.warn(e, "Could not compare {0} with {1}", snapshot, copy);
+            return false;
+        }
     }
 
     /**

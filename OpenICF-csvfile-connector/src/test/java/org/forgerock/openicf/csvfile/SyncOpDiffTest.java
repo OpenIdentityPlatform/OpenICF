@@ -556,16 +556,73 @@ public class SyncOpDiffTest {
     public void existingSnapshotOfTheCopiedMtimeAdvancesTheToken() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
-        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
-        // the live rows, written differently, so that a replaced snapshot shows
-        final List<String> existingLines = Arrays.asList(HEADER, "\"k\",\"Ann\",\"Poe\",\"pw3\"");
-        Files.write(existing, existingLines, StandardCharsets.UTF_8);
+        // the bytes of the live file, as an earlier sync of the same changes copied them
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
 
         assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
         assertEquals(resultToken.getValue(), csvFile.lastModified());
-        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), existingLines);
         assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
                 existing.getFileName().toString()));
+    }
+
+    @DataProvider
+    public Object[][] laterWrites() {
+        return new Object[][] {
+            { "w,Will,Woe,pw4", "k,Ann,Poe,pw3", "CREATE w [Will, Woe, pw4]" },
+            // the same length, and past the first 8 KiB the comparison reads at once
+            { null, "k,Ann,Poe,pw4", "UPDATE k [Ann, Poe, pw4]" }
+        };
+    }
+
+    @Test(dataProvider = "laterWrites")
+    public void existingSnapshotOfTheCopiedMtimeWithOtherBytesKeepsTheToken(String added, String k, String delta)
+            throws Exception {
+        final List<String> rows = new ArrayList<>(Collections.singletonList(HEADER));
+        for (int i = 0; i < 400; i++) {
+            rows.add(String.format("u%03d,First,Last,pw%03d", i, i));
+        }
+        rows.add("k,Ann,Poe,pw3");
+        givenLive(rows.toArray(new String[0]));
+        rows.add("d,John,Roe,pw2");
+        givenSnapshot(rows.toArray(new String[0]));
+        // another JVM read the same mtime, but copied the file only after a writer had made a change
+        final List<String> theirs = new ArrayList<>(rows.subList(0, rows.size() - 2));
+        theirs.add(k);
+        if (added != null) {
+            theirs.add(added);
+        }
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(),
+                theirs.toArray(new String[0]));
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        // as the new token, the existing snapshot would hide that change from this consumer for good
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), theirs);
+
+        givenLive(theirs.toArray(new String[0]));
+        assertEquals(sync(resultToken), Arrays.asList("DELETE d [John, Roe, pw2]", delta));
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeThatCannotBeReadKeepsTheToken() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unreadable file needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // the bytes of the live file, so only the failed read keeps the token
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
+        Files.setPosixFilePermissions(existing, PosixFilePermissions.fromString("---------"));
+        if (Files.isReadable(existing)) {
+            throw new SkipException("A file without read permission can still be read by this user");
+        }
+        connector();
+
+        final String output = captureStdOut(() -> assertEquals(sync(SNAPSHOT_TOKEN),
+                Collections.singletonList("DELETE d [John, Roe, pw2]")));
+
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertTrue(output.contains("Could not compare " + existing.toFile()), output);
     }
 
     @Test
