@@ -92,12 +92,15 @@ public class SyncOpDiffTest {
 
     private SyncToken resultToken;
 
+    private Integer retentionCount;
+
     @BeforeMethod
     public void before() throws IOException {
         dir = Files.createTempDirectory("csv-sync");
         csvFile = dir.resolve("data.csv").toFile();
         deltas = null;
         resultToken = null;
+        retentionCount = null;
     }
 
     @AfterMethod(alwaysRun = true)
@@ -619,6 +622,88 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void syncDeletesTheSnapshotsBeyondTheRetentionCount() throws Exception {
+        retentionCount = 2;
+        givenFile(csvFile.getName() + ".1100000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + ".1200000000000",
+                csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void syncKeepsTheSnapshotItReadsWhenItIsTheOldest() throws Exception {
+        retentionCount = 1;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1500000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        // the newest snapshot and the one this sync read are kept, then the sync adds its own
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                csvFile.getName() + ".1500000000000", csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @Test
+    public void syncKeepsTheSnapshotsOfOtherFiles() throws Exception {
+        retentionCount = 1;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // each would be the oldest snapshot under the old pattern, which was not anchored and did not quote the dot
+        final List<String> others = Arrays.asList("old_data.csv.1100000000000", "dataXcsv.1200000000000");
+        for (String other : others) {
+            givenFile(other, HEADER, "k,Ann,Poe,pw3");
+        }
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        for (String other : others) {
+            assertTrue(Files.exists(dir.resolve(other)), other);
+        }
+    }
+
+    @Test
+    public void snapshotThatCannotBeScrubbedIsLogged() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from deleting files");
+        }
+        retentionCount = 1;
+        final Path old = givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        connector();
+
+        final List<ConnectorException> failures = new ArrayList<>();
+        final String output;
+        setDirMode(readOnly);
+        try {
+            // the scrub only logs; then the copy for the diff fails in the read-only directory
+            output = captureStdOut(() -> failures.add(expectThrows(ConnectorException.class,
+                    () -> sync(SNAPSHOT_TOKEN))));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertTrue(output.contains("Could not delete " + old.toFile()), output);
+        assertEquals(failures.get(0).getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(Files.exists(old));
+    }
+
+    @Test
     public void snapshotThatCannotBeMovedInFailsSync() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("A read-only directory needs POSIX permissions");
@@ -938,6 +1023,9 @@ public class SyncOpDiffTest {
         config.setCsvFile(csvFile);
         config.setHeaderUid("uid");
         config.setHeaderPassword("password");
+        if (retentionCount != null) {
+            config.setSyncFileRetentionCount(retentionCount);
+        }
         instance.init(config);
         connector = instance;
         return connector;

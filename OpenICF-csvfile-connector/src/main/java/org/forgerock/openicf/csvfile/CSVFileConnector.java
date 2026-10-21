@@ -493,7 +493,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
                 token = new SyncToken(timestamp);
             }
-            scrubSyncFiles();
+            scrubSyncFiles(syncOrigin);
 
             // downgrade to a read-lock
             rwLock.readLock().lock();
@@ -1046,11 +1046,21 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         return snapshots;
     }
 
-    private void scrubSyncFiles() {
-        final Map<Long, File> files = listSnapshots();
-        while (files.size() > config.getSyncFileRetentionCount()) {
-            Long key = (Long) files.keySet().toArray()[0];
-            files.remove(key);
+    /**
+     * Deletes the snapshots older than the {@code syncFileRetentionCount} newest ones, except the snapshot this sync
+     * reads. Runs under the write lock, so no sync in this JVM reads a snapshot while it is deleted; one in another
+     * JVM may. A snapshot that cannot be deleted, such as one still open on Windows, is logged and kept.
+     */
+    private void scrubSyncFiles(File syncOrigin) {
+        final TreeMap<Long, File> snapshots = listSnapshots();
+        int surplus = snapshots.size() - config.getSyncFileRetentionCount();
+        for (File snapshot : snapshots.values()) {
+            if (surplus-- <= 0) {
+                break;
+            }
+            if (!snapshot.equals(syncOrigin)) {
+                deleteRewriteFile(snapshot);
+            }
         }
     }
 
