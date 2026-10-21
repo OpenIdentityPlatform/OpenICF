@@ -42,6 +42,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -533,16 +534,46 @@ public class SyncOpDiffTest {
     public void syncQueuedBehindAFailingSyncGetsATokenWithASnapshot() throws Exception {
         givenLive(HEADER, "u1,Jane,Doe,pw1");
         connector();
-        // a fair lock hands the write lock to the queued sync before the failing sync can take it back
-        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-        lockMap().put(csvFile.getAbsolutePath(), lock);
-        final ExecutorService other = Executors.newSingleThreadExecutor();
+        final Thread failing = Thread.currentThread();
         final List<Future<?>> queued = new ArrayList<>();
+        final CountDownLatch baselineTaken = new CountDownLatch(1);
+        // once the failing sync releases the read lock, it waits until the queued sync has taken its baseline and
+        // released the write lock, so a snapshot the failing sync deletes only after the release is already reused
+        lockMap().put(csvFile.getAbsolutePath(), new ReentrantReadWriteLock() {
+            private final ReadLock readLock = new ReadLock(this) {
+                @Override
+                public void unlock() {
+                    super.unlock();
+                    if (Thread.currentThread() == failing && !queued.isEmpty()) {
+                        await(baselineTaken);
+                    }
+                }
+            };
+
+            private final WriteLock writeLock = new WriteLock(this) {
+                @Override
+                public void unlock() {
+                    super.unlock();
+                    if (Thread.currentThread() != failing) {
+                        baselineTaken.countDown();
+                    }
+                }
+            };
+
+            @Override
+            public ReadLock readLock() {
+                return readLock;
+            }
+
+            @Override
+            public WriteLock writeLock() {
+                return writeLock;
+            }
+        });
+        final ExecutorService other = Executors.newSingleThreadExecutor();
         try {
-            expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> {
-                queued.add(other.submit(() -> sync(null)));
-                awaitQueued(lock);
-            }));
+            expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null,
+                    () -> queued.add(other.submit(() -> sync(null)))));
             await(queued.get(0));
 
             // the old code deleted the snapshot of the failing sync after the queued sync had reused it
@@ -1163,14 +1194,14 @@ public class SyncOpDiffTest {
         }
     }
 
-    // waits until another thread queues for the lock
-    private static void awaitQueued(ReentrantReadWriteLock lock) {
-        final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
-        while (!lock.hasQueuedThreads()) {
-            if (System.nanoTime() > deadline) {
-                throw new AssertionError("No thread queued for " + lock);
+    // waits for another thread to count the latch down
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out waiting for " + latch);
             }
-            Thread.yield();
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
         }
     }
 
