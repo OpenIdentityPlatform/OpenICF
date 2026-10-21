@@ -47,7 +47,6 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -716,23 +715,12 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         isAccount(objectClass);
 
-        File dataDir = config.getCsvFile().getParentFile();
-        Map<Long, String> files = new TreeMap<Long, String>();
-
         final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
         lock.lock();
         try {
-            Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
-            for (String filename : dataDir.list()) {
-                Matcher matcher = filePattern.matcher(filename);
-                if (matcher.find()) {
-                    Long timestamp = Long.valueOf(matcher.group(2).substring(1));
-                    files.put(timestamp, filename);
-                }
-            }
-            if (files.size() > 0) {
-                List<Long> keys = new LinkedList<Long>(files.keySet());
-                return new SyncToken(keys.get(keys.size() - 1));
+            final TreeMap<Long, File> snapshots = listSnapshots();
+            if (!snapshots.isEmpty()) {
+                return new SyncToken(snapshots.lastKey());
             }
             return new SyncToken(new Date().getTime());
         } finally {
@@ -1035,18 +1023,29 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         digest.update((byte) length);
     }
 
-    private void scrubSyncFiles() {
-        File dataDir = config.getCsvFile().getParentFile();
-        Map<Long, String> files = new TreeMap<Long, String>();
-
-        Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
-        for (String filename : dataDir.list()) {
-            Matcher matcher = filePattern.matcher(filename);
-            if (matcher.find()) {
-                Long timestamp = Long.valueOf(matcher.group(2).substring(1));
-                files.put(timestamp, filename);
+    /**
+     * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, oldest first. The name is matched
+     * exactly, so the snapshots of another CSV file in the same directory are never listed.
+     */
+    private TreeMap<Long, File> listSnapshots() {
+        final File dataDir = config.getCsvFile().getParentFile();
+        final String[] names = dataDir.list();
+        if (names == null) {
+            throw new ConnectorIOException("Unable to list the files of " + dataDir);
+        }
+        final Pattern snapshotName = Pattern.compile(Pattern.quote(config.getCsvFile().getName()) + "\\.([0-9]{13})");
+        final TreeMap<Long, File> snapshots = new TreeMap<Long, File>();
+        for (String name : names) {
+            final Matcher matcher = snapshotName.matcher(name);
+            if (matcher.matches()) {
+                snapshots.put(Long.valueOf(matcher.group(1)), new File(dataDir, name));
             }
         }
+        return snapshots;
+    }
+
+    private void scrubSyncFiles() {
+        final Map<Long, File> files = listSnapshots();
         while (files.size() > config.getSyncFileRetentionCount()) {
             Long key = (Long) files.keySet().toArray()[0];
             files.remove(key);

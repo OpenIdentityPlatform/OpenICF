@@ -594,6 +594,77 @@ public class SyncOpDiffTest {
         sync(SNAPSHOT_TOKEN);
     }
 
+    @DataProvider
+    public Object[][] otherFileNames() {
+        return new Object[][] {
+            // the old pattern was not anchored at the start
+            { "old_data.csv" },
+            // and did not quote the dot
+            { "dataXcsv" }
+        };
+    }
+
+    @Test(dataProvider = "otherFileNames")
+    public void latestSyncTokenIgnoresSnapshotsOfOtherFiles(String otherName) throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        givenFile(otherName + ".1600000000000", HEADER);
+
+        assertEquals(connector().getLatestSyncToken(ObjectClass.ACCOUNT), SNAPSHOT_TOKEN);
+    }
+
+    @DataProvider
+    public Object[][] regexMetacharacterNames() {
+        return new Object[][] {
+            // never matched its own snapshots
+            { "data(1).csv" },
+            // made the pattern invalid
+            { "data[1.csv" }
+        };
+    }
+
+    @Test(dataProvider = "regexMetacharacterNames")
+    public void latestSyncTokenFindsTheSnapshotsOfAFileWithRegexMetacharactersInItsName(String name)
+            throws Exception {
+        csvFile = dir.resolve(name).toFile();
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+
+        assertEquals(connector().getLatestSyncToken(ObjectClass.ACCOUNT), SNAPSHOT_TOKEN);
+    }
+
+    @Test
+    public void syncOfAFileWhoseNameIsAnInvalidRegexReportsItsChanges() throws Exception {
+        csvFile = dir.resolve("data[1.csv").toFile();
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+    }
+
+    @Test
+    public void latestSyncTokenOfAnUnlistableDirectoryFails() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unlistable directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+
+        setDirMode(PosixFilePermissions.fromString("-wx------"));
+        try {
+            if (dir.toFile().list() != null) {
+                throw new SkipException("A directory without read permission does not stop this user from listing it");
+            }
+            // the old code failed with a NullPointerException
+            ConnectorIOException e = expectThrows(ConnectorIOException.class,
+                    () -> connector.getLatestSyncToken(ObjectClass.ACCOUNT));
+            assertEquals(e.getMessage(), "Unable to list the files of " + dir.toFile());
+        } finally {
+            setDirMode(mode);
+        }
+    }
+
     @Test
     public void missingCsvFileFailsSync() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
@@ -671,6 +742,10 @@ public class SyncOpDiffTest {
 
     private void givenLive(String... lines) throws IOException {
         Files.write(csvFile.toPath(), Arrays.asList(lines), StandardCharsets.UTF_8);
+    }
+
+    private Path givenFile(String name, String... lines) throws IOException {
+        return Files.write(dir.resolve(name), Arrays.asList(lines), StandardCharsets.UTF_8);
     }
 
     // the connector logs through StdOutLogger, which reads System.out on every call
