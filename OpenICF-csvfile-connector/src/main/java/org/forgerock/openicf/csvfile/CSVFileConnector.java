@@ -700,13 +700,14 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             completed = true;
         } finally {
-            rwLock.readLock().unlock();
             if (!completed) {
-                // a kept copy could be handed out by getLatestSyncToken
+                // a kept copy could be handed out by getLatestSyncToken; deleted before the read lock is released,
+                // which, like the write lock, keeps every other sync in this JVM out, as one could reuse the copy
                 for (File copy : copies) {
-                    deleteSnapshot(rwLock, copy);
+                    deleteRewriteFile(copy);
                 }
             }
+            rwLock.readLock().unlock();
             if (next != null) {
                 // not a snapshot, so no other sync reads it
                 deleteRewriteFile(next);
@@ -1073,18 +1074,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (!snapshot.equals(syncOrigin)) {
                 deleteRewriteFile(snapshot);
             }
-        }
-    }
-
-    /**
-     * Deletes a snapshot under the write lock, so that no sync in this JVM is reading it meanwhile.
-     */
-    private void deleteSnapshot(ReentrantReadWriteLock rwLock, File snapshot) {
-        rwLock.writeLock().lock();
-        try {
-            deleteRewriteFile(snapshot);
-        } finally {
-            rwLock.writeLock().unlock();
         }
     }
 

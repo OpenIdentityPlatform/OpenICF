@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
@@ -38,6 +39,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +47,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -520,6 +523,29 @@ public class SyncOpDiffTest {
             assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
             await(writer.get(0));
             assertEquals(sync(resultToken), Collections.singletonList("DELETE k [Ann, Poe, pw3]"));
+        } finally {
+            other.shutdownNow();
+        }
+    }
+
+    @Test
+    public void syncQueuedBehindAFailingSyncGetsATokenWithASnapshot() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+        // a fair lock hands the write lock to the queued sync before the failing sync can take it back
+        final ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+        lockMap().put(csvFile.getAbsolutePath(), lock);
+        final ExecutorService other = Executors.newSingleThreadExecutor();
+        final List<Future<?>> queued = new ArrayList<>();
+        try {
+            expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> {
+                queued.add(other.submit(() -> sync(null)));
+                awaitQueued(lock);
+            }));
+            await(queued.get(0));
+
+            // the old code deleted the snapshot of the failing sync after the queued sync had reused it
+            assertEquals(sync(resultToken), Collections.emptyList());
         } finally {
             other.shutdownNow();
         }
@@ -1010,6 +1036,24 @@ public class SyncOpDiffTest {
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new AssertionError(e);
         }
+    }
+
+    // waits until another thread queues for the lock
+    private static void awaitQueued(ReentrantReadWriteLock lock) {
+        final long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (!lock.hasQueuedThreads()) {
+            if (System.nanoTime() > deadline) {
+                throw new AssertionError("No thread queued for " + lock);
+            }
+            Thread.yield();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, ReentrantReadWriteLock> lockMap() throws ReflectiveOperationException {
+        final Field field = CSVFileConnector.class.getDeclaredField("fileNameToLockMap");
+        field.setAccessible(true);
+        return (Map<String, ReentrantReadWriteLock>) field.get(null);
     }
 
     private void setDirMode(Set<PosixFilePermission> mode) {
