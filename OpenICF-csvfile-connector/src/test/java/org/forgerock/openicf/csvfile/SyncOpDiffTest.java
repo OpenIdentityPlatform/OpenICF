@@ -523,18 +523,99 @@ public class SyncOpDiffTest {
     }
 
     @Test
-    public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
+    public void existingSnapshotOfTheCopiedMtimeAdvancesTheToken() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
         final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
-        final List<String> existingLines = Arrays.asList(HEADER, "x,Ann,Poe,pw3");
+        // the live rows, written differently, so that a replaced snapshot shows
+        final List<String> existingLines = Arrays.asList(HEADER, "\"k\",\"Ann\",\"Poe\",\"pw3\"");
         Files.write(existing, existingLines, StandardCharsets.UTF_8);
 
         assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
-        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+        assertEquals(resultToken.getValue(), csvFile.lastModified());
         assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), existingLines);
         assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
                 existing.getFileName().toString()));
+    }
+
+    @Test
+    public void failedSyncKeepsTheExistingSnapshotOfTheCopiedMtime() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(SNAPSHOT_TOKEN, () -> { }));
+
+        assertTrue(Files.exists(existing));
+    }
+
+    @Test
+    public void secondConsumerOfTheSameChangesGetsTheNewTokenToo() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        final SyncToken first = resultToken;
+        // another consumer stored the same token; the old code gave it that token back, so it got this delta forever
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        assertEquals(resultToken, first);
+        assertEquals(sync(resultToken), Collections.emptyList());
+    }
+
+    @Test
+    public void secondSyncWithoutATokenOfAnUnchangedFileReusesItsSnapshot() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final List<File> copies = connectorRecordingCopies(false);
+
+        assertEquals(sync(null), Collections.emptyList());
+        final SyncToken first = resultToken;
+        // the old code failed here: its copy found the snapshot of the first sync in the way
+        assertEquals(sync(null), Collections.emptyList());
+
+        assertEquals(resultToken, first);
+        assertEquals(first.getValue(), csvFile.lastModified());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + first.getValue()));
+        // the snapshot and the copy for the diff, then only the copy for the diff
+        assertEquals(copies.size(), 3);
+    }
+
+    @Test
+    public void failedSyncKeepsTheSnapshotItReused() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        sync(null);
+        final List<String> taken = snapshots();
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> { }));
+
+        assertEquals(snapshots(), taken);
+    }
+
+    @Test
+    public void snapshotTakenMeanwhileByAnotherProcessIsKept() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final Path snapshot = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        // the live row, written differently, so that a replaced snapshot shows
+        final List<String> theirs = Arrays.asList(HEADER, "\"u1\",\"Jane\",\"Doe\",\"pw1\"");
+        final List<File> copies = new ArrayList<>();
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                if (copies.isEmpty()) {
+                    // another process takes the snapshot of this mtime while the sync copies the CSV file for it
+                    Files.write(snapshot, theirs, StandardCharsets.UTF_8);
+                }
+                copies.add(copy);
+                return copy;
+            }
+        });
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> { }));
+
+        assertEquals(Files.readAllLines(snapshot, StandardCharsets.UTF_8), theirs);
+        // the copy that lost the race is deleted
+        assertEquals(snapshots(), Collections.singletonList(snapshot.getFileName().toString()));
     }
 
     @Test

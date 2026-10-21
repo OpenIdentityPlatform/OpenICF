@@ -484,11 +484,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 syncOrigin = new File(config.getCsvFile().getParentFile(),
                         config.getCsvFile().getName() + "." + timestamp);
                 try {
-                    Files.copy(config.getCsvFile().toPath(), syncOrigin.toPath());
+                    // a snapshot of this mtime taken by an earlier sync is the baseline, and not this call's to delete
+                    if (takeSnapshot(syncOrigin)) {
+                        copies.add(syncOrigin);
+                    }
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
-                copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
             scrubSyncFiles();
@@ -682,7 +684,8 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     copies.add(syncOrigin);
                     token = new SyncToken(nextTimestamp);
                 } catch (FileAlreadyExistsException e) {
-                    // the snapshot of this mtime is kept, and so is the token
+                    // taken by an earlier sync of the same changes, such as another consumer's; not added to copies
+                    token = new SyncToken(nextTimestamp);
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
@@ -695,8 +698,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         } finally {
             rwLock.readLock().unlock();
             if (!completed) {
-                // a kept copy could be handed out by getLatestSyncToken,
-                // and it would stop a retry from copying the unchanged live file again
+                // a kept copy could be handed out by getLatestSyncToken
                 for (File copy : copies) {
                     deleteSnapshot(rwLock, copy);
                 }
@@ -1313,6 +1315,32 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 deleteRewriteFile(copy);
             }
         }
+    }
+
+    /**
+     * Takes a snapshot of the CSV file: a complete copy, renamed into place, so that no snapshot is ever seen
+     * half-written. Makes nothing if a snapshot of that name exists, as it holds the same mtime of the CSV file.
+     *
+     * @return whether this call made the snapshot
+     */
+    private boolean takeSnapshot(File snapshot) throws IOException {
+        if (snapshot.exists()) {
+            return false;
+        }
+        final File copy = copyCsvFile();
+        boolean moved = false;
+        try {
+            Files.move(copy.toPath(), snapshot.toPath());
+            moved = true;
+        } catch (FileAlreadyExistsException e) {
+            // taken meanwhile by another process
+        } finally {
+            if (!moved) {
+                // once moved, the name is free again, and createRewriteFile may hand it to a writer
+                deleteRewriteFile(copy);
+            }
+        }
+        return moved;
     }
 
     /**
