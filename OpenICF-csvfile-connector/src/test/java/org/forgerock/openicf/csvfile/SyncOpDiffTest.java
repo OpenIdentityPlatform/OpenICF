@@ -676,6 +676,38 @@ public class SyncOpDiffTest {
                 csvFile.getName() + ".1500000000000", csvFile.getName() + "." + resultToken.getValue()));
     }
 
+    @DataProvider
+    public Object[][] retentionCountsBelowOne() {
+        return new Object[][] { { 0 }, { -1 } };
+    }
+
+    @Test(dataProvider = "retentionCountsBelowOne")
+    public void syncFromATokenKeepsOnlyTheSnapshotItReads(int count) throws Exception {
+        retentionCount = count;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1500000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        // then the sync adds its own
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @Test(dataProvider = "retentionCountsBelowOne")
+    public void syncWithoutATokenKeepsOnlyItsBaseline(int count) throws Exception {
+        retentionCount = count;
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(null), Collections.emptyList());
+
+        // with a count of 1 or more the baseline is the newest snapshot, so only a count below 1 reaches it
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + resultToken.getValue()));
+    }
+
     @Test
     public void syncKeepsTheSnapshotsOfOtherFiles() throws Exception {
         retentionCount = 1;
