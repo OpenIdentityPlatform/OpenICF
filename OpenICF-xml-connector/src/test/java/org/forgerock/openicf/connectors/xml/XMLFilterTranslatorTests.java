@@ -395,6 +395,27 @@ public class XMLFilterTranslatorTests {
                 expression(filterTranslator.createEndsWithExpression(new EndsWithFilter(quote), true)));
     }
 
+    @Test
+    public void numbersAreComparedAsNumbers() {
+        AssertJUnit.assertEquals("$x/ri:age[number(.) > 9]", expression(filterTranslator.createGreaterThanExpression(
+                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[number(.) <= 9]", expression(filterTranslator.createGreaterThanExpression(
+                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), true)));
+        AssertJUnit.assertEquals("$x/ri:age[number(.) < -5]", expression(filterTranslator.createLessThanExpression(
+                new LessThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, -5)), false)));
+        AssertJUnit.assertEquals("$x/ri:ms-employed[. != '' and not(number(.) < xs:double('9007199254740992'))]",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage[. != '' and not(number(.) > xs:double('INF'))]",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, Double.POSITIVE_INFINITY)), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage[. != '' and not(number(.) < xs:double('-INF'))]",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, Double.NEGATIVE_INFINITY)), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'", expression(filterTranslator.createGreaterThanExpression(
+                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+    }
+
     private static String expression(Query query) {
         AssertJUnit.assertEquals(1, query.getParts().size());
         return query.getParts().iterator().next().getExpression();

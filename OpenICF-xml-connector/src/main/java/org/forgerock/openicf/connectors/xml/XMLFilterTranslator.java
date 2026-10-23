@@ -32,6 +32,7 @@ import org.forgerock.openicf.connectors.xml.query.FunctionQuery;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.forgerock.openicf.connectors.xml.query.QueryImpl;
 import org.forgerock.openicf.connectors.xml.util.NamespaceLookupUtil;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -155,20 +156,12 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createGreaterThanExpression(GreaterThanFilter filter, boolean not) {
-        String attrName = getAttributeName(filter.getAttribute());
-        String prefixedName = createNameWithNamespace(attrName);
-        String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
-
-        return createComparisonQuery(prefixedName, not ? "<=" : ">", value);
+        return createOrderingQuery(filter.getAttribute(), not ? "<=" : ">");
     }
 
     @Override
     public Query createGreaterThanOrEqualExpression(GreaterThanOrEqualFilter filter, boolean not) {
-        String attrName = getAttributeName(filter.getAttribute());
-        String prefixedName = createNameWithNamespace(attrName);
-        String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
-
-        return createComparisonQuery(prefixedName, not ? "<" : ">=", value);
+        return createOrderingQuery(filter.getAttribute(), not ? "<" : ">=");
     }
 
     @Override
@@ -187,20 +180,70 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     @Override
     public Query createLessThanExpression(LessThanFilter filter, boolean not) {
-        String attrName = getAttributeName(filter.getAttribute());
-        String prefixedName = createNameWithNamespace(attrName);
-        String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
-
-        return createComparisonQuery(prefixedName, not ? ">=" : "<", value);
+        return createOrderingQuery(filter.getAttribute(), not ? ">=" : "<");
     }
 
     @Override
     public Query createLessThanOrEqualExpression(LessThanOrEqualFilter filter, boolean not) {
-        String attrName = getAttributeName(filter.getAttribute());
-        String prefixedName = createNameWithNamespace(attrName);
-        String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
+        return createOrderingQuery(filter.getAttribute(), not ? ">" : "<=");
+    }
 
-        return createComparisonQuery(prefixedName, not ? ">" : "<=", value);
+    /** {@code attribute operator value}: numerically for a {@link Number} value, as strings otherwise. */
+    private Query createOrderingQuery(Attribute attribute, String operator) {
+        String prefixedName = createNameWithNamespace(getAttributeName(attribute));
+        Object value = AttributeUtil.getSingleValue(attribute);
+
+        if (value instanceof Number) {
+            return createPredicateQuery(prefixedName, numericCondition(operator, (Number) value), false);
+        }
+        return createComparisonQuery(prefixedName, operator, value.toString());
+    }
+
+    /**
+     * The condition a stored value meets if {@code value operator bound} may hold, where
+     * {@code operator} is one of {@code >}, {@code >=}, {@code <} and {@code <=}.
+     * <p>
+     * An integer bound of magnitude below 2^53 is compared directly, {@code number(.) > 9}: it is
+     * a double, and no other integer reads as it. Any other bound gives the non-strict form
+     * {@code . != '' and not(number(.) < xs:double('L'))} (for {@code >} and
+     * {@code >=}; mirrored for {@code <} and {@code <=}), which keeps every value the framework
+     * selects and only adds values equal to the bound:
+     * <ul>
+     * <li>Reading a decimal as a double is monotonic, so a value above the bound never reads
+     * below it.</li>
+     * <li>Text that Java parses and XPath does not, such as {@code Infinity}, reads as NaN, and
+     * {@code not(NaN < x)} holds.</li>
+     * <li>{@code -0.0} and {@code 0.0} are equal in XPath.</li>
+     * <li>{@code . != ''} skips the empty elements of unset attributes.</li>
+     * </ul>
+     * The literal is the value's own {@code toString()}, so a {@link Float} bound stays the float
+     * it is instead of widening to a double just above or below it.
+     */
+    static String numericCondition(String operator, Number value) {
+        if (isExactInDouble(value)) {
+            return "number(.) " + operator + " " + value;
+        }
+        String bound = "xs:double('" + value.toString().replace("Infinity", "INF") + "')";
+        String opposite = operator.startsWith(">") ? "<" : ">";
+
+        return ". != '' and not(number(.) " + opposite + " " + bound + ")";
+    }
+
+    /** Whether the value is an integer of magnitude below 2^53, which every double holds exactly. */
+    static boolean isExactInDouble(Number value) {
+        if (value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            return true;
+        }
+        if (value instanceof Long) {
+            long v = value.longValue();
+            // Not Math.abs: it overflows on Long.MIN_VALUE.
+            return -(1L << 53) < v && v < (1L << 53);
+        }
+        if (value instanceof BigInteger) {
+            // abs(): the signed bitLength() of -2^53 is 53.
+            return ((BigInteger) value).abs().bitLength() <= 53;
+        }
+        return false;
     }
 
     private Query createComparisonQuery(String name, String operator, String value) {

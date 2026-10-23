@@ -29,6 +29,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -130,6 +132,33 @@ public class XMLFilterSearchTests {
                 {not(startsWith(attribute(ATTR_ACCOUNT_EMAIL, "y"))), asList("a1", "a4", "a5")},
                 {endsWith(attribute(ATTR_ACCOUNT_EMAIL, "3")), asList("a3")},
                 {not(endsWith(attribute(ATTR_ACCOUNT_EMAIL, "3"))), asList("a1", "a2", "a4", "a5")},
+                // Numbers are compared as numbers: as strings, '10' < '9'. a4 has an empty age.
+                {greaterThan(attribute(ATTR_ACCOUNT_AGE, 9)), asList("a1")},
+                {greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 9)), asList("a1", "a2")},
+                {lessThan(attribute(ATTR_ACCOUNT_AGE, 10)), asList("a2", "a3")},
+                {lessThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 10)), asList("a1", "a2", "a3")},
+                {not(greaterThan(attribute(ATTR_ACCOUNT_AGE, 10))), asList("a1", "a2", "a3")},
+                {not(greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 10))), asList("a2", "a3")},
+                {not(lessThan(attribute(ATTR_ACCOUNT_AGE, 9))), asList("a1", "a2")},
+                {not(lessThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 9))), asList("a1")},
+                // Integers are compared exactly only inside (-2^53, 2^53); 2^53 + 1 reads as 2^53.
+                {greaterThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), asList("a1", "a2")},
+                {greaterThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740991L)), asList("a1", "a2")},
+                {lessThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, -9007199254740992L)), asList("a4", "a5")},
+                {greaterThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, Long.MIN_VALUE)),
+                        asList("a1", "a2", "a3", "a4", "a5")},
+                {lessThan(attribute(ATTR_ACCOUNT_LAST_LOGOFF_DATE, new BigInteger("-9007199254740992"))),
+                        asList("a4")},
+                {greaterThan(attribute(ATTR_ACCOUNT_LAST_LOGOFF_DATE, new BigInteger("9007199254740991"))),
+                        asList("a1", "a2")},
+                // Other numbers keep every value that is not on the wrong side of the bound.
+                {greaterThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, 5.0)), asList("a1", "a2", "a3")},
+                {lessThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, Double.POSITIVE_INFINITY)),
+                        asList("a1", "a2", "a3", "a5")},
+                {greaterThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, -0.0)), asList("a1", "a2", "a3", "a5")},
+                {greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, 0.1f)), asList("a1", "a2")},
+                {greaterThan(attribute(ATTR_ACCOUNT_MAX_STORAGE, new BigDecimal("0.10000000000000000001"))),
+                        asList("a1", "a2", "a3")},
         };
     }
 
