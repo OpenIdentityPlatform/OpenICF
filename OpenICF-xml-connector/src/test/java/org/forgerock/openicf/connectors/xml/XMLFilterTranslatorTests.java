@@ -358,6 +358,77 @@ public class XMLFilterTranslatorTests {
                 new EqualsFilter(AttributeBuilder.build(ATTR_NAME, "x")), true)));
         AssertJUnit.assertEquals("$x/ri:lastname >= 'M'", expression(filterTranslator.createGreaterThanOrEqualExpression(
                 new GreaterThanOrEqualFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage = '9.5'", expression(filterTranslator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, 9.5)), false)));
+    }
+
+    @Test
+    public void orderingNegationsKeepTheBound() {
+        Attribute m = AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M");
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname <= 'M'",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname >= 'M'",
+                expression(filterTranslator.createGreaterThanOrEqualExpression(new GreaterThanOrEqualFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname < 'M'",
+                expression(filterTranslator.createGreaterThanOrEqualExpression(new GreaterThanOrEqualFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname < 'M'",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname >= 'M'",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname <= 'M'",
+                expression(filterTranslator.createLessThanOrEqualExpression(new LessThanOrEqualFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'",
+                expression(filterTranslator.createLessThanOrEqualExpression(new LessThanOrEqualFilter(m), true)));
+    }
+
+    @Test
+    public void startsWithAndEndsWithTestEachValue() {
+        Attribute y = AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "y");
+        Attribute quote = AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "O'B");
+        AssertJUnit.assertEquals("$x/ri:email[fn:starts-with(., 'y')]",
+                expression(filterTranslator.createStartsWithExpression(new StartsWithFilter(y), false)));
+        AssertJUnit.assertEquals("fn:not($x/ri:email[fn:starts-with(., 'y')])",
+                expression(filterTranslator.createStartsWithExpression(new StartsWithFilter(y), true)));
+        AssertJUnit.assertEquals("$x/ri:email[fn:ends-with(., 'O''B')]",
+                expression(filterTranslator.createEndsWithExpression(new EndsWithFilter(quote), false)));
+        AssertJUnit.assertEquals("fn:not($x/ri:email[fn:ends-with(., 'O''B')])",
+                expression(filterTranslator.createEndsWithExpression(new EndsWithFilter(quote), true)));
+    }
+
+    @Test
+    public void numbersAreComparedAsNumbers() {
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) <= xs:double('9'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) > xs:double('9'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), true)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) >= xs:double('-5'))]",
+                expression(filterTranslator.createLessThanExpression(
+                        new LessThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, -5)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) <= xs:double('5'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, (byte) 5)), false)));
+        AssertJUnit.assertEquals("$x/ri:ms-employed[. != '' and not(number(.) < xs:double('9007199254740992'))]",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage[. != '' and not(number(.) > xs:double('INF'))]",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, Double.POSITIVE_INFINITY)), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage[. != '' and not(number(.) < xs:double('-INF'))]",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
+                        AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, Double.NEGATIVE_INFINITY)), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'", expression(filterTranslator.createGreaterThanExpression(
+                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+    }
+
+    @Test
+    public void floatBoundsUseTheEndsOfTheRoundingInterval() {
+        // 0.125f is a power of two: the float below it is 2^-27 away, the float above 2^-26.
+        AssertJUnit.assertEquals(0.125 - 0x1p-28, XMLFilterTranslator.roundingEdge(0.125f, true), 0.0);
+        AssertJUnit.assertEquals(0.125 + 0x1p-27, XMLFilterTranslator.roundingEdge(0.125f, false), 0.0);
     }
 
     private static String expression(Query query) {
