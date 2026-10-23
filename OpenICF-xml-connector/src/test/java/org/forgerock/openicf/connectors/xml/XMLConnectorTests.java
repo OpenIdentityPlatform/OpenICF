@@ -34,6 +34,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
@@ -44,6 +46,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
@@ -548,8 +551,9 @@ public class XMLConnectorTests {
         File sameFile = new File(file.getParentFile(), "." + File.separator + file.getName());
         String key = file.getCanonicalPath();
         SearchBlockingHandler stub = new SearchBlockingHandler();
+        ConcurrentXMLHandler shared = new ConcurrentXMLHandler(stub);
         synchronized (XMLConnector.class) {
-            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(stub));
+            XMLConnector.XMLHandlerCache.put(key, shared);
         }
         XMLConnector first = new XMLConnector();
         XMLConnector second = new XMLConnector();
@@ -561,8 +565,18 @@ public class XMLConnectorTests {
             Future<?> a = executor.submit(() -> first.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
             AssertJUnit.assertTrue(stub.firstIn.await(10, TimeUnit.SECONDS));
 
-            Future<?> b = executor.submit(() -> second.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
-            AssertJUnit.assertFalse(stub.entries.await(500, TimeUnit.MILLISECONDS)); // the second search waits for the first
+            AtomicReference<Thread> secondThread = new AtomicReference<>();
+            Future<?> b = executor.submit(() -> {
+                secondThread.set(Thread.currentThread());
+                second.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null);
+            });
+            // Wait until the second search either blocks on the file's shared handler or reaches the stub.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (stub.entries.getCount() == 1 && !blockedOn(secondThread.get(), shared)) {
+                AssertJUnit.assertTrue("the second search neither blocked nor started", System.nanoTime() < deadline);
+                Thread.sleep(1);
+            }
+            AssertJUnit.assertEquals(1L, stub.entries.getCount()); // the second search waits for the first
 
             stub.release.countDown();
             a.get(10, TimeUnit.SECONDS);
@@ -610,6 +624,15 @@ public class XMLConnectorTests {
                 XMLConnector.XMLHandlerCache.remove(key);
             }
         }
+    }
+
+    private static boolean blockedOn(Thread thread, Object monitor) {
+        if (thread == null || thread.getState() != Thread.State.BLOCKED) {
+            return false;
+        }
+        ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.getId());
+        return info != null && info.getLockInfo() != null
+                && info.getLockInfo().getIdentityHashCode() == System.identityHashCode(monitor);
     }
 
     private static XMLConfiguration configFor(File xmlFile) {
