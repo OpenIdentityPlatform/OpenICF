@@ -695,6 +695,26 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void existingSnapshotOfTheCopiedMtimeDeletedMeanwhileIsLogged() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // a link to no file holds the name, so the move finds the snapshot, which then reads as deleted meanwhile
+        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        try {
+            Files.createSymbolicLink(existing, dir.resolve("gone"));
+        } catch (UnsupportedOperationException | IOException e) {
+            throw new SkipException("A symbolic link cannot be created here", e);
+        }
+        connector();
+
+        final String output = captureStdOut(() -> assertEquals(sync(SNAPSHOT_TOKEN),
+                Collections.singletonList("DELETE d [John, Roe, pw2]")));
+
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertTrue(output.contains("Could not compare " + existing.toFile()), output);
+    }
+
+    @Test
     public void failedSyncKeepsTheExistingSnapshotOfTheCopiedMtime() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");

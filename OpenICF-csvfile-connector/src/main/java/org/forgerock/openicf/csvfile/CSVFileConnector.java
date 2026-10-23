@@ -1384,14 +1384,14 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
 
     /**
      * Whether an existing snapshot holds the same bytes as a copy of the CSV file. A snapshot that cannot be read,
-     * such as one deleted meanwhile in another JVM, does not.
+     * such as one deleted meanwhile in another JVM, does not, and is logged.
      */
     private static boolean sameBytes(File snapshot, File copy) {
-        if (snapshot.length() != copy.length()) {
-            return false;
-        }
         try (InputStream in = Files.newInputStream(snapshot.toPath());
                 InputStream other = Files.newInputStream(copy.toPath())) {
+            if (Files.size(snapshot.toPath()) != Files.size(copy.toPath())) {
+                return false;
+            }
             final byte[] buffer = new byte[8192];
             final byte[] otherBuffer = new byte[buffer.length];
             int length;
