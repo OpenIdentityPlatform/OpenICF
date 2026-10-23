@@ -358,6 +358,8 @@ public class XMLFilterTranslatorTests {
                 new EqualsFilter(AttributeBuilder.build(ATTR_NAME, "x")), true)));
         AssertJUnit.assertEquals("$x/ri:lastname >= 'M'", expression(filterTranslator.createGreaterThanOrEqualExpression(
                 new GreaterThanOrEqualFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+        AssertJUnit.assertEquals("$x/ri:hourly-wage = '9.5'", expression(filterTranslator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, 9.5)), false)));
     }
 
     @Test
@@ -406,6 +408,9 @@ public class XMLFilterTranslatorTests {
         AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) >= xs:double('-5'))]",
                 expression(filterTranslator.createLessThanExpression(
                         new LessThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, -5)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) <= xs:double('5'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, (byte) 5)), false)));
         AssertJUnit.assertEquals("$x/ri:ms-employed[. != '' and not(number(.) < xs:double('9007199254740992'))]",
                 expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
                         AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), false)));
@@ -417,6 +422,13 @@ public class XMLFilterTranslatorTests {
                         AttributeBuilder.build(ATTR_ACCOUNT_HOURLY_WAGE, Double.NEGATIVE_INFINITY)), false)));
         AssertJUnit.assertEquals("$x/ri:lastname > 'M'", expression(filterTranslator.createGreaterThanExpression(
                 new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
+    }
+
+    @Test
+    public void floatBoundsUseTheEndsOfTheRoundingInterval() {
+        // 0.125f is a power of two: the float below it is 2^-27 away, the float above 2^-26.
+        AssertJUnit.assertEquals(0.125 - 0x1p-28, XMLFilterTranslator.roundingEdge(0.125f, true), 0.0);
+        AssertJUnit.assertEquals(0.125 + 0x1p-27, XMLFilterTranslator.roundingEdge(0.125f, false), 0.0);
     }
 
     private static String expression(Query query) {
