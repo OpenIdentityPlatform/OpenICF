@@ -161,7 +161,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
-        return createComparisonQuery(prefixedName, not ? "<" : ">", value);
+        return createComparisonQuery(prefixedName, not ? "<=" : ">", value);
     }
 
     @Override
@@ -170,7 +170,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
-        return createComparisonQuery(prefixedName, not ? "<=" : ">=", value);
+        return createComparisonQuery(prefixedName, not ? "<" : ">=", value);
     }
 
     @Override
@@ -193,7 +193,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
-        return createComparisonQuery(prefixedName, not ? ">" : "<", value);
+        return createComparisonQuery(prefixedName, not ? ">=" : "<", value);
     }
 
     @Override
@@ -202,7 +202,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
-        return createComparisonQuery(prefixedName, not ? ">=" : "<=", value);
+        return createComparisonQuery(prefixedName, not ? ">" : "<=", value);
     }
 
     private Query createComparisonQuery(String name, String operator, String value) {

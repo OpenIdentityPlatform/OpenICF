@@ -360,6 +360,27 @@ public class XMLFilterTranslatorTests {
                 new GreaterThanOrEqualFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M")), false)));
     }
 
+    @Test
+    public void orderingNegationsKeepTheBound() {
+        Attribute m = AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "M");
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname <= 'M'",
+                expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname >= 'M'",
+                expression(filterTranslator.createGreaterThanOrEqualExpression(new GreaterThanOrEqualFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname < 'M'",
+                expression(filterTranslator.createGreaterThanOrEqualExpression(new GreaterThanOrEqualFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname < 'M'",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname >= 'M'",
+                expression(filterTranslator.createLessThanExpression(new LessThanFilter(m), true)));
+        AssertJUnit.assertEquals("$x/ri:lastname <= 'M'",
+                expression(filterTranslator.createLessThanOrEqualExpression(new LessThanOrEqualFilter(m), false)));
+        AssertJUnit.assertEquals("$x/ri:lastname > 'M'",
+                expression(filterTranslator.createLessThanOrEqualExpression(new LessThanOrEqualFilter(m), true)));
+    }
+
     private static String expression(Query query) {
         AssertJUnit.assertEquals(1, query.getParts().size());
         return query.getParts().iterator().next().getExpression();
