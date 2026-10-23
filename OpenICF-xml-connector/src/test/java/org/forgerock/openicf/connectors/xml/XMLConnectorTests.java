@@ -542,6 +542,43 @@ public class XMLConnectorTests {
         }
     }
 
+    @Test(timeOut = 60_000L)
+    public void searchesOnOneFileStillTakeTurnsBuildingResults() throws Exception {
+        File file = getRandomXMLFile();
+        File sameFile = new File(file.getParentFile(), "." + File.separator + file.getName());
+        String key = file.getCanonicalPath();
+        SearchBlockingHandler stub = new SearchBlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(stub));
+        }
+        XMLConnector first = new XMLConnector();
+        XMLConnector second = new XMLConnector();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            // Both load before the first search blocks: init() takes the handler's write lock.
+            first.init(configFor(file));
+            second.init(configFor(sameFile));
+            Future<?> a = executor.submit(() -> first.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
+            AssertJUnit.assertTrue(stub.firstIn.await(10, TimeUnit.SECONDS));
+
+            Future<?> b = executor.submit(() -> second.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
+            AssertJUnit.assertFalse(stub.entries.await(500, TimeUnit.MILLISECONDS)); // the second search waits for the first
+
+            stub.release.countDown();
+            a.get(10, TimeUnit.SECONDS);
+            b.get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertEquals(0L, stub.entries.getCount());
+        } finally {
+            stub.release.countDown();
+            executor.shutdownNow();
+            first.dispose();
+            second.dispose();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
     private static XMLConfiguration configFor(File xmlFile) {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(xmlFile);
@@ -551,7 +588,7 @@ public class XMLConnectorTests {
     }
 
     /** A handler whose init() blocks until released. */
-    private static final class BlockingHandler implements XMLHandler {
+    private static final class BlockingHandler extends StubHandler {
         final CountDownLatch entered = new CountDownLatch(1);
         final CountDownLatch release = new CountDownLatch(1);
 
@@ -563,6 +600,34 @@ public class XMLConnectorTests {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            return this;
+        }
+    }
+
+    /** A handler whose search(Query, ObjectClass) counts each caller in and blocks until released. */
+    private static final class SearchBlockingHandler extends StubHandler {
+        final CountDownLatch firstIn = new CountDownLatch(1);
+        final CountDownLatch entries = new CountDownLatch(2);
+        final CountDownLatch release = new CountDownLatch(1);
+
+        @Override
+        public Collection<ConnectorObject> search(Query query, ObjectClass objectClass) {
+            firstIn.countDown();
+            entries.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return Collections.<ConnectorObject>emptyList();
+        }
+    }
+
+    /** A handler that loads and releases nothing and supports no operation. */
+    private static class StubHandler implements XMLHandler {
+
+        @Override
+        public XMLHandler init() {
             return this;
         }
 

@@ -58,8 +58,12 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     static final Map<String, ConcurrentXMLHandler> XMLHandlerCache = new HashMap<String, ConcurrentXMLHandler>(1);
     private XMLConfiguration config;
     private XMLHandler xmlInstanceHandler = null;
-
-    private static Map<String, Object> lockMap = new HashMap<String, Object>();
+    /**
+     * The file's shared {@link ConcurrentXMLHandler}: there is one per canonical path, created
+     * under {@code XMLConnector.class}, so every connector instance on the file synchronizes on
+     * the same object.
+     */
+    private Object fileLock;
 
     /*
      * (non-Javadoc)
@@ -93,6 +97,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
             throw new ConnectorIOException(ex);
         }
         // Outside the class monitor: loading one file, or waiting while another call saves it, must not hold up connectors on other files.
+        fileLock = handler;
         xmlInstanceHandler = handler.init();
         log.info("XMLConnector initialized");
     }
@@ -117,16 +122,6 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
         }
         log.ok("Dispose {0}", config != null ? config.getXmlFilePath() : null);
     }
-    
-    private synchronized Object getLock() {
-        String filename = config.getXmlFilePath().getAbsolutePath();
-        Object lock = lockMap.get(filename);
-        if (lock == null) {
-            lock = new Object();
-            lockMap.put(filename, lock);
-        }
-        return lock;
-    }
 
     @Override
     public Uid authenticate(final ObjectClass objClass, final String username, final GuardedString password, final OperationOptions options) {
@@ -149,7 +144,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public Uid create(final ObjectClass objClass, final Set<Attribute> attributes, final OperationOptions options) {
-        synchronized (getLock()) {
+        synchronized (fileLock) {
             Assertions.nullCheck(objClass, "objectClass");
             Assertions.nullCheck(attributes, "attributes");
             Uid returnUid = xmlInstanceHandler.create(objClass, attributes);
@@ -164,7 +159,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public Uid update(ObjectClass objClass, Uid uid, Set<Attribute> replaceAttributes, OperationOptions options) {
-        synchronized (getLock()) {
+        synchronized (fileLock) {
             Assertions.nullCheck(objClass, "objectClass");
             Assertions.nullCheck(uid, "attributes");
             Uid returnUid = xmlInstanceHandler.update(objClass, uid,
@@ -180,7 +175,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public void delete(final ObjectClass objClass, final Uid uid, final OperationOptions options) {
-        synchronized (getLock()) {
+        synchronized (fileLock) {
             Assertions.nullCheck(objClass, "objectClass");
             Assertions.nullCheck(uid, "uid");
             xmlInstanceHandler.delete(objClass, uid);
@@ -214,7 +209,7 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
     @Override
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
         Collection<ConnectorObject> hits;
-        synchronized (getLock()) {
+        synchronized (fileLock) {
             hits = xmlInstanceHandler.search(query, objClass);
         }
         // Outside the lock: the hits are finished objects, and a slow handler must not hold up changes to the file.
