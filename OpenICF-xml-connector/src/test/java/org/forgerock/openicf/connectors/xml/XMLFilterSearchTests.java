@@ -17,11 +17,13 @@ package org.forgerock.openicf.connectors.xml;
 
 import static java.util.Arrays.asList;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.endsWith;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThan;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThanOrEqualTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.lessThan;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.lessThanOrEqualTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.not;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.startsWith;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -122,6 +124,12 @@ public class XMLFilterSearchTests {
                 {not(lessThan(attribute(ATTR_ACCOUNT_LAST_NAME, "M"))), asList("a2", "a3")},
                 {not(greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_LAST_NAME, "M"))), asList("a1", "a4", "a5")},
                 {not(lessThanOrEqualTo(attribute(ATTR_ACCOUNT_LAST_NAME, "M"))), asList("a3")},
+                // startsWith and endsWith test each value: a2 has two emails. The framework never
+                // matches a multi-valued attribute here, so a2 is an extra match it drops.
+                {startsWith(attribute(ATTR_ACCOUNT_EMAIL, "y")), asList("a2", "a3")},
+                {not(startsWith(attribute(ATTR_ACCOUNT_EMAIL, "y"))), asList("a1", "a4", "a5")},
+                {endsWith(attribute(ATTR_ACCOUNT_EMAIL, "3")), asList("a3")},
+                {not(endsWith(attribute(ATTR_ACCOUNT_EMAIL, "3"))), asList("a1", "a2", "a4", "a5")},
         };
     }
 

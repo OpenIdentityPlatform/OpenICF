@@ -80,9 +80,8 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
-        String[] args = createFunctionArgs(prefixedName, value);
 
-        return createFunctionQuery(args, "ends-with", not);
+        return createPredicateQuery(prefixedName, createFunctionCondition("ends-with", value), not);
     }
 
     @Override
@@ -128,9 +127,8 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
-        String[] args = createFunctionArgs(prefixedName, value);
 
-        return createFunctionQuery(args, "starts-with", not);
+        return createPredicateQuery(prefixedName, createFunctionCondition("starts-with", value), not);
     }
 
     @Override
@@ -212,17 +210,22 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         return query;
     }
 
-    private Query createFunctionQuery(String[] args, String function, boolean not) {
+    /**
+     * Matches an entry if one of its values meets the condition: {@code $x/name[condition]}, with
+     * {@code .} standing for the value. Unlike {@code fn:starts-with($x/name, ...)}, this does not
+     * fail when an entry has several values.
+     */
+    private Query createPredicateQuery(String name, String condition, boolean not) {
+        String predicate = "$x/" + name + "[" + condition + "]";
+        String expression = not ? "fn:not(" + predicate + ")" : predicate;
         Query query = new QueryImpl();
-        query.set(new FunctionQuery(args, function, not));
+        query.set(() -> expression);
 
         return query;
     }
 
-    private String[] createFunctionArgs(String attrName, String value) {
-        String[] args = {"$x/" + attrName, escape(value)};
-
-        return args;
+    private String createFunctionCondition(String function, String value) {
+        return new FunctionQuery(new String[] {".", escape(value)}, function, false).getExpression();
     }
 
     private String createNameWithNamespace(String attrName) {

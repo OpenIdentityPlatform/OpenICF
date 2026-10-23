@@ -381,6 +381,20 @@ public class XMLFilterTranslatorTests {
                 expression(filterTranslator.createLessThanOrEqualExpression(new LessThanOrEqualFilter(m), true)));
     }
 
+    @Test
+    public void startsWithAndEndsWithTestEachValue() {
+        Attribute y = AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "y");
+        Attribute quote = AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "O'B");
+        AssertJUnit.assertEquals("$x/ri:email[fn:starts-with(., 'y')]",
+                expression(filterTranslator.createStartsWithExpression(new StartsWithFilter(y), false)));
+        AssertJUnit.assertEquals("fn:not($x/ri:email[fn:starts-with(., 'y')])",
+                expression(filterTranslator.createStartsWithExpression(new StartsWithFilter(y), true)));
+        AssertJUnit.assertEquals("$x/ri:email[fn:ends-with(., 'O''B')]",
+                expression(filterTranslator.createEndsWithExpression(new EndsWithFilter(quote), false)));
+        AssertJUnit.assertEquals("fn:not($x/ri:email[fn:ends-with(., 'O''B')])",
+                expression(filterTranslator.createEndsWithExpression(new EndsWithFilter(quote), true)));
+    }
+
     private static String expression(Query query) {
         AssertJUnit.assertEquals(1, query.getParts().size());
         return query.getParts().iterator().next().getExpression();
