@@ -207,7 +207,8 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
      * a double, and no other integer reads as it. Any other bound gives the non-strict form
      * {@code . != '' and not(number(.) < xs:double('L'))} (for {@code >} and
      * {@code >=}; mirrored for {@code <} and {@code <=}), which keeps every value the framework
-     * selects and only adds values equal to the bound:
+     * selects. It adds the values that read as equal to the bound, and text XPath cannot read as
+     * a number:
      * <ul>
      * <li>Reading a decimal as a double is monotonic, so a value above the bound never reads
      * below it.</li>
@@ -216,17 +217,29 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
      * <li>{@code -0.0} and {@code 0.0} are equal in XPath.</li>
      * <li>{@code . != ''} skips the empty elements of unset attributes.</li>
      * </ul>
-     * The literal is the value's own {@code toString()}, so a {@link Float} bound stays the float
-     * it is instead of widening to a double just above or below it.
+     * The literal is the value's own {@code toString()}, except for a {@link Float}: see
+     * {@link #roundingEdge}.
      */
     static String numericCondition(String operator, Number value) {
         if (isExactInDouble(value)) {
             return "number(.) " + operator + " " + value;
         }
-        String bound = "xs:double('" + value.toString().replace("Infinity", "INF") + "')";
-        String opposite = operator.startsWith(">") ? "<" : ">";
+        boolean lower = operator.startsWith(">");
+        String literal = value instanceof Float
+                ? Double.toString(roundingEdge((Float) value, lower)) : value.toString();
+        String bound = "xs:double('" + literal.replace("Infinity", "INF") + "')";
 
-        return ". != '' and not(number(.) " + opposite + " " + bound + ")";
+        return ". != '' and not(number(.) " + (lower ? "<" : ">") + " " + bound + ")";
+    }
+
+    /**
+     * The lower or upper end of the decimals Java reads as the float, exact as a double. XPath
+     * reads a stored float as a double, and its text may be any of those decimals: before
+     * JDK 19, {@code Float.toString} wrote some floats with more digits, such as
+     * {@code 3.3565272E7} for what it now writes as {@code 3.356527E7}.
+     */
+    static double roundingEdge(float value, boolean lower) {
+        return lower ? ((double) Math.nextDown(value) + value) / 2 : ((double) value + Math.nextUp(value)) / 2;
     }
 
     /** Whether the value is an integer of magnitude below 2^53, which every double holds exactly. */

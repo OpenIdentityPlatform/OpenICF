@@ -89,14 +89,17 @@ public class XMLFilterSearchTests {
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "Infinity"),
                         element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.05"),
                         element(ATTR_ACCOUNT_MAX_STORAGE, "0.1")))
-                // Empty elements, as create writes them for unset attributes.
+                // Empty elements, as create writes them for unset attributes. The office-square-feet
+                // of a4 and a5 read as 0.1f, but are not the text Float.toString writes for it.
                 .append(account("a4", element(ATTR_ACCOUNT_LAST_NAME, "B"), emptyElement(ATTR_ACCOUNT_AGE),
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "-9007199254740993"),
                         element(ATTR_ACCOUNT_LAST_LOGOFF_DATE, "-9007199254740993"),
-                        emptyElement(ATTR_ACCOUNT_HOURLY_WAGE)))
+                        emptyElement(ATTR_ACCOUNT_HOURLY_WAGE),
+                        element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.1000000025")))
                 .append(account("a5", element(ATTR_ACCOUNT_LAST_NAME, "C"),
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "-9223372036854775807"),
-                        element(ATTR_ACCOUNT_HOURLY_WAGE, "0.0")))
+                        element(ATTR_ACCOUNT_HOURLY_WAGE, "0.0"),
+                        element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.099999999")))
                 .append("</icf:OpenICFContainer>\n");
         Files.write(file.toPath(), xml.toString().getBytes(StandardCharsets.UTF_8));
 
@@ -156,7 +159,13 @@ public class XMLFilterSearchTests {
                 {lessThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, Double.POSITIVE_INFINITY)),
                         asList("a1", "a2", "a3", "a5")},
                 {greaterThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, -0.0)), asList("a1", "a2", "a3", "a5")},
-                {greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, 0.1f)), asList("a1", "a2")},
+                {lessThanOrEqualTo(attribute(ATTR_ACCOUNT_HOURLY_WAGE, 5.0)), asList("a2", "a3", "a5")},
+                {not(greaterThan(attribute(ATTR_ACCOUNT_HOURLY_WAGE, 5.0))), asList("a2", "a3", "a5")},
+                // A float bound covers every decimal Java reads as that float.
+                {greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, 0.1f)),
+                        asList("a1", "a2", "a4", "a5")},
+                {lessThanOrEqualTo(attribute(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, 0.1f)),
+                        asList("a1", "a3", "a4", "a5")},
                 {greaterThan(attribute(ATTR_ACCOUNT_MAX_STORAGE, new BigDecimal("0.10000000000000000001"))),
                         asList("a1", "a2", "a3")},
         };
