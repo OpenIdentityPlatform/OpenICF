@@ -765,6 +765,43 @@ public class SyncOpDiffTest {
                 csvFile.getName() + ".1500000000000", csvFile.getName() + "." + resultToken.getValue()));
     }
 
+    @Test
+    public void syncKeepsTheTokenOfAnotherConsumerWhenTheCsvFileMtimeMovesBack() throws Exception {
+        retentionCount = 2;
+        // the tokens of consumers B and A, each taken while the CSV file had the mtime in its name
+        final SyncToken tokenOfA = new SyncToken(1400000000000L);
+        givenSnapshotTakenAt(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3");
+        givenSnapshotTakenAt(tokenOfA, HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        // then the CSV file is replaced by one with an older mtime, such as by a restore from a backup
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        Files.setLastModifiedTime(csvFile.toPath(), FileTime.fromMillis(1200000000000L));
+
+        assertEquals(sync(tokenOfA), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        final SyncToken nextOfA = resultToken;
+        assertEquals(nextOfA.getValue(), 1200000000000L);
+        // B's scrub spares the snapshot it reads, the one taken first; ordered by name, it deleted A's
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+        assertEquals(snapshots().size(), 3);
+
+        assertEquals(sync(nextOfA), Collections.emptyList());
+    }
+
+    @Test
+    public void snapshotsTakenInOneTickAreScrubbedInTheOrderOfTheirNames() throws Exception {
+        retentionCount = 2;
+        // a file system clock that ticks once a second or slower gives snapshots taken in a row one mtime
+        final FileTime tick = FileTime.fromMillis(1500000000000L);
+        for (Object mtime : Arrays.asList(1100000000000L, 1200000000000L, SNAPSHOT_TOKEN.getValue())) {
+            Files.setLastModifiedTime(givenFile(csvFile.getName() + "." + mtime, HEADER, "k,Ann,Poe,pw3"), tick);
+        }
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + ".1200000000000",
+                csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
     @DataProvider
     public Object[][] retentionCountsBelowOne() {
         return new Object[][] { { 0 }, { -1 } };
@@ -874,6 +911,20 @@ public class SyncOpDiffTest {
         // the first sync from the token reports a change made after the call; the old code lost it
         givenLive(HEADER, "k,Ann,Poe,pw3", "c,Jane,Doe,pw1");
         assertEquals(sync(token), Collections.singletonList("CREATE c [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void latestSyncTokenIsThatOfTheSnapshotTakenLast() throws Exception {
+        givenSnapshotTakenAt(new SyncToken(1400000000000L), HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        // taken now, after the CSV file was replaced by one with an older mtime
+        givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        // the token of the newest name reported a delete made before the call, and the scrub deleted it first
+        assertEquals(token.getValue(), 1200000000000L);
+        assertEquals(sync(token), Collections.emptyList());
     }
 
     @Test
@@ -1116,6 +1167,12 @@ public class SyncOpDiffTest {
 
     private Path givenFile(String name, String... lines) throws IOException {
         return Files.write(dir.resolve(name), Arrays.asList(lines), StandardCharsets.UTF_8);
+    }
+
+    // a snapshot gets the time of its copy as its mtime, here the mtime of the CSV file that its name holds
+    private void givenSnapshotTakenAt(SyncToken token, String... lines) throws IOException {
+        Files.setLastModifiedTime(givenFile(csvFile.getName() + "." + token.getValue(), lines),
+                FileTime.fromMillis((Long) token.getValue()));
     }
 
     // the connector logs through StdOutLogger, which reads System.out on every call

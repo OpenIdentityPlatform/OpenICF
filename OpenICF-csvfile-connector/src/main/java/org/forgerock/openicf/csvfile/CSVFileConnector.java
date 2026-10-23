@@ -728,9 +728,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
         lock.lock();
         try {
-            final TreeMap<Long, File> snapshots = listSnapshots();
+            final List<Map.Entry<Long, File>> snapshots = listSnapshots();
             if (!snapshots.isEmpty()) {
-                return new SyncToken(snapshots.lastKey());
+                // the snapshot taken last, which the scrub keeps longest
+                return new SyncToken(snapshots.get(snapshots.size() - 1).getKey());
             }
             // every token handed out has a snapshot, so the first sync from it reports every change made since
             final long timestamp = config.getCsvFile().lastModified();
@@ -1051,40 +1052,51 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     /**
-     * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, oldest first. The name is matched
-     * exactly, so the snapshots of another CSV file in the same directory are never listed.
+     * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, each by its token, the mtime in its
+     * name, in the order they were taken. The name is matched exactly, so the snapshots of another CSV file in the
+     * same directory are never listed. A snapshot is a copy made without the attributes of the CSV file and renamed
+     * into place, so its own mtime is the time of its copy; its name follows that order only as long as the mtime of
+     * the CSV file never moves back, as it does on a restore from a backup. Snapshots of one own mtime, such as those
+     * taken in one tick of a coarse file system clock, keep the order of their names.
      */
-    private TreeMap<Long, File> listSnapshots() {
+    private List<Map.Entry<Long, File>> listSnapshots() {
         final File dataDir = config.getCsvFile().getAbsoluteFile().getParentFile();
         final String[] names = dataDir.list();
         if (names == null) {
             throw new ConnectorIOException("Unable to list the files of " + dataDir);
         }
         final Pattern snapshotName = Pattern.compile(Pattern.quote(config.getCsvFile().getName()) + "\\.([0-9]{13})");
-        final TreeMap<Long, File> snapshots = new TreeMap<Long, File>();
+        final TreeMap<Long, File> byName = new TreeMap<Long, File>();
         for (String name : names) {
             final Matcher matcher = snapshotName.matcher(name);
             if (matcher.matches()) {
-                snapshots.put(Long.valueOf(matcher.group(1)), new File(dataDir, name));
+                byName.put(Long.valueOf(matcher.group(1)), new File(dataDir, name));
             }
         }
+        final Map<File, Long> taken = new HashMap<File, Long>();
+        for (File snapshot : byName.values()) {
+            taken.put(snapshot, snapshot.lastModified());
+        }
+        final List<Map.Entry<Long, File>> snapshots = new ArrayList<Map.Entry<Long, File>>(byName.entrySet());
+        // a stable sort, so the snapshots of one own mtime stay in the order of their names
+        Collections.sort(snapshots, (a, b) -> Long.compare(taken.get(a.getValue()), taken.get(b.getValue())));
         return snapshots;
     }
 
     /**
-     * Deletes the snapshots older than the {@code syncFileRetentionCount} newest ones, except the snapshot this sync
+     * Deletes the snapshots taken before the {@code syncFileRetentionCount} last ones, except the snapshot this sync
      * reads. Runs under the write lock, so no sync in this JVM reads a snapshot while it is deleted; one in another
      * JVM may. A snapshot that cannot be deleted, such as one still open on Windows, is logged and kept.
      */
     private void scrubSyncFiles(File syncOrigin) {
-        final TreeMap<Long, File> snapshots = listSnapshots();
+        final List<Map.Entry<Long, File>> snapshots = listSnapshots();
         int surplus = snapshots.size() - config.getSyncFileRetentionCount();
-        for (File snapshot : snapshots.values()) {
+        for (Map.Entry<Long, File> snapshot : snapshots) {
             if (surplus-- <= 0) {
                 break;
             }
-            if (!snapshot.equals(syncOrigin)) {
-                deleteRewriteFile(snapshot);
+            if (!snapshot.getValue().equals(syncOrigin)) {
+                deleteRewriteFile(snapshot.getValue());
             }
         }
     }
