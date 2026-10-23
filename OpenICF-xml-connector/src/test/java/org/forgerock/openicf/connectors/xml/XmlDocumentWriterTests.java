@@ -23,11 +23,24 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertSame;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.CRC32;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,6 +49,7 @@ import javax.xml.transform.Transformer;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,6 +65,221 @@ public class XmlDocumentWriterTests {
     private static final String XSI = "http://www.w3.org/2001/XMLSchema-instance";
     private static final String XMLNS = "http://www.w3.org/2000/xmlns/";
     private static final String TRICKY = "  a>b&c<d \"q\" 'a' é中 \r\n\ttab ]]> 😀  ";
+
+    /** A directory of its own in the test store directory, which is not under java.io.tmpdir. */
+    private static Path newStoreDir() throws IOException {
+        return Files.createDirectory(new File(XmlConnectorTestUtil.getRandomXMLFile().getPath() + ".d").toPath());
+    }
+
+    /** The copies of {@code store} in its directory: {@code <name>.<digits>.tmp}. */
+    private static List<Path> copiesOf(Path store) throws IOException {
+        List<Path> copies = new ArrayList<Path>();
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(store.getParent(), store.getFileName() + ".*.tmp")) {
+            for (Path entry : entries) {
+                copies.add(entry);
+            }
+        }
+        return copies;
+    }
+
+    private static void requirePosix(Path path) throws IOException {
+        if (!Files.getFileStore(path).supportsFileAttributeView(PosixFileAttributeView.class)) {
+            throw new SkipException("No POSIX permissions on " + path);
+        }
+    }
+
+    private static String modeOf(Path path) throws IOException {
+        return PosixFilePermissions.toString(Files.getPosixFilePermissions(path));
+    }
+
+    @Test
+    public void failedWriteLeavesTheFileAsItWas() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.write(store, "<old/>\n".getBytes(StandardCharsets.UTF_8));
+        Document document = parse("<r><a>x</a></r>");
+        // An unpaired surrogate: no encoder can write it, so the write fails after it has started.
+        document.getDocumentElement().appendChild(document.createTextNode("x\uD800y"));
+        expectThrows(Exception.class, () -> XmlDocumentWriter.write(document, store.toFile()));
+        assertEquals(new String(Files.readAllBytes(store), StandardCharsets.UTF_8), "<old/>\n");
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
+    public void copyIsPrivateAndNextToTheFileWhileItIsWritten() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.write(store, "<old/>".getBytes(StandardCharsets.UTF_8));
+        requirePosix(store);
+        // Neither createTempFile's rw------- nor a umask-022 default: only a copied mode gives it.
+        Files.setPosixFilePermissions(store, PosixFilePermissions.fromString("rw-r-----"));
+        List<String> modesSeen = new ArrayList<String>();
+        CountingDom dom = new CountingDom(() -> {
+            try {
+                if (modesSeen.isEmpty()) {
+                    for (Path copy : copiesOf(store)) {
+                        modesSeen.add(modeOf(copy));
+                    }
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+        XmlDocumentWriter.write(dom.wrap(parse("<r><a>x</a></r>")), store.toFile());
+        assertEquals(modesSeen, Collections.singletonList("rw-------"));
+        assertEquals(modeOf(store), "rw-r-----");
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
+    public void newFileIsReadableByItsOwnerOnly() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        requirePosix(store.getParent());
+        XmlDocumentWriter.write(parse("<r/>"), store.toFile());
+        assertEquals(modeOf(store), "rw-------");
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
+    public void readOnlyFileIsRefusedAndLeftAlone() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.write(store, "<old/>".getBytes(StandardCharsets.UTF_8));
+        if (!store.toFile().setWritable(false, false) || Files.isWritable(store)) {
+            store.toFile().setWritable(true, false);
+            throw new SkipException("Cannot make " + store + " read-only here");
+        }
+        try {
+            expectThrows(AccessDeniedException.class, () -> XmlDocumentWriter.write(parse("<r/>"), store.toFile()));
+            assertEquals(new String(Files.readAllBytes(store), StandardCharsets.UTF_8), "<old/>");
+            assertEquals(copiesOf(store), Collections.emptyList());
+        } finally {
+            store.toFile().setWritable(true, false);
+        }
+    }
+
+    @Test
+    public void storeInADirectoryThatCannotBeWrittenIsRefusedAndLeftAlone() throws Exception {
+        Path dir = newStoreDir();
+        Path store = dir.resolve("store.xml");
+        Files.write(store, "<old/>".getBytes(StandardCharsets.UTF_8));
+        if (!dir.toFile().setWritable(false, false) || Files.isWritable(dir)) {
+            dir.toFile().setWritable(true, false);
+            throw new SkipException("Cannot make " + dir + " read-only here");
+        }
+        try {
+            expectThrows(AccessDeniedException.class, () -> XmlDocumentWriter.write(parse("<r/>"), store.toFile()));
+            assertEquals(new String(Files.readAllBytes(store), StandardCharsets.UTF_8), "<old/>");
+            assertEquals(copiesOf(store), Collections.emptyList());
+        } finally {
+            dir.toFile().setWritable(true, false);
+        }
+    }
+
+    @Test
+    public void fileReachedThroughALinkIsReplacedBehindTheLink() throws Exception {
+        Path real = newStoreDir().resolve("store.xml");
+        Files.write(real, "<old/>".getBytes(StandardCharsets.UTF_8));
+        Path link = newStoreDir().resolve("link.xml");
+        try {
+            Files.createSymbolicLink(link, real);
+        } catch (IOException | UnsupportedOperationException e) {
+            throw new SkipException("Cannot create a symbolic link here: " + e);
+        }
+        XmlDocumentWriter.write(parse("<r><a>x</a></r>"), link.toFile());
+        assertTrue(Files.isSymbolicLink(link));
+        assertTrue(new String(Files.readAllBytes(real), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(real), Collections.emptyList());
+        assertEquals(copiesOf(link), Collections.emptyList());
+    }
+
+    private static void createLink(Path link, Path to) {
+        try {
+            Files.createSymbolicLink(link, to);
+        } catch (IOException | UnsupportedOperationException e) {
+            throw new SkipException("Cannot create a symbolic link here: " + e);
+        }
+    }
+
+    @Test
+    public void danglingLinkKeepsTheLinkAndCreatesTheFileBehindIt() throws Exception {
+        Path real = newStoreDir().resolve("store.xml");
+        Path link = newStoreDir().resolve("link.xml");
+        createLink(link, real);
+        XmlDocumentWriter.write(parse("<r><a>x</a></r>"), link.toFile());
+        assertTrue(Files.isSymbolicLink(link));
+        assertTrue(Files.exists(real));
+        assertTrue(new String(Files.readAllBytes(real), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(real), Collections.emptyList());
+        assertEquals(copiesOf(link), Collections.emptyList());
+    }
+
+    @Test
+    public void danglingLinkIntoAMissingDirectoryFailsAndKeepsTheLink() throws Exception {
+        Path missing = newStoreDir().resolve("missing");
+        Path real = missing.resolve("store.xml");
+        Path link = newStoreDir().resolve("link.xml");
+        createLink(link, real);
+        expectThrows(IOException.class, () -> XmlDocumentWriter.write(parse("<r/>"), link.toFile()));
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals(Files.readSymbolicLink(link), real);
+        assertEquals(copiesOf(link), Collections.emptyList());
+        assertFalse(Files.exists(missing));
+    }
+
+    @Test(timeOut = 10_000L)
+    public void linkCycleIsRefused() throws Exception {
+        Path dir = newStoreDir();
+        Path a = dir.resolve("a.xml");
+        Path b = dir.resolve("b.xml");
+        createLink(a, b);
+        createLink(b, a);
+        expectThrows(FileSystemException.class, () -> XmlDocumentWriter.write(parse("<r/>"), a.toFile()));
+        assertTrue(Files.isSymbolicLink(a));
+        assertTrue(Files.isSymbolicLink(b));
+        assertEquals(copiesOf(a), Collections.emptyList());
+        assertEquals(copiesOf(b), Collections.emptyList());
+    }
+
+    @Test
+    public void relativeDanglingLinksAreFollowedFromEachLinksDirectory() throws Exception {
+        Path dir = newStoreDir();
+        Path link = dir.resolve("link.xml");
+        Path middle = Files.createDirectory(dir.resolve("sub")).resolve("middle.xml");
+        Path real = middle.resolveSibling("store.xml");
+        createLink(link, dir.relativize(middle)); // "sub/middle.xml", relative to dir
+        createLink(middle, middle.getParent().relativize(real)); // "store.xml", relative to dir/sub
+        XmlDocumentWriter.write(parse("<r><a>x</a></r>"), link.toFile());
+        assertTrue(Files.isSymbolicLink(link));
+        assertTrue(Files.isSymbolicLink(middle));
+        assertTrue(new String(Files.readAllBytes(real), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(real), Collections.emptyList());
+    }
+
+    @Test
+    public void failedRenameLeavesNoCopy() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.createDirectory(store);
+        expectThrows(IOException.class, () -> XmlDocumentWriter.write(parse("<r><a>x</a></r>"), store.toFile()));
+        assertTrue(Files.isDirectory(store));
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(store)) {
+            assertFalse(entries.iterator().hasNext());
+        }
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
+
+    @Test
+    public void writeOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Path store = newStoreDir().resolve("store.xml");
+        Files.write(store, "<old/>\n".getBytes(StandardCharsets.UTF_8));
+        Document document = parse("<r><a>x</a></r>");
+        Thread.currentThread().interrupt();
+        try {
+            XmlDocumentWriter.write(document, store.toFile());
+            assertTrue(Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+        assertTrue(new String(Files.readAllBytes(store), StandardCharsets.UTF_8).contains("<a>x</a>"));
+        assertEquals(copiesOf(store), Collections.emptyList());
+    }
 
     @Test
     public void followingIsTheNextSibling() throws Exception {

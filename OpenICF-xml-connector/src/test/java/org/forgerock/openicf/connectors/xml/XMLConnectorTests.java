@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
@@ -52,6 +53,7 @@ import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -61,7 +63,9 @@ import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
 import org.identityconnectors.test.common.TestHelpers;
+import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
@@ -369,7 +373,7 @@ public class XMLConnectorTests {
         AssertJUnit.assertTrue(xmlFile.mkdir()); // a directory cannot be written, whoever runs the test
         try {
             String errors = captureStdErr(() -> expectThrows(ConnectorException.class, handler::dispose));
-            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: java.io.FileNotFoundException"));
+            AssertJUnit.assertTrue(errors, errors.contains("Failed saving changes to xml file: java.nio.file."));
         } finally {
             AssertJUnit.assertTrue(xmlFile.delete());
         }
@@ -407,6 +411,51 @@ public class XMLConnectorTests {
 
         AssertJUnit.assertEquals(past, Files.getLastModifiedTime(xmlFile.toPath()));
         AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+    }
+
+    @Test
+    public void failedSaveFailsTheCreateAndLosesNothing() throws Exception {
+        writeAccounts(xmlFile, "alice");
+        byte[] before = Files.readAllBytes(xmlFile.toPath());
+        Set<Attribute> attributes = getRequiredAccountAttributes();
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "x\uD800y")); // an unpaired surrogate: no encoder can write it
+        captureStdErr(() -> expectThrows(ConnectorException.class, () -> facade.create(ObjectClass.ACCOUNT, attributes, null)));
+        AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+        TestResultsHandler all = new TestResultsHandler();
+        facade.search(ObjectClass.ACCOUNT, null, all, null);
+        AssertJUnit.assertEquals(1, all.getResultSize()); // alice only
+    }
+
+    @DataProvider
+    public Object[][] changesToAReadOnlyStore() {
+        Uid alice = new Uid("uid-alice");
+        return new Object[][] {
+                {(Consumer<ConnectorFacade>) f -> f.create(ObjectClass.ACCOUNT, account("bob"), null)},
+                {(Consumer<ConnectorFacade>) f -> f.update(ObjectClass.ACCOUNT, alice,
+                        Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW")), null)},
+                {(Consumer<ConnectorFacade>) f -> f.delete(ObjectClass.ACCOUNT, alice, null)},
+        };
+    }
+
+    @Test(dataProvider = "changesToAReadOnlyStore")
+    public void changeToAReadOnlyStoreFailsAndLosesNothing(Consumer<ConnectorFacade> change) throws Exception {
+        writeAccounts(xmlFile, "alice");
+        byte[] before = Files.readAllBytes(xmlFile.toPath());
+        if (!xmlFile.setWritable(false, false) || Files.isWritable(xmlFile.toPath())) {
+            xmlFile.setWritable(true, false);
+            throw new SkipException("Cannot make " + xmlFile + " read-only here");
+        }
+        try {
+            captureStdErr(() -> expectThrows(ConnectorIOException.class, () -> change.accept(facade)));
+            AssertJUnit.assertTrue(Arrays.equals(before, Files.readAllBytes(xmlFile.toPath())));
+            ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, new Uid("uid-alice"), null);
+            AssertJUnit.assertEquals("Last-alice", AttributeUtil.getStringValue(read.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+            TestResultsHandler all = new TestResultsHandler();
+            facade.search(ObjectClass.ACCOUNT, null, all, null);
+            AssertJUnit.assertEquals(1, all.getResultSize());
+        } finally {
+            xmlFile.setWritable(true, false);
+        }
     }
 
     @Test(timeOut = 60_000L)
