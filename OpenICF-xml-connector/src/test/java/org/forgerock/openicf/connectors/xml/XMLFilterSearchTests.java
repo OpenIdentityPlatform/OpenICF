@@ -69,6 +69,8 @@ public class XMLFilterSearchTests {
                 .append("\" xmlns:ri=\"").append(RI_NAMESPACE).append("\">\n")
                 .append(account("a1", element(ATTR_ACCOUNT_LAST_NAME, "A"), element(ATTR_ACCOUNT_EMAIL, "x1"),
                         element(ATTR_ACCOUNT_AGE, "10"),
+                        // 10 in Arabic-Indic digits: Java reads it, XPath reads it as NaN.
+                        element(ATTR_ACCOUNT_YEARS_EMPLOYED, "\u0661\u0660"),
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "9007199254740993"),
                         element(ATTR_ACCOUNT_LAST_LOGOFF_DATE, "9007199254740993"),
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "10.0"),
@@ -77,6 +79,7 @@ public class XMLFilterSearchTests {
                 .append(account("a2", element(ATTR_ACCOUNT_LAST_NAME, "M"), element(ATTR_ACCOUNT_EMAIL, "x2"),
                         element(ATTR_ACCOUNT_EMAIL, "y2"),
                         element(ATTR_ACCOUNT_AGE, "9"),
+                        element(ATTR_ACCOUNT_YEARS_EMPLOYED, "9"),
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "9007199254740992"),
                         element(ATTR_ACCOUNT_LAST_LOGOFF_DATE, "9007199254740992"),
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "5.0"),
@@ -144,6 +147,9 @@ public class XMLFilterSearchTests {
                 {not(greaterThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 10))), asList("a2", "a3")},
                 {not(lessThan(attribute(ATTR_ACCOUNT_AGE, 9))), asList("a1", "a2")},
                 {not(lessThanOrEqualTo(attribute(ATTR_ACCOUNT_AGE, 9))), asList("a1")},
+                // Text XPath reads as NaN is kept: a1's years-employed is 10.
+                {greaterThan(attribute(ATTR_ACCOUNT_YEARS_EMPLOYED, 9)), asList("a1")},
+                {lessThan(attribute(ATTR_ACCOUNT_YEARS_EMPLOYED, 11)), asList("a1", "a2")},
                 // Integers are compared exactly only inside (-2^53, 2^53); 2^53 + 1 reads as 2^53.
                 {greaterThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), asList("a1", "a2")},
                 {greaterThan(attribute(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740991L)), asList("a1", "a2")},

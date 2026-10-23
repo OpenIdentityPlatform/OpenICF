@@ -201,35 +201,34 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     /**
      * The condition a stored value meets if {@code value operator bound} may hold, where
-     * {@code operator} is one of {@code >}, {@code >=}, {@code <} and {@code <=}.
-     * <p>
-     * An integer bound of magnitude below 2^53 is compared directly, {@code number(.) > 9}: it is
-     * a double, and no other integer reads as it. Any other bound gives the non-strict form
-     * {@code . != '' and not(number(.) < xs:double('L'))} (for {@code >} and
-     * {@code >=}; mirrored for {@code <} and {@code <=}), which keeps every value the framework
-     * selects. It adds the values that read as equal to the bound, and text XPath cannot read as
-     * a number:
+     * {@code operator} is one of {@code >}, {@code >=}, {@code <} and {@code <=}: that the value
+     * is not excluded, {@code . != '' and not(number(.) <= xs:double('9'))} for {@code > 9}.
+     * <ul>
+     * <li>Text that Java parses and XPath does not, such as {@code Infinity} or non-Latin digits,
+     * reads as NaN, and {@code not(NaN <= x)} holds.</li>
+     * <li>{@code . != ''} skips the empty elements of unset attributes.</li>
+     * </ul>
+     * An integer bound of magnitude below 2^53 keeps a strict operator strict: it is a double, and
+     * no other integer reads as it. Any other bound only excludes the values on the wrong side of
+     * it, {@code not(number(.) < xs:double('L'))} for both {@code >} and {@code >=} (mirrored for
+     * {@code <} and {@code <=}). This adds the values that read as equal to the bound:
      * <ul>
      * <li>Reading a decimal as a double is monotonic, so a value above the bound never reads
      * below it.</li>
-     * <li>Text that Java parses and XPath does not, such as {@code Infinity}, reads as NaN, and
-     * {@code not(NaN < x)} holds.</li>
      * <li>{@code -0.0} and {@code 0.0} are equal in XPath.</li>
-     * <li>{@code . != ''} skips the empty elements of unset attributes.</li>
      * </ul>
      * The literal is the value's own {@code toString()}, except for a {@link Float}: see
      * {@link #roundingEdge}.
      */
     static String numericCondition(String operator, Number value) {
-        if (isExactInDouble(value)) {
-            return "number(.) " + operator + " " + value;
-        }
         boolean lower = operator.startsWith(">");
+        boolean strict = operator.length() == 1 && isExactInDouble(value);
+        String excluded = (lower ? "<" : ">") + (strict ? "=" : "");
         String literal = value instanceof Float
                 ? Double.toString(roundingEdge((Float) value, lower)) : value.toString();
         String bound = "xs:double('" + literal.replace("Infinity", "INF") + "')";
 
-        return ". != '' and not(number(.) " + (lower ? "<" : ">") + " " + bound + ")";
+        return ". != '' and not(number(.) " + excluded + " " + bound + ")";
     }
 
     /**

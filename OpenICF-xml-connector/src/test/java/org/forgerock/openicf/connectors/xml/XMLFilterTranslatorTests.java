@@ -397,12 +397,15 @@ public class XMLFilterTranslatorTests {
 
     @Test
     public void numbersAreComparedAsNumbers() {
-        AssertJUnit.assertEquals("$x/ri:age[number(.) > 9]", expression(filterTranslator.createGreaterThanExpression(
-                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), false)));
-        AssertJUnit.assertEquals("$x/ri:age[number(.) <= 9]", expression(filterTranslator.createGreaterThanExpression(
-                new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), true)));
-        AssertJUnit.assertEquals("$x/ri:age[number(.) < -5]", expression(filterTranslator.createLessThanExpression(
-                new LessThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, -5)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) <= xs:double('9'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), false)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) > xs:double('9'))]",
+                expression(filterTranslator.createGreaterThanExpression(
+                        new GreaterThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, 9)), true)));
+        AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) >= xs:double('-5'))]",
+                expression(filterTranslator.createLessThanExpression(
+                        new LessThanFilter(AttributeBuilder.build(ATTR_ACCOUNT_AGE, -5)), false)));
         AssertJUnit.assertEquals("$x/ri:ms-employed[. != '' and not(number(.) < xs:double('9007199254740992'))]",
                 expression(filterTranslator.createGreaterThanExpression(new GreaterThanFilter(
                         AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, 9007199254740992L)), false)));
