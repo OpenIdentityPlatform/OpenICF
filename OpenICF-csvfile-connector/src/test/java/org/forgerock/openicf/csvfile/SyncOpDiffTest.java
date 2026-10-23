@@ -823,8 +823,14 @@ public class SyncOpDiffTest {
                 csvFile.getName() + ".1500000000000", csvFile.getName() + "." + resultToken.getValue()));
     }
 
-    @Test
-    public void syncKeepsTheTokenOfAnotherConsumerWhenTheCsvFileMtimeMovesBack() throws Exception {
+    @DataProvider
+    public Object[][] copiesKeepingTheCsvFileMtime() {
+        return new Object[][] { { false }, { true } };
+    }
+
+    @Test(dataProvider = "copiesKeepingTheCsvFileMtime")
+    public void syncKeepsTheTokenOfAnotherConsumerWhenTheCsvFileMtimeMovesBack(boolean copyKeepsTheCsvFileMtime)
+            throws Exception {
         retentionCount = 2;
         // the tokens of consumers B and A, each taken while the CSV file had the mtime in its name
         final SyncToken tokenOfA = new SyncToken(1400000000000L);
@@ -833,7 +839,11 @@ public class SyncOpDiffTest {
         // then the CSV file is replaced by one with an older mtime, such as by a restore from a backup
         givenLive(HEADER, "k,Ann,Poe,pw3");
         Files.setLastModifiedTime(csvFile.toPath(), FileTime.fromMillis(1200000000000L));
+        if (copyKeepsTheCsvFileMtime) {
+            connectorWhoseCopiesKeepTheCsvFileMtime();
+        }
 
+        // A's sync takes the snapshot of its next token while it reads the changes
         assertEquals(sync(tokenOfA), Collections.singletonList("DELETE d [John, Roe, pw2]"));
         final SyncToken nextOfA = resultToken;
         assertEquals(nextOfA.getValue(), 1200000000000L);
@@ -981,6 +991,25 @@ public class SyncOpDiffTest {
         final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
 
         // the token of the newest name reported a delete made before the call, and the scrub deleted it first
+        assertEquals(token.getValue(), 1200000000000L);
+        assertEquals(sync(token), Collections.emptyList());
+    }
+
+    @Test(dataProvider = "copiesKeepingTheCsvFileMtime")
+    public void latestSyncTokenIsThatOfABaselineTakenAfterTheCsvFileMtimeMovesBack(boolean copyKeepsTheCsvFileMtime)
+            throws Exception {
+        givenSnapshotTakenAt(new SyncToken(1400000000000L), HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        Files.setLastModifiedTime(csvFile.toPath(), FileTime.fromMillis(1200000000000L));
+        if (copyKeepsTheCsvFileMtime) {
+            connectorWhoseCopiesKeepTheCsvFileMtime();
+        }
+        // a sync without a token takes the baseline of the restored CSV file
+        assertEquals(sync(null), Collections.emptyList());
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        // a baseline with the mtime of the CSV file sorts before the older snapshot, whose token reports a delete
         assertEquals(token.getValue(), 1200000000000L);
         assertEquals(sync(token), Collections.emptyList());
     }
@@ -1199,6 +1228,18 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void copyDeletedBeforeItsMtimeIsSetLogsAWarning() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(true);
+
+        final String output =
+                captureStdOut(() -> expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN)));
+
+        assertTrue(output.contains("Could not set the mtime of copy " + copies.get(0) + " of " + csvFile), output);
+    }
+
+    @Test
     public void copyDeletedBeforeTheCreateUpdatePassFailsSyncNamingTheCsvFile() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
@@ -1357,6 +1398,19 @@ public class SyncOpDiffTest {
             }
         });
         return copies;
+    }
+
+    // copies the CSV file as Files.copy does on Windows, where CopyFileEx keeps the mtime of the source file; on Linux
+    // and macOS a copy gets the time it is made
+    private void connectorWhoseCopiesKeepTheCsvFileMtime() {
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                Files.setLastModifiedTime(copy.toPath(), Files.getLastModifiedTime(csvFile.toPath()));
+                return copy;
+            }
+        });
     }
 
     private CSVFileConnector connector(CSVFileConnector instance) {

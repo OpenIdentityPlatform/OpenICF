@@ -37,6 +37,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -518,7 +519,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // change would be kept over the fresh copy of that mtime, and every sync would report the change again
             final long nextTimestamp = config.getCsvFile().lastModified();
             try {
-                next = copyCsvFile();
+                next = copyCsvFileForSnapshot();
             } catch (NoSuchFileException e) {
                 log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
                 throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
@@ -1058,10 +1059,10 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, each by its token, the mtime in its
      * name, in the order they were taken. The name is matched exactly, so the snapshots of another CSV file in the
-     * same directory are never listed. A snapshot is a copy made without the attributes of the CSV file and renamed
-     * into place, so its own mtime is the time of its copy; its name follows that order only as long as the mtime of
-     * the CSV file never moves back, as it does on a restore from a backup. Snapshots of one own mtime, such as those
-     * taken in one tick of a coarse file system clock, keep the order of their names.
+     * same directory are never listed. A snapshot is a copy given the time of its copy as its mtime and renamed into
+     * place, see {@link #copyCsvFileForSnapshot()}; its name follows that order only as long as the mtime of the CSV
+     * file never moves back, as it does on a restore from a backup. Snapshots of one own mtime, such as those taken in
+     * one tick of a coarse file system clock, keep the order of their names.
      */
     private List<Map.Entry<Long, File>> listSnapshots() {
         final File dataDir = config.getCsvFile().getAbsoluteFile().getParentFile();
@@ -1357,6 +1358,23 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     /**
+     * Copies the CSV file for a sync snapshot, with the time of the copy as its mtime, which orders the snapshots in
+     * {@link #listSnapshots()}. {@code Files.copy} gives a copy that mtime on Linux and macOS only: on Windows its
+     * {@code CopyFileEx} keeps the mtime of the CSV file. A copy whose mtime cannot be set is logged and used as it is;
+     * one deleted meanwhile fails the read that follows.
+     */
+    private File copyCsvFileForSnapshot() throws IOException {
+        final File copy = copyCsvFile();
+        try {
+            Files.setLastModifiedTime(copy.toPath(), FileTime.fromMillis(System.currentTimeMillis()));
+        } catch (IOException e) {
+            log.warn(e, "Could not set the mtime of copy {0} of {1} to the time of the copy", copy,
+                    config.getCsvFile());
+        }
+        return copy;
+    }
+
+    /**
      * Takes a snapshot of the CSV file: a complete copy, renamed into place, so that no snapshot is ever seen
      * half-written. Makes nothing if a snapshot of that name exists, as it holds the same mtime of the CSV file.
      *
@@ -1366,7 +1384,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         if (snapshot.exists()) {
             return false;
         }
-        final File copy = copyCsvFile();
+        final File copy = copyCsvFileForSnapshot();
         boolean moved = false;
         try {
             Files.move(copy.toPath(), snapshot.toPath());
