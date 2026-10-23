@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
@@ -486,6 +487,58 @@ public class XMLConnectorTests {
             synchronized (XMLConnector.class) {
                 XMLConnector.XMLHandlerCache.remove(key);
             }
+        }
+    }
+
+    @Test
+    public void searchStopsAtTheFirstFalse() throws Exception {
+        writeAccounts(xmlFile, "a1", "a2", "a3", "a4", "a5");
+        APIConfiguration impl = TestHelpers.createTestConfiguration(XMLConnector.class, configFor(xmlFile));
+        impl.setProducerBufferSize(0); // the facade passes the handler's false straight back to the connector
+        ConnectorFacade unbuffered = ConnectorFacadeFactory.getInstance().newInstance(impl);
+        AtomicInteger calls = new AtomicInteger();
+        unbuffered.search(ObjectClass.ACCOUNT, null, o -> {
+            calls.incrementAndGet();
+            return false;
+        }, null);
+        AssertJUnit.assertEquals(1, calls.get());
+    }
+
+    @Test(timeOut = 60_000L)
+    public void searchHandlerDoesNotHoldUpAChangeOnTheSameFile() throws Exception {
+        File file = getRandomXMLFile();
+        writeAccounts(file, "alice");
+        XMLConnector searching = new XMLConnector();
+        XMLConnector creating = new XMLConnector();
+        searching.init(configFor(file));
+        creating.init(configFor(file));
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Future<?> search = null;
+        try {
+            search = executor.submit(() -> searching.executeQuery(ObjectClass.ACCOUNT, null, o -> {
+                entered.countDown();
+                try {
+                    release.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }, null));
+            AssertJUnit.assertTrue(entered.await(10, TimeUnit.SECONDS));
+
+            Uid bob = executor.submit(() -> creating.create(ObjectClass.ACCOUNT, account("bob"), null))
+                    .get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertNotNull(bob);
+        } finally {
+            release.countDown();
+            if (search != null) {
+                search.get(10, TimeUnit.SECONDS);
+            }
+            searching.dispose();
+            creating.dispose();
+            executor.shutdownNow();
         }
     }
 

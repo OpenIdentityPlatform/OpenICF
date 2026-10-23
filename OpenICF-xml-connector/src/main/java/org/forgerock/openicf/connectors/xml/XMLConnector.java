@@ -213,15 +213,19 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public void executeQuery(ObjectClass objClass, Query query, ResultsHandler handler, OperationOptions options) {
+        Collection<ConnectorObject> hits;
         synchronized (getLock()) {
-            Collection<ConnectorObject> hits = xmlInstanceHandler.search(query, objClass);
-            int count = 0;
-            for (ConnectorObject hit : hits) {
-                count++;
-                handler.handle(hit);
-            }
-            log.info("Query returned {0} object(s)", count);
+            hits = xmlInstanceHandler.search(query, objClass);
         }
+        // Outside the lock: the hits are finished objects, and a slow handler must not hold up changes to the file.
+        int count = 0;
+        for (ConnectorObject hit : hits) {
+            count++;
+            if (!handler.handle(hit)) {
+                break;
+            }
+        }
+        log.info("Query returned {0} object(s)", count);
     }
 
     /*
