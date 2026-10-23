@@ -579,6 +579,39 @@ public class XMLConnectorTests {
         }
     }
 
+    @Test(timeOut = 60_000L)
+    public void searchOnOneFileDoesNotHoldUpAChangeOnAnotherFile() throws Exception {
+        File blockedFile = getRandomXMLFile();
+        String key = blockedFile.getCanonicalPath();
+        SearchBlockingHandler stub = new SearchBlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(stub));
+        }
+        File otherFile = getRandomXMLFile();
+        writeAccounts(otherFile, "alice");
+        XMLConnector searching = new XMLConnector();
+        XMLConnector creating = new XMLConnector();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            searching.init(configFor(blockedFile));
+            creating.init(configFor(otherFile));
+            executor.submit(() -> searching.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
+            AssertJUnit.assertTrue(stub.firstIn.await(10, TimeUnit.SECONDS));
+
+            Uid bob = executor.submit(() -> creating.create(ObjectClass.ACCOUNT, account("bob"), null))
+                    .get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertNotNull(bob);
+        } finally {
+            stub.release.countDown();
+            executor.shutdownNow();
+            searching.dispose();
+            creating.dispose();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
     private static XMLConfiguration configFor(File xmlFile) {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(xmlFile);
