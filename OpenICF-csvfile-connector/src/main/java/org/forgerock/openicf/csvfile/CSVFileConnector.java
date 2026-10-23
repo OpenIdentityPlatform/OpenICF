@@ -26,6 +26,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -36,18 +37,17 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -477,22 +477,27 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         rwLock.writeLock().lock();
         try {
             if (token != null && token.getValue() != null) {
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + token.getValue());
-            }
-            if (syncOrigin == null || !syncOrigin.exists()) {
+                syncOrigin = snapshotFile(token.getValue());
+                if (!syncOrigin.exists()) {
+                    // a baseline taken now would hide every delete since the token
+                    throw new ConnectorException("Snapshot " + syncOrigin + " of sync token " + token.getValue()
+                            + " does not exist, so the changes since that token cannot be reported;"
+                            + " reset the sync token");
+                }
+            } else {
                 long timestamp = config.getCsvFile().lastModified();
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + timestamp);
+                syncOrigin = snapshotFile(timestamp);
                 try {
-                    Files.copy(config.getCsvFile().toPath(), syncOrigin.toPath());
+                    // a snapshot of this mtime taken by an earlier sync is the baseline, and not this call's to delete
+                    if (takeSnapshot(syncOrigin)) {
+                        copies.add(syncOrigin);
+                    }
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
-                copies.add(syncOrigin);
                 token = new SyncToken(timestamp);
             }
-            scrubSyncFiles();
+            scrubSyncFiles(syncOrigin);
 
             // downgrade to a read-lock
             rwLock.readLock().lock();
@@ -514,7 +519,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             // change would be kept over the fresh copy of that mtime, and every sync would report the change again
             final long nextTimestamp = config.getCsvFile().lastModified();
             try {
-                next = copyCsvFile();
+                next = copyCsvFileForSnapshot();
             } catch (NoSuchFileException e) {
                 log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
                 throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
@@ -674,8 +679,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
 
             if (changesProcessed) {
-                syncOrigin = new File(config.getCsvFile().getParentFile(),
-                        config.getCsvFile().getName() + "." + nextTimestamp);
+                syncOrigin = snapshotFile(nextTimestamp);
                 try {
                     Files.move(next.toPath(), syncOrigin.toPath());
                     // the name is free again, and createRewriteFile may hand it to a writer
@@ -683,7 +687,13 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     copies.add(syncOrigin);
                     token = new SyncToken(nextTimestamp);
                 } catch (FileAlreadyExistsException e) {
-                    // the snapshot of this mtime is kept, and so is the token
+                    // taken by an earlier sync of the same changes, such as another consumer's; not added to copies.
+                    // Named after the mtime read before its copy, one taken in another JVM may also hold a later
+                    // write, which this sync has not reported: then the token stays, and the next sync reports these
+                    // changes again instead of never reporting that write
+                    if (sameBytes(syncOrigin, next)) {
+                        token = new SyncToken(nextTimestamp);
+                    }
                 } catch (IOException e) {
                     throw new ConnectorException("Unable to copy CSV file for sync operation", e);
                 }
@@ -694,17 +704,21 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             completed = true;
         } finally {
-            rwLock.readLock().unlock();
-            if (!completed) {
-                // a kept copy could be handed out by getLatestSyncToken,
-                // and it would stop a retry from copying the unchanged live file again
-                for (File copy : copies) {
-                    deleteSnapshot(rwLock, copy);
+            try {
+                if (!completed) {
+                    // a kept copy could be handed out by getLatestSyncToken; deleted before the read lock is
+                    // released, which, like the write lock, keeps every other sync in this JVM out, as one could
+                    // reuse the copy
+                    for (File copy : copies) {
+                        deleteRewriteFile(copy);
+                    }
                 }
-            }
-            if (next != null) {
-                // not a snapshot, so no other sync reads it
-                deleteRewriteFile(next);
+            } finally {
+                rwLock.readLock().unlock();
+                if (next != null) {
+                    // not a snapshot, so no other sync reads it
+                    deleteRewriteFile(next);
+                }
             }
         }
     }
@@ -716,25 +730,22 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     public SyncToken getLatestSyncToken(ObjectClass objectClass) {
         isAccount(objectClass);
 
-        File dataDir = config.getCsvFile().getParentFile();
-        Map<Long, String> files = new TreeMap<Long, String>();
-
         final ReadLock lock = fileNameToLockMap.get(csvFilePath).readLock();
         lock.lock();
         try {
-            Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
-            for (String filename : dataDir.list()) {
-                Matcher matcher = filePattern.matcher(filename);
-                if (matcher.find()) {
-                    Long timestamp = Long.valueOf(matcher.group(2).substring(1));
-                    files.put(timestamp, filename);
-                }
+            final List<Map.Entry<Long, File>> snapshots = listSnapshots();
+            if (!snapshots.isEmpty()) {
+                // the snapshot taken last, which the scrub keeps longest
+                return new SyncToken(snapshots.get(snapshots.size() - 1).getKey());
             }
-            if (files.size() > 0) {
-                List<Long> keys = new LinkedList<Long>(files.keySet());
-                return new SyncToken(keys.get(keys.size() - 1));
+            // every token handed out has a snapshot, so the first sync from it reports every change made since
+            final long timestamp = config.getCsvFile().lastModified();
+            try {
+                takeSnapshot(snapshotFile(timestamp));
+            } catch (IOException e) {
+                throw new ConnectorException("Unable to copy CSV file for sync operation", e);
             }
-            return new SyncToken(new Date().getTime());
+            return new SyncToken(timestamp);
         } finally {
             lock.unlock();
         }
@@ -1035,33 +1046,63 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         digest.update((byte) length);
     }
 
-    private void scrubSyncFiles() {
-        File dataDir = config.getCsvFile().getParentFile();
-        Map<Long, String> files = new TreeMap<Long, String>();
-
-        Pattern filePattern = Pattern.compile("(" + config.getCsvFile().getName() + ")(\\.[0-9]{13})$");
-        for (String filename : dataDir.list()) {
-            Matcher matcher = filePattern.matcher(filename);
-            if (matcher.find()) {
-                Long timestamp = Long.valueOf(matcher.group(2).substring(1));
-                files.put(timestamp, filename);
-            }
-        }
-        while (files.size() > config.getSyncFileRetentionCount()) {
-            Long key = (Long) files.keySet().toArray()[0];
-            files.remove(key);
-        }
+    /**
+     * Returns the sync snapshot of the CSV file of the given mtime, {@code <csv>.<mtime>}. Its path is absolute, as are
+     * those {@link #listSnapshots()} lists, so that it equals its listed file even for a CSV file named without a
+     * directory, which has no parent file.
+     */
+    private File snapshotFile(Object mtime) {
+        final File csv = config.getCsvFile().getAbsoluteFile();
+        return new File(csv.getParentFile(), csv.getName() + "." + mtime);
     }
 
     /**
-     * Deletes a snapshot under the write lock, so that no sync in this JVM is reading it meanwhile.
+     * Lists the sync snapshots of the CSV file, {@code <csv>.<13-digit mtime>}, each by its token, the mtime in its
+     * name, in the order they were taken. The name is matched exactly, so the snapshots of another CSV file in the
+     * same directory are never listed. A snapshot is a copy given the time of its copy as its mtime and renamed into
+     * place, see {@link #copyCsvFileForSnapshot()}; its name follows that order only as long as the mtime of the CSV
+     * file never moves back, as it does on a restore from a backup. Snapshots of one own mtime, such as those taken in
+     * one tick of a coarse file system clock, keep the order of their names.
      */
-    private void deleteSnapshot(ReentrantReadWriteLock rwLock, File snapshot) {
-        rwLock.writeLock().lock();
-        try {
-            deleteRewriteFile(snapshot);
-        } finally {
-            rwLock.writeLock().unlock();
+    private List<Map.Entry<Long, File>> listSnapshots() {
+        final File dataDir = config.getCsvFile().getAbsoluteFile().getParentFile();
+        final String[] names = dataDir.list();
+        if (names == null) {
+            throw new ConnectorIOException("Unable to list the files of " + dataDir);
+        }
+        final Pattern snapshotName = Pattern.compile(Pattern.quote(config.getCsvFile().getName()) + "\\.([0-9]{13})");
+        final TreeMap<Long, File> byName = new TreeMap<Long, File>();
+        for (String name : names) {
+            final Matcher matcher = snapshotName.matcher(name);
+            if (matcher.matches()) {
+                byName.put(Long.valueOf(matcher.group(1)), new File(dataDir, name));
+            }
+        }
+        final Map<File, Long> taken = new HashMap<File, Long>();
+        for (File snapshot : byName.values()) {
+            taken.put(snapshot, snapshot.lastModified());
+        }
+        final List<Map.Entry<Long, File>> snapshots = new ArrayList<Map.Entry<Long, File>>(byName.entrySet());
+        // a stable sort, so the snapshots of one own mtime stay in the order of their names
+        Collections.sort(snapshots, (a, b) -> Long.compare(taken.get(a.getValue()), taken.get(b.getValue())));
+        return snapshots;
+    }
+
+    /**
+     * Deletes the snapshots taken before the {@code syncFileRetentionCount} last ones, except the snapshot this sync
+     * reads. Runs under the write lock, so no sync in this JVM reads a snapshot while it is deleted; one in another
+     * JVM may. A snapshot that cannot be deleted, such as one still open on Windows, is logged and kept.
+     */
+    private void scrubSyncFiles(File syncOrigin) {
+        final List<Map.Entry<Long, File>> snapshots = listSnapshots();
+        int surplus = snapshots.size() - config.getSyncFileRetentionCount();
+        for (Map.Entry<Long, File> snapshot : snapshots) {
+            if (surplus-- <= 0) {
+                break;
+            }
+            if (!snapshot.getValue().equals(syncOrigin)) {
+                deleteRewriteFile(snapshot.getValue());
+            }
         }
     }
 
@@ -1313,6 +1354,76 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             if (!copied) {
                 deleteRewriteFile(copy);
             }
+        }
+    }
+
+    /**
+     * Copies the CSV file for a sync snapshot, with the time of the copy as its mtime, which orders the snapshots in
+     * {@link #listSnapshots()}. {@code Files.copy} gives a copy that mtime on Linux and macOS only: on Windows its
+     * {@code CopyFileEx} keeps the mtime of the CSV file. A copy whose mtime cannot be set is logged and used as it is;
+     * one deleted meanwhile fails the read that follows.
+     */
+    private File copyCsvFileForSnapshot() throws IOException {
+        final File copy = copyCsvFile();
+        try {
+            Files.setLastModifiedTime(copy.toPath(), FileTime.fromMillis(System.currentTimeMillis()));
+        } catch (IOException e) {
+            log.warn(e, "Could not set the mtime of copy {0} of {1} to the time of the copy", copy,
+                    config.getCsvFile());
+        }
+        return copy;
+    }
+
+    /**
+     * Takes a snapshot of the CSV file: a complete copy, renamed into place, so that no snapshot is ever seen
+     * half-written. Makes nothing if a snapshot of that name exists, as it holds the same mtime of the CSV file.
+     *
+     * @return whether this call made the snapshot
+     */
+    private boolean takeSnapshot(File snapshot) throws IOException {
+        if (snapshot.exists()) {
+            return false;
+        }
+        final File copy = copyCsvFileForSnapshot();
+        boolean moved = false;
+        try {
+            Files.move(copy.toPath(), snapshot.toPath());
+            moved = true;
+        } catch (FileAlreadyExistsException e) {
+            // taken meanwhile by another process
+        } finally {
+            if (!moved) {
+                // once moved, the name is free again, and createRewriteFile may hand it to a writer
+                deleteRewriteFile(copy);
+            }
+        }
+        return moved;
+    }
+
+    /**
+     * Whether an existing snapshot holds the same bytes as a copy of the CSV file. A snapshot that cannot be read,
+     * such as one deleted meanwhile in another JVM, does not, and is logged.
+     */
+    private static boolean sameBytes(File snapshot, File copy) {
+        try (InputStream in = Files.newInputStream(snapshot.toPath());
+                InputStream other = Files.newInputStream(copy.toPath())) {
+            if (Files.size(snapshot.toPath()) != Files.size(copy.toPath())) {
+                return false;
+            }
+            final byte[] buffer = new byte[8192];
+            final byte[] otherBuffer = new byte[buffer.length];
+            int length;
+            do {
+                length = in.readNBytes(buffer, 0, buffer.length);
+                if (other.readNBytes(otherBuffer, 0, otherBuffer.length) != length
+                        || !Arrays.equals(buffer, 0, length, otherBuffer, 0, length)) {
+                    return false;
+                }
+            } while (length > 0);
+            return true;
+        } catch (IOException e) {
+            log.warn(e, "Could not compare {0} with {1}", snapshot, copy);
+            return false;
         }
     }
 
