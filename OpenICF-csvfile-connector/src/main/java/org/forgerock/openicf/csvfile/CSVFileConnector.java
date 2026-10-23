@@ -703,17 +703,21 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
             completed = true;
         } finally {
-            if (!completed) {
-                // a kept copy could be handed out by getLatestSyncToken; deleted before the read lock is released,
-                // which, like the write lock, keeps every other sync in this JVM out, as one could reuse the copy
-                for (File copy : copies) {
-                    deleteRewriteFile(copy);
+            try {
+                if (!completed) {
+                    // a kept copy could be handed out by getLatestSyncToken; deleted before the read lock is
+                    // released, which, like the write lock, keeps every other sync in this JVM out, as one could
+                    // reuse the copy
+                    for (File copy : copies) {
+                        deleteRewriteFile(copy);
+                    }
                 }
-            }
-            rwLock.readLock().unlock();
-            if (next != null) {
-                // not a snapshot, so no other sync reads it
-                deleteRewriteFile(next);
+            } finally {
+                rwLock.readLock().unlock();
+                if (next != null) {
+                    // not a snapshot, so no other sync reads it
+                    deleteRewriteFile(next);
+                }
             }
         }
     }

@@ -23,6 +23,7 @@ import static org.testng.Assert.expectThrows;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
@@ -330,6 +331,43 @@ public class SyncOpDiffTest {
         }
 
         assertTrue(output.contains("Could not delete " + copy), output);
+    }
+
+    @Test
+    public void failedSyncReleasesTheReadLockWhenItsCleanupFails() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from deleting files");
+        }
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+
+        final PrintStream original = System.out;
+        try {
+            // the snapshot this sync copied cannot be deleted, and the WARN about it throws, standing in for an Error
+            expectThrows(UncheckedIOException.class, () -> syncWithFailingHandleResult(null, () -> {
+                setDirMode(readOnly);
+                System.setOut(new PrintStream(new OutputStream() {
+                    @Override
+                    public void write(int b) {
+                        throw new UncheckedIOException(new IOException("Standard output is closed"));
+                    }
+                }));
+            }));
+        } finally {
+            System.setOut(original);
+            setDirMode(mode);
+        }
+
+        // otherwise every later write and sync of this CSV file in this JVM waits for the write lock for good
+        assertEquals(lockMap().get(csvFile.getAbsolutePath()).getReadLockCount(), 0);
     }
 
     @Test
