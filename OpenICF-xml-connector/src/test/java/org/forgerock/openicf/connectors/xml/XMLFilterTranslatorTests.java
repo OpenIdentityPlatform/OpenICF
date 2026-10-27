@@ -398,6 +398,15 @@ public class XMLFilterTranslatorTests {
     }
 
     @Test
+    public void literalsEscapeAmpersands() {
+        AssertJUnit.assertEquals("$x/ri:lastname = 'AT&amp;T'", expression(filterTranslator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "AT&T")), false)));
+        AssertJUnit.assertEquals("$x/ri:email[fn:starts-with(., 'O''B&amp;amp;')]",
+                expression(filterTranslator.createStartsWithExpression(
+                        new StartsWithFilter(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "O'B&amp;")), false)));
+    }
+
+    @Test
     public void numbersAreComparedAsNumbers() {
         AssertJUnit.assertEquals("$x/ri:age[. != '' and not(number(.) <= xs:double('9'))]",
                 expression(filterTranslator.createGreaterThanExpression(

@@ -18,6 +18,7 @@ package org.forgerock.openicf.connectors.xml;
 import static java.util.Arrays.asList;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.endsWith;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.equalTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThan;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThanOrEqualTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.lessThan;
@@ -67,7 +68,9 @@ public class XMLFilterSearchTests {
         xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n")
                 .append("<icf:OpenICFContainer xmlns:icf=\"").append(ICF_NAMESPACE)
                 .append("\" xmlns:ri=\"").append(RI_NAMESPACE).append("\">\n")
-                .append(account("a1", element(ATTR_ACCOUNT_LAST_NAME, "A"), element(ATTR_ACCOUNT_EMAIL, "x1"),
+                // The first names are AT&T, AT&amp;T and O'B.
+                .append(account("a1", element(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;T"),
+                        element(ATTR_ACCOUNT_LAST_NAME, "A"), element(ATTR_ACCOUNT_EMAIL, "x1"),
                         element(ATTR_ACCOUNT_AGE, "10"),
                         // 10 in Arabic-Indic digits: Java reads it, XPath reads it as NaN.
                         element(ATTR_ACCOUNT_YEARS_EMPLOYED, "\u0661\u0660"),
@@ -76,7 +79,8 @@ public class XMLFilterSearchTests {
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "10.0"),
                         element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.1"),
                         element(ATTR_ACCOUNT_MAX_STORAGE, "1E+3")))
-                .append(account("a2", element(ATTR_ACCOUNT_LAST_NAME, "M"), element(ATTR_ACCOUNT_EMAIL, "x2"),
+                .append(account("a2", element(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;amp;T"),
+                        element(ATTR_ACCOUNT_LAST_NAME, "M"), element(ATTR_ACCOUNT_EMAIL, "x2"),
                         element(ATTR_ACCOUNT_EMAIL, "y2"),
                         element(ATTR_ACCOUNT_AGE, "9"),
                         element(ATTR_ACCOUNT_YEARS_EMPLOYED, "9"),
@@ -85,7 +89,8 @@ public class XMLFilterSearchTests {
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "5.0"),
                         element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.2"),
                         element(ATTR_ACCOUNT_MAX_STORAGE, "0.10000000000000000002")))
-                .append(account("a3", element(ATTR_ACCOUNT_LAST_NAME, "Z"), element(ATTR_ACCOUNT_EMAIL, "y3"),
+                .append(account("a3", element(ATTR_ACCOUNT_FIRST_NAME, "O'B"),
+                        element(ATTR_ACCOUNT_LAST_NAME, "Z"), element(ATTR_ACCOUNT_EMAIL, "y3"),
                         element(ATTR_ACCOUNT_AGE, "5"),
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "9007199254740991"),
                         element(ATTR_ACCOUNT_LAST_LOGOFF_DATE, "9007199254740991"),
@@ -174,6 +179,12 @@ public class XMLFilterSearchTests {
                         asList("a1", "a3", "a4", "a5")},
                 {greaterThan(attribute(ATTR_ACCOUNT_MAX_STORAGE, new BigDecimal("0.10000000000000000001"))),
                         asList("a1", "a2", "a3")},
+                // An & in the value is text, not the start of an entity reference.
+                {startsWith(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&")), asList("a1", "a2")},
+                {equalTo(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&T")), asList("a1")},
+                {equalTo(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;T")), asList("a2")},
+                {not(equalTo(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;T"))), asList("a1", "a3")},
+                {greaterThan(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&T")), asList("a2", "a3")},
         };
     }
 

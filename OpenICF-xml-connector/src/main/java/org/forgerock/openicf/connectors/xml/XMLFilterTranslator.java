@@ -289,7 +289,8 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         return prefix + ":" + attrName;
     }
     
+    /** The value as an XQuery string literal, which decodes entity references such as {@code &amp;}. */
     private String escape(String value) {
-        return "'" + value.replaceAll("'","''") + "'";
+        return "'" + value.replace("&", "&amp;").replace("'", "''") + "'";
     }
 }
