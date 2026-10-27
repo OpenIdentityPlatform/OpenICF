@@ -23,13 +23,16 @@ import static org.testng.Assert.expectThrows;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -38,13 +41,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -92,12 +98,15 @@ public class SyncOpDiffTest {
 
     private SyncToken resultToken;
 
+    private Integer retentionCount;
+
     @BeforeMethod
     public void before() throws IOException {
         dir = Files.createTempDirectory("csv-sync");
         csvFile = dir.resolve("data.csv").toFile();
         deltas = null;
         resultToken = null;
+        retentionCount = null;
     }
 
     @AfterMethod(alwaysRun = true)
@@ -325,6 +334,43 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void failedSyncReleasesTheReadLockWhenItsCleanupFails() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from deleting files");
+        }
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+
+        final PrintStream original = System.out;
+        try {
+            // the snapshot this sync copied cannot be deleted, and the WARN about it throws, standing in for an Error
+            expectThrows(UncheckedIOException.class, () -> syncWithFailingHandleResult(null, () -> {
+                setDirMode(readOnly);
+                System.setOut(new PrintStream(new OutputStream() {
+                    @Override
+                    public void write(int b) {
+                        throw new UncheckedIOException(new IOException("Standard output is closed"));
+                    }
+                }));
+            }));
+        } finally {
+            System.setOut(original);
+            setDirMode(mode);
+        }
+
+        // otherwise every later write and sync of this CSV file in this JVM waits for the write lock for good
+        assertEquals(lockMap().get(csvFile.getAbsolutePath()).getReadLockCount(), 0);
+    }
+
+    @Test
     public void syncThatCannotListItsSnapshotsDeletesTheSnapshotItCopied() throws Exception {
         if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
             throw new SkipException("An unlistable directory needs POSIX permissions");
@@ -523,18 +569,449 @@ public class SyncOpDiffTest {
     }
 
     @Test
-    public void existingSnapshotOfTheCopiedMtimeKeepsTheToken() throws Exception {
+    public void syncQueuedBehindAFailingSyncGetsATokenWithASnapshot() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+        final Thread failing = Thread.currentThread();
+        final List<Future<?>> queued = new ArrayList<>();
+        final CountDownLatch baselineTaken = new CountDownLatch(1);
+        // once the failing sync releases the read lock, it waits until the queued sync has taken its baseline and
+        // released the write lock, so a snapshot the failing sync deletes only after the release is already reused
+        lockMap().put(csvFile.getAbsolutePath(), new ReentrantReadWriteLock() {
+            private final ReadLock readLock = new ReadLock(this) {
+                @Override
+                public void unlock() {
+                    super.unlock();
+                    if (Thread.currentThread() == failing && !queued.isEmpty()) {
+                        await(baselineTaken);
+                    }
+                }
+            };
+
+            private final WriteLock writeLock = new WriteLock(this) {
+                @Override
+                public void unlock() {
+                    super.unlock();
+                    if (Thread.currentThread() != failing) {
+                        baselineTaken.countDown();
+                    }
+                }
+            };
+
+            @Override
+            public ReadLock readLock() {
+                return readLock;
+            }
+
+            @Override
+            public WriteLock writeLock() {
+                return writeLock;
+            }
+        });
+        final ExecutorService other = Executors.newSingleThreadExecutor();
+        try {
+            expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null,
+                    () -> queued.add(other.submit(() -> sync(null)))));
+            await(queued.get(0));
+
+            // the old code deleted the snapshot of the failing sync after the queued sync had reused it
+            assertEquals(sync(resultToken), Collections.emptyList());
+        } finally {
+            other.shutdownNow();
+        }
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeAdvancesTheToken() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
-        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
-        final List<String> existingLines = Arrays.asList(HEADER, "x,Ann,Poe,pw3");
-        Files.write(existing, existingLines, StandardCharsets.UTF_8);
+        // the bytes of the live file, as an earlier sync of the same changes copied them
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
 
         assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
-        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
-        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), existingLines);
+        assertEquals(resultToken.getValue(), csvFile.lastModified());
         assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
                 existing.getFileName().toString()));
+    }
+
+    @DataProvider
+    public Object[][] laterWrites() {
+        return new Object[][] {
+            { "w,Will,Woe,pw4", "k,Ann,Poe,pw3", "CREATE w [Will, Woe, pw4]" },
+            // the same length, and past the first 8 KiB the comparison reads at once
+            { null, "k,Ann,Poe,pw4", "UPDATE k [Ann, Poe, pw4]" }
+        };
+    }
+
+    @Test(dataProvider = "laterWrites")
+    public void existingSnapshotOfTheCopiedMtimeWithOtherBytesKeepsTheToken(String added, String k, String delta)
+            throws Exception {
+        final List<String> rows = new ArrayList<>(Collections.singletonList(HEADER));
+        for (int i = 0; i < 400; i++) {
+            rows.add(String.format("u%03d,First,Last,pw%03d", i, i));
+        }
+        rows.add("k,Ann,Poe,pw3");
+        givenLive(rows.toArray(new String[0]));
+        rows.add("d,John,Roe,pw2");
+        givenSnapshot(rows.toArray(new String[0]));
+        // another JVM read the same mtime, but copied the file only after a writer had made a change
+        final List<String> theirs = new ArrayList<>(rows.subList(0, rows.size() - 2));
+        theirs.add(k);
+        if (added != null) {
+            theirs.add(added);
+        }
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(),
+                theirs.toArray(new String[0]));
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        // as the new token, the existing snapshot would hide that change from this consumer for good
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertEquals(Files.readAllLines(existing, StandardCharsets.UTF_8), theirs);
+
+        givenLive(theirs.toArray(new String[0]));
+        assertEquals(sync(resultToken), Arrays.asList("DELETE d [John, Roe, pw2]", delta));
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeThatCannotBeReadKeepsTheToken() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unreadable file needs POSIX permissions");
+        }
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // the bytes of the live file, so only the failed read keeps the token
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
+        Files.setPosixFilePermissions(existing, PosixFilePermissions.fromString("---------"));
+        if (Files.isReadable(existing)) {
+            throw new SkipException("A file without read permission can still be read by this user");
+        }
+        connector();
+
+        final String output = captureStdOut(() -> assertEquals(sync(SNAPSHOT_TOKEN),
+                Collections.singletonList("DELETE d [John, Roe, pw2]")));
+
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertTrue(output.contains("Could not compare " + existing.toFile()), output);
+    }
+
+    @Test
+    public void existingSnapshotOfTheCopiedMtimeDeletedMeanwhileIsLogged() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // a link to no file holds the name, so the move finds the snapshot, which then reads as deleted meanwhile
+        final Path existing = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        try {
+            Files.createSymbolicLink(existing, dir.resolve("gone"));
+        } catch (UnsupportedOperationException | IOException e) {
+            throw new SkipException("A symbolic link cannot be created here", e);
+        }
+        connector();
+
+        final String output = captureStdOut(() -> assertEquals(sync(SNAPSHOT_TOKEN),
+                Collections.singletonList("DELETE d [John, Roe, pw2]")));
+
+        assertEquals(resultToken, SNAPSHOT_TOKEN);
+        assertTrue(output.contains("Could not compare " + existing.toFile()), output);
+    }
+
+    @Test
+    public void failedSyncKeepsTheExistingSnapshotOfTheCopiedMtime() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final Path existing = givenFile(csvFile.getName() + "." + csvFile.lastModified(), HEADER, "k,Ann,Poe,pw3");
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(SNAPSHOT_TOKEN, () -> { }));
+
+        assertTrue(Files.exists(existing));
+    }
+
+    @Test
+    public void secondConsumerOfTheSameChangesGetsTheNewTokenToo() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        final SyncToken first = resultToken;
+        // another consumer stored the same token; the old code gave it that token back, so it got this delta forever
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        assertEquals(resultToken, first);
+        assertEquals(sync(resultToken), Collections.emptyList());
+    }
+
+    @Test
+    public void secondSyncWithoutATokenOfAnUnchangedFileReusesItsSnapshot() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final List<File> copies = connectorRecordingCopies(false);
+
+        assertEquals(sync(null), Collections.emptyList());
+        final SyncToken first = resultToken;
+        // the old code failed here: its copy found the snapshot of the first sync in the way
+        assertEquals(sync(null), Collections.emptyList());
+
+        assertEquals(resultToken, first);
+        assertEquals(first.getValue(), csvFile.lastModified());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + first.getValue()));
+        // the snapshot and the copy for the diff, then only the copy for the diff
+        assertEquals(copies.size(), 3);
+    }
+
+    @Test
+    public void failedSyncKeepsTheSnapshotItReused() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        sync(null);
+        final List<String> taken = snapshots();
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> { }));
+
+        assertEquals(snapshots(), taken);
+    }
+
+    @Test
+    public void snapshotTakenMeanwhileByAnotherProcessIsKept() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final Path snapshot = dir.resolve(csvFile.getName() + "." + csvFile.lastModified());
+        // the live row, written differently, so that a replaced snapshot shows
+        final List<String> theirs = Arrays.asList(HEADER, "\"u1\",\"Jane\",\"Doe\",\"pw1\"");
+        final List<File> copies = new ArrayList<>();
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                if (copies.isEmpty()) {
+                    // another process takes the snapshot of this mtime while the sync copies the CSV file for it
+                    Files.write(snapshot, theirs, StandardCharsets.UTF_8);
+                }
+                copies.add(copy);
+                return copy;
+            }
+        });
+
+        expectThrows(IllegalStateException.class, () -> syncWithFailingHandleResult(null, () -> { }));
+
+        assertEquals(Files.readAllLines(snapshot, StandardCharsets.UTF_8), theirs);
+        // the copy that lost the race is deleted
+        assertEquals(snapshots(), Collections.singletonList(snapshot.getFileName().toString()));
+    }
+
+    @Test
+    public void syncDeletesTheSnapshotsBeyondTheRetentionCount() throws Exception {
+        retentionCount = 2;
+        givenFile(csvFile.getName() + ".1100000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + ".1200000000000",
+                csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @Test
+    public void syncKeepsTheSnapshotItReadsWhenItIsTheOldest() throws Exception {
+        retentionCount = 1;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1500000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        // the newest snapshot and the one this sync read are kept, then the sync adds its own
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                csvFile.getName() + ".1500000000000", csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @DataProvider
+    public Object[][] copiesKeepingTheCsvFileMtime() {
+        return new Object[][] { { false }, { true } };
+    }
+
+    @Test(dataProvider = "copiesKeepingTheCsvFileMtime")
+    public void syncKeepsTheTokenOfAnotherConsumerWhenTheCsvFileMtimeMovesBack(boolean copyKeepsTheCsvFileMtime)
+            throws Exception {
+        retentionCount = 2;
+        // the tokens of consumers B and A, each taken while the CSV file had the mtime in its name
+        final SyncToken tokenOfA = new SyncToken(1400000000000L);
+        givenSnapshotTakenAt(SNAPSHOT_TOKEN, HEADER, "k,Ann,Poe,pw3");
+        givenSnapshotTakenAt(tokenOfA, HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        // then the CSV file is replaced by one with an older mtime, such as by a restore from a backup
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        Files.setLastModifiedTime(csvFile.toPath(), FileTime.fromMillis(1200000000000L));
+        if (copyKeepsTheCsvFileMtime) {
+            connectorWhoseCopiesKeepTheCsvFileMtime();
+        }
+
+        // A's sync takes the snapshot of its next token while it reads the changes
+        assertEquals(sync(tokenOfA), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+        final SyncToken nextOfA = resultToken;
+        assertEquals(nextOfA.getValue(), 1200000000000L);
+        // B's scrub spares the snapshot it reads, the one taken first; ordered by name, it deleted A's
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+        assertEquals(snapshots().size(), 3);
+
+        assertEquals(sync(nextOfA), Collections.emptyList());
+    }
+
+    @Test
+    public void snapshotsTakenInOneTickAreScrubbedInTheOrderOfTheirNames() throws Exception {
+        retentionCount = 2;
+        // a file system clock that ticks once a second or slower gives snapshots taken in a row one mtime
+        final FileTime tick = FileTime.fromMillis(1500000000000L);
+        for (Object mtime : Arrays.asList(1100000000000L, 1200000000000L, SNAPSHOT_TOKEN.getValue())) {
+            Files.setLastModifiedTime(givenFile(csvFile.getName() + "." + mtime, HEADER, "k,Ann,Poe,pw3"), tick);
+        }
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + ".1200000000000",
+                csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
+    }
+
+    @DataProvider
+    public Object[][] retentionCountsBelowOne() {
+        return new Object[][] { { 0 }, { -1 } };
+    }
+
+    @Test(dataProvider = "retentionCountsBelowOne")
+    public void syncFromATokenKeepsOnlyTheSnapshotItReads(int count) throws Exception {
+        retentionCount = count;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenFile(csvFile.getName() + ".1500000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+
+        // then the sync adds its own
+        assertEquals(snapshots(), Arrays.asList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue(),
+                csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @Test(dataProvider = "retentionCountsBelowOne")
+    public void syncWithoutATokenKeepsOnlyItsBaseline(int count) throws Exception {
+        retentionCount = count;
+        givenFile(csvFile.getName() + ".1400000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(null), Collections.emptyList());
+
+        // with a count of 1 or more the baseline is the newest snapshot, so only a count below 1 reaches it
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + resultToken.getValue()));
+    }
+
+    @Test
+    public void syncKeepsTheSnapshotsOfOtherFiles() throws Exception {
+        retentionCount = 1;
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        // each would be the oldest snapshot under the old pattern, which was not anchored and did not quote the dot
+        final List<String> others = Arrays.asList("old_data.csv.1100000000000", "dataXcsv.1200000000000");
+        for (String other : others) {
+            givenFile(other, HEADER, "k,Ann,Poe,pw3");
+        }
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.emptyList());
+
+        for (String other : others) {
+            assertTrue(Files.exists(dir.resolve(other)), other);
+        }
+    }
+
+    @Test
+    public void snapshotThatCannotBeScrubbedIsLogged() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("A read-only directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        final Set<PosixFilePermission> readOnly = PosixFilePermissions.fromString("r-xr-xr-x");
+        setDirMode(readOnly);
+        final boolean writable = Files.isWritable(dir);
+        setDirMode(mode);
+        if (writable) {
+            throw new SkipException("A read-only directory does not stop this user from deleting files");
+        }
+        retentionCount = 1;
+        final Path old = givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        connector();
+
+        final List<ConnectorException> failures = new ArrayList<>();
+        final String output;
+        setDirMode(readOnly);
+        try {
+            // the scrub only logs; then the copy for the diff fails in the read-only directory
+            output = captureStdOut(() -> failures.add(expectThrows(ConnectorException.class,
+                    () -> sync(SNAPSHOT_TOKEN))));
+        } finally {
+            setDirMode(mode);
+        }
+
+        assertTrue(output.contains("Could not delete " + old.toFile()), output);
+        assertEquals(failures.get(0).getMessage(), "Unable to copy CSV file for sync operation");
+        assertTrue(Files.exists(old));
+    }
+
+    @Test
+    public void syncFromATokenWhoseSnapshotIsGoneFails() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        final File snapshot = new File(dir.toFile(), csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue());
+
+        ConnectorException e = expectThrows(ConnectorException.class, () -> sync(SNAPSHOT_TOKEN));
+
+        assertEquals(e.getMessage(), "Snapshot " + snapshot + " of sync token " + SNAPSHOT_TOKEN.getValue()
+                + " does not exist, so the changes since that token cannot be reported; reset the sync token");
+        assertEquals(deltas, Collections.emptyList());
+        assertEquals(snapshots(), Collections.emptyList());
+    }
+
+    @Test
+    public void latestSyncTokenWithoutASnapshotTakesOne() throws Exception {
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        assertEquals(token.getValue(), csvFile.lastModified());
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + token.getValue()));
+        // the first sync from the token reports a change made after the call; the old code lost it
+        givenLive(HEADER, "k,Ann,Poe,pw3", "c,Jane,Doe,pw1");
+        assertEquals(sync(token), Collections.singletonList("CREATE c [Jane, Doe, pw1]"));
+    }
+
+    @Test
+    public void latestSyncTokenIsThatOfTheSnapshotTakenLast() throws Exception {
+        givenSnapshotTakenAt(new SyncToken(1400000000000L), HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        // taken now, after the CSV file was replaced by one with an older mtime
+        givenFile(csvFile.getName() + ".1200000000000", HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        // the token of the newest name reported a delete made before the call, and the scrub deleted it first
+        assertEquals(token.getValue(), 1200000000000L);
+        assertEquals(sync(token), Collections.emptyList());
+    }
+
+    @Test(dataProvider = "copiesKeepingTheCsvFileMtime")
+    public void latestSyncTokenIsThatOfABaselineTakenAfterTheCsvFileMtimeMovesBack(boolean copyKeepsTheCsvFileMtime)
+            throws Exception {
+        givenSnapshotTakenAt(new SyncToken(1400000000000L), HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        Files.setLastModifiedTime(csvFile.toPath(), FileTime.fromMillis(1200000000000L));
+        if (copyKeepsTheCsvFileMtime) {
+            connectorWhoseCopiesKeepTheCsvFileMtime();
+        }
+        // a sync without a token takes the baseline of the restored CSV file
+        assertEquals(sync(null), Collections.emptyList());
+
+        final SyncToken token = connector().getLatestSyncToken(ObjectClass.ACCOUNT);
+
+        // a baseline with the mtime of the CSV file sorts before the older snapshot, whose token reports a delete
+        assertEquals(token.getValue(), 1200000000000L);
+        assertEquals(sync(token), Collections.emptyList());
     }
 
     @Test
@@ -594,6 +1071,108 @@ public class SyncOpDiffTest {
         sync(SNAPSHOT_TOKEN);
     }
 
+    @DataProvider
+    public Object[][] otherFileNames() {
+        return new Object[][] {
+            // the old pattern was not anchored at the start
+            { "old_data.csv" },
+            // and did not quote the dot
+            { "dataXcsv" }
+        };
+    }
+
+    @Test(dataProvider = "otherFileNames")
+    public void latestSyncTokenIgnoresSnapshotsOfOtherFiles(String otherName) throws Exception {
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        givenFile(otherName + ".1600000000000", HEADER);
+
+        assertEquals(connector().getLatestSyncToken(ObjectClass.ACCOUNT), SNAPSHOT_TOKEN);
+    }
+
+    @DataProvider
+    public Object[][] regexMetacharacterNames() {
+        return new Object[][] {
+            // never matched its own snapshots
+            { "data(1).csv" },
+            // made the pattern invalid
+            { "data[1.csv" }
+        };
+    }
+
+    @Test(dataProvider = "regexMetacharacterNames")
+    public void latestSyncTokenFindsTheSnapshotsOfAFileWithRegexMetacharactersInItsName(String name)
+            throws Exception {
+        csvFile = dir.resolve(name).toFile();
+        givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+
+        assertEquals(connector().getLatestSyncToken(ObjectClass.ACCOUNT), SNAPSHOT_TOKEN);
+    }
+
+    @Test
+    public void syncOfAFileWhoseNameIsAnInvalidRegexReportsItsChanges() throws Exception {
+        csvFile = dir.resolve("data[1.csv").toFile();
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+    }
+
+    @Test
+    public void syncOfAFileNamedWithoutADirectoryKeepsTheSnapshotItReads() throws Exception {
+        // the name resolves against the working directory, but its File has no parent
+        final Path workingDir = Paths.get("").toAbsolutePath();
+        final String name = Files.createTempFile(workingDir, "csv-sync-", ".csv").getFileName().toString();
+        try {
+            csvFile = new File(name);
+            // the scrub reaches the snapshot the sync reads, so it has to recognise that snapshot in its own listing
+            retentionCount = 1;
+            Files.write(workingDir.resolve(name + "." + SNAPSHOT_TOKEN.getValue()),
+                    Arrays.asList(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2"), StandardCharsets.UTF_8);
+            Files.write(workingDir.resolve(name + ".1400000000000"), Arrays.asList(HEADER, "k,Ann,Poe,pw3"),
+                    StandardCharsets.UTF_8);
+            givenLive(HEADER, "k,Ann,Poe,pw3");
+
+            // the old code failed with a NullPointerException in the scrub, and so did getLatestSyncToken
+            assertEquals(sync(SNAPSHOT_TOKEN), Collections.singletonList("DELETE d [John, Roe, pw2]"));
+            assertEquals(connector.getLatestSyncToken(ObjectClass.ACCOUNT), resultToken);
+
+            assertEquals(snapshots(workingDir), Arrays.asList(name + "." + SNAPSHOT_TOKEN.getValue(),
+                    name + ".1400000000000", name + "." + resultToken.getValue()));
+        } finally {
+            try (Stream<Path> paths = Files.list(workingDir)) {
+                for (Path file : paths.filter(path -> path.getFileName().toString().startsWith(name))
+                        .collect(Collectors.toList())) {
+                    Files.delete(file);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void latestSyncTokenOfAnUnlistableDirectoryFails() throws Exception {
+        if (!FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            throw new SkipException("An unlistable directory needs POSIX permissions");
+        }
+        final Set<PosixFilePermission> mode = Files.getPosixFilePermissions(dir);
+        givenLive(HEADER, "u1,Jane,Doe,pw1");
+        connector();
+
+        setDirMode(PosixFilePermissions.fromString("-wx------"));
+        try {
+            if (dir.toFile().list() != null) {
+                throw new SkipException("A directory without read permission does not stop this user from listing it");
+            }
+            // the old code failed with a NullPointerException
+            ConnectorIOException e = expectThrows(ConnectorIOException.class,
+                    () -> connector.getLatestSyncToken(ObjectClass.ACCOUNT));
+            assertEquals(e.getMessage(), "Unable to list the files of " + dir.toFile());
+        } finally {
+            setDirMode(mode);
+        }
+    }
+
     @Test
     public void missingCsvFileFailsSync() throws Exception {
         givenSnapshot(HEADER, "u1,Jane,Doe,pw1");
@@ -649,6 +1228,18 @@ public class SyncOpDiffTest {
     }
 
     @Test
+    public void copyDeletedBeforeItsMtimeIsSetLogsAWarning() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+        final List<File> copies = connectorRecordingCopies(true);
+
+        final String output =
+                captureStdOut(() -> expectThrows(ConnectorIOException.class, () -> sync(SNAPSHOT_TOKEN)));
+
+        assertTrue(output.contains("Could not set the mtime of copy " + copies.get(0) + " of " + csvFile), output);
+    }
+
+    @Test
     public void copyDeletedBeforeTheCreateUpdatePassFailsSyncNamingTheCsvFile() throws Exception {
         givenSnapshot(HEADER, "k,Ann,Poe,pw3", "d,John,Roe,pw2");
         givenLive(HEADER, "k,Ann,Poe,pw3");
@@ -671,6 +1262,16 @@ public class SyncOpDiffTest {
 
     private void givenLive(String... lines) throws IOException {
         Files.write(csvFile.toPath(), Arrays.asList(lines), StandardCharsets.UTF_8);
+    }
+
+    private Path givenFile(String name, String... lines) throws IOException {
+        return Files.write(dir.resolve(name), Arrays.asList(lines), StandardCharsets.UTF_8);
+    }
+
+    // a snapshot gets the time of its copy as its mtime, here the mtime of the CSV file that its name holds
+    private void givenSnapshotTakenAt(SyncToken token, String... lines) throws IOException {
+        Files.setLastModifiedTime(givenFile(csvFile.getName() + "." + token.getValue(), lines),
+                FileTime.fromMillis((Long) token.getValue()));
     }
 
     // the connector logs through StdOutLogger, which reads System.out on every call
@@ -700,7 +1301,11 @@ public class SyncOpDiffTest {
     }
 
     private List<String> snapshots() throws IOException {
-        try (Stream<Path> paths = Files.list(dir)) {
+        return snapshots(dir);
+    }
+
+    private List<String> snapshots(Path in) throws IOException {
+        try (Stream<Path> paths = Files.list(in)) {
             return paths.map(path -> path.getFileName().toString())
                     .filter(name -> name.startsWith(csvFile.getName() + "."))
                     .sorted()
@@ -745,6 +1350,24 @@ public class SyncOpDiffTest {
         }
     }
 
+    // waits for another thread to count the latch down
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new AssertionError("Timed out waiting for " + latch);
+            }
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, ReentrantReadWriteLock> lockMap() throws ReflectiveOperationException {
+        final Field field = CSVFileConnector.class.getDeclaredField("fileNameToLockMap");
+        field.setAccessible(true);
+        return (Map<String, ReentrantReadWriteLock>) field.get(null);
+    }
+
     private void setDirMode(Set<PosixFilePermission> mode) {
         try {
             Files.setPosixFilePermissions(dir, mode);
@@ -777,11 +1400,27 @@ public class SyncOpDiffTest {
         return copies;
     }
 
+    // copies the CSV file as Files.copy does on Windows, where CopyFileEx keeps the mtime of the source file; on Linux
+    // and macOS a copy gets the time it is made
+    private void connectorWhoseCopiesKeepTheCsvFileMtime() {
+        connector(new CSVFileConnector() {
+            @Override
+            File copyCsvFile() throws IOException {
+                final File copy = super.copyCsvFile();
+                Files.setLastModifiedTime(copy.toPath(), Files.getLastModifiedTime(csvFile.toPath()));
+                return copy;
+            }
+        });
+    }
+
     private CSVFileConnector connector(CSVFileConnector instance) {
         CSVFileConfiguration config = new CSVFileConfiguration();
         config.setCsvFile(csvFile);
         config.setHeaderUid("uid");
         config.setHeaderPassword("password");
+        if (retentionCount != null) {
+            config.setSyncFileRetentionCount(retentionCount);
+        }
         instance.init(config);
         connector = instance;
         return connector;
