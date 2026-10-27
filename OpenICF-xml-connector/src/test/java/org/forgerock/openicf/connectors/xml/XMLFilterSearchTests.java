@@ -199,6 +199,12 @@ public class XMLFilterSearchTests {
                 {containsAllValues(attribute(ATTR_ACCOUNT_EMAIL, null)), asList("a1", "a2", "a3", "a4", "a5")},
                 {containsAllValues(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "x1", null)),
                         asList("a1", "a2", "a3", "a4", "a5")},
+                // equalTo with other than one value is left to the framework, which compares lists.
+                {equalTo(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "x2", "y2")), asList("a1", "a2", "a3", "a4", "a5")},
+                {not(equalTo(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "x2", "y2"))),
+                        asList("a1", "a2", "a3", "a4", "a5")},
+                {equalTo(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL)), asList("a1", "a2", "a3", "a4", "a5")},
+                {equalTo(attribute(ATTR_ACCOUNT_EMAIL, null)), asList("a1", "a2", "a3", "a4", "a5")},
         };
     }
 

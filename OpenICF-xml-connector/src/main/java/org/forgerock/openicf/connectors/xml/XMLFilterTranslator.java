@@ -146,7 +146,12 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
     public Query createEqualsExpression(EqualsFilter filter, boolean not) {
         String attrName = getAttributeName(filter.getAttribute());
         String prefixedName = createNameWithNamespace(attrName);
-        String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
+        List<Object> values = filter.getAttribute().getValue();
+        // The framework compares whole lists of values; null leaves anything but one value to it.
+        if (values == null || values.size() != 1 || values.get(0) == null) {
+            return null;
+        }
+        String value = values.get(0).toString();
 
         return createComparisonQuery(prefixedName, not ? "!=" : "=", value);
     }
