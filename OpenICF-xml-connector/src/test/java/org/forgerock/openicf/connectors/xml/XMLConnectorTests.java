@@ -668,8 +668,9 @@ public class XMLConnectorTests {
 
         @Override
         public Collection<ConnectorObject> search(Query query, ObjectClass objectClass) {
-            firstIn.countDown();
+            // Count the caller in before opening firstIn, so whoever wakes on firstIn already sees it counted.
             entries.countDown();
+            firstIn.countDown();
             try {
                 release.await();
             } catch (InterruptedException e) {
