@@ -91,12 +91,14 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
         int numOfValues = values.size();
 
-        if (numOfValues == 0) {
+        // null leaves the filter to the framework: every entry is returned for it to check.
+        if (numOfValues == 0 || values.contains(null)) {
             return null;
         } else if (numOfValues == 1) {
-            ContainsFilter cf = new ContainsFilter(AttributeBuilder.build(attrName, values.get(0)));
+            // Equal values, as below: a stored x1 does not contain the value x.
+            EqualsFilter ef = new EqualsFilter(AttributeBuilder.build(attrName, values.get(0).toString()));
 
-            return createContainsExpression(cf, not);
+            return createEqualsExpression(ef, not);
         } else {
 
             List<Query> equalsQueries = new ArrayList<Query>();

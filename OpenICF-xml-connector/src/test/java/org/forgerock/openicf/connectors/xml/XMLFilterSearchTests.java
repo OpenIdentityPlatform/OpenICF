@@ -18,6 +18,7 @@ package org.forgerock.openicf.connectors.xml;
 import static java.util.Arrays.asList;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.contains;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.containsAllValues;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.endsWith;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.equalTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThan;
@@ -190,6 +191,14 @@ public class XMLFilterSearchTests {
                 {contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "'")), asList("a3")},
                 {contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "&amp;")), asList("a2")},
                 {not(contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "&T"))), asList("a2", "a3", "a4", "a5")},
+                // containsAllValues looks for equal values: x1 does not contain x. A null value is
+                // left to the framework, so every entry is returned.
+                {containsAllValues(attribute(ATTR_ACCOUNT_EMAIL, "x")), asList()},
+                {not(containsAllValues(attribute(ATTR_ACCOUNT_EMAIL, "x"))), asList("a1", "a2", "a3")},
+                {containsAllValues(attribute(ATTR_ACCOUNT_AGE, 9)), asList("a2")},
+                {containsAllValues(attribute(ATTR_ACCOUNT_EMAIL, null)), asList("a1", "a2", "a3", "a4", "a5")},
+                {containsAllValues(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "x1", null)),
+                        asList("a1", "a2", "a3", "a4", "a5")},
         };
     }
 
