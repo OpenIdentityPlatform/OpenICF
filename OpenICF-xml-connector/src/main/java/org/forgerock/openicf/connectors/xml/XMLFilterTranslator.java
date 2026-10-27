@@ -27,7 +27,6 @@
 package org.forgerock.openicf.connectors.xml;
 
 import org.forgerock.openicf.connectors.xml.query.ComparisonQuery;
-import org.forgerock.openicf.connectors.xml.query.ContainsQuery;
 import org.forgerock.openicf.connectors.xml.query.FunctionQuery;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
 import org.forgerock.openicf.connectors.xml.query.QueryImpl;
@@ -138,11 +137,7 @@ public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
         String prefixedName = createNameWithNamespace(attrName);
         String value = AttributeUtil.getSingleValue(filter.getAttribute()).toString();
 
-        // contains uses a different format than the other functions
-        Query query = new QueryImpl();
-        query.set(new ContainsQuery(prefixedName, value, not));
-
-        return query;
+        return createPredicateQuery(prefixedName, createFunctionCondition("contains", value), not);
     }
 
     @Override

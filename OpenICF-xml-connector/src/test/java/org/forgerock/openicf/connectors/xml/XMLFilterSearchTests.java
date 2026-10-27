@@ -17,6 +17,7 @@ package org.forgerock.openicf.connectors.xml;
 
 import static java.util.Arrays.asList;
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
+import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.contains;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.endsWith;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.equalTo;
 import static org.identityconnectors.framework.common.objects.filter.FilterBuilder.greaterThan;
@@ -185,6 +186,10 @@ public class XMLFilterSearchTests {
                 {equalTo(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;T")), asList("a2")},
                 {not(equalTo(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;T"))), asList("a1", "a3")},
                 {greaterThan(attribute(ATTR_ACCOUNT_FIRST_NAME, "AT&T")), asList("a2", "a3")},
+                // contains escapes its value like the other filters.
+                {contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "'")), asList("a3")},
+                {contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "&amp;")), asList("a2")},
+                {not(contains(attribute(ATTR_ACCOUNT_FIRST_NAME, "&T"))), asList("a2", "a3", "a4", "a5")},
         };
     }
 

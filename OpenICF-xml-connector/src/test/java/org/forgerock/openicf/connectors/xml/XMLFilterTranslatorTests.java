@@ -398,6 +398,15 @@ public class XMLFilterTranslatorTests {
     }
 
     @Test
+    public void containsEscapesItsValue() {
+        Attribute quote = AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "O'B");
+        AssertJUnit.assertEquals("$x/ri:firstname[fn:contains(., 'O''B')]",
+                expression(filterTranslator.createContainsExpression(new ContainsFilter(quote), false)));
+        AssertJUnit.assertEquals("fn:not($x/ri:firstname[fn:contains(., 'O''B')])",
+                expression(filterTranslator.createContainsExpression(new ContainsFilter(quote), true)));
+    }
+
+    @Test
     public void literalsEscapeAmpersands() {
         AssertJUnit.assertEquals("$x/ri:lastname = 'AT&amp;T'", expression(filterTranslator.createEqualsExpression(
                 new EqualsFilter(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "AT&T")), false)));
