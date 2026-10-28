@@ -390,8 +390,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
         } finally {
-            // A DOM failure midway, such as a value below another element (#182), may leave the entry already changed,
-            // so report the change either way.
+            // A failure midway may leave the entry already changed, so report the change either way.
             entryIndex.rekeyed(entry);
         }
         saveChange();
@@ -768,7 +767,8 @@ public class XMLHandlerImpl implements XMLHandler {
         log.info("Exit {0}", method);
     }
 
-    private Element createDomElement(String elementName, String value) {
+    // Not private: tests override it to make update fail midway.
+    Element createDomElement(String elementName, String value) {
 
         Element element = null;
 
