@@ -379,6 +379,10 @@ public class XMLHandlerIndexTests {
         assertIndexAgreesWithXQuery("first duplicate re-keyed");
         handler.delete(ObjectClass.ACCOUNT, new Uid("u1"));
         assertIndexAgreesWithXQuery("first duplicate deleted");
+        handler.update(ObjectClass.ACCOUNT, new Uid("u11"), Collections.singleton(AttributeBuilder.build(Name.NAME, "holder-renamed")));
+        assertIndexAgreesWithXQuery("entry holding another renamed");
+        handler.delete(ObjectClass.ACCOUNT, new Uid("u8"));
+        assertIndexAgreesWithXQuery("entry below another element deleted");
         handler.update(ObjectClass.ACCOUNT, new Uid("u11"), Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L11")));
         assertIndexAgreesWithXQuery("value holding an entry replaced");
         handler.failOnce(ATTR_ACCOUNT_LAST_NAME);

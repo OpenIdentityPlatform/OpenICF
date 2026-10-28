@@ -67,7 +67,6 @@ import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.w3c.dom.DOMException;
 
 public class XMLHandlerReloadTests {
 
@@ -737,27 +736,6 @@ public class XMLHandlerReloadTests {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));
         assertTrue(log.contains("Exit serialize: nothing to save"), log);
-    }
-
-    @Test
-    public void failedDeleteOfANestedEntryLeavesTheFileAlone() throws Exception {
-        writeAccounts(file, "alice");
-        // An XSD-invalid hand edit: getEntry's descendant query finds the entry, removeChild on the container rejects it.
-        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
-                .replace("  <ri:__ACCOUNT__>\n", "  <ri:wrapper>\n  <ri:__ACCOUNT__>\n")
-                .replace("  </ri:__ACCOUNT__>\n", "  </ri:__ACCOUNT__>\n  </ri:wrapper>\n");
-        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
-        FileTime past = FileTime.fromMillis(now() - HOUR);
-        Files.setLastModifiedTime(file.toPath(), past);
-        byte[] before = Files.readAllBytes(file.toPath());
-
-        expectThrows(DOMException.class, () -> call(h -> {
-            h.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"));
-            return null;
-        }));
-
-        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
-        assertEquals(Files.readAllBytes(file.toPath()), before);
     }
 
     @Test

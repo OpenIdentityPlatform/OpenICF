@@ -376,7 +376,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
                 // Remove existing nodes from entry
                 markDirty();
-                removeChildrenFromElement(entry, prefixAttributeName(attributeName));
+                removeChildrenFromElement(entry, attributeName);
 
                 // Append empty element if no values is provided
                 if (values.isEmpty()) {
@@ -411,7 +411,8 @@ public class XMLHandlerImpl implements XMLHandler {
         if (elementToRemove == null) {
             throw new UnknownUidException("Deleting entry failed. Could not find an entry of type " + objClass.getObjectClassValue() + " with the uid " + uid.getUidValue());
         }
-        getDocument().getDocumentElement().removeChild(elementToRemove);
+        // Not always a child of the container: a hand-edited file may have it below another element.
+        elementToRemove.getParentNode().removeChild(elementToRemove);
         markDirty();
         entryIndex.removed(elementToRemove);
         saveChange();
@@ -844,29 +845,24 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     private void removeChildrenFromElement(Element element, String childName) {
-        NodeList oldNodes = element.getElementsByTagName(childName);
-        List<Element> elementsToRemove = new ArrayList<Element>();
-
-        for (int i = 0; i < oldNodes.getLength(); i++) {
-            elementsToRemove.add((Element) oldNodes.item(i));
-        }
-
-        for (Element e : elementsToRemove) {
+        for (Element e : ownElements(element, childName)) {
             element.removeChild(e);
             entryIndex.removed(e);
         }
     }
 
-    private String prefixAttributeName(String attrName) {
-        String prefix = "";
-
-        if (icfSchema.getElementDecls().containsKey(attrName)) {
-            prefix = ICF_NAMESPACE_PREFIX + ":" + attrName;
-        } else {
-            prefix = RI_NAMESPACE_PREFIX + ":" + attrName;
+    /**
+     * The child elements of {@code entry} named {@code localName}, in any namespace, in document order: the
+     * elements {@link ConnectorObjectCreator} reads the attribute from. Walks the children, not a NodeList.
+     */
+    private static List<Element> ownElements(Element entry, String localName) {
+        List<Element> elements = new ArrayList<Element>();
+        for (Node child = entry.getFirstChild(); child != null; child = child.getNextSibling()) {
+            if (child.getNodeType() == Node.ELEMENT_NODE && localName.equals(child.getLocalName())) {
+                elements.add((Element) child);
+            }
         }
-
-        return prefix;
+        return elements;
     }
 
     Document getDocument() {
