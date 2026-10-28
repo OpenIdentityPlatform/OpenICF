@@ -481,6 +481,30 @@ public class SyncOpDiffTest {
         assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
     }
 
+    @Test
+    public void handlerStopInTheCreateUpdatePassKeepsTheToken() throws Exception {
+        givenSnapshot(HEADER, "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "c1,Jane,Doe,pw1", "c2,John,Roe,pw2", "c3,Max,Moe,pw4");
+
+        assertEquals(syncAccepting(SNAPSHOT_TOKEN, 1),
+                Arrays.asList("CREATE c1 [Jane, Doe, pw1]", "CREATE c2 [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+        assertEquals(snapshots(), Collections.singletonList("data.csv.1300000000000"));
+
+        // the stopped sync took no snapshot, so the next one offers every delta again, the accepted one too
+        assertEquals(sync(resultToken), Arrays.asList("CREATE c1 [Jane, Doe, pw1]", "CREATE c2 [John, Roe, pw2]",
+                "CREATE c3 [Max, Moe, pw4]"));
+    }
+
+    @Test
+    public void rejectedUpdateKeepsTheSnapshotItsTokenNames() throws Exception {
+        givenLive(DUPLICATE_UIDS);
+
+        List<SyncToken> offered = syncRejectingWithFailingHandleResult(null);
+
+        assertEquals(snapshots(), Collections.singletonList("data.csv." + offered.get(0).getValue()));
+    }
+
     @DataProvider
     public Object[][] singleChanges() {
         return new Object[][] {
@@ -1247,7 +1271,7 @@ public class SyncOpDiffTest {
 
         final String output = captureStdErr(() -> {
             ConnectorIOException e = expectThrows(ConnectorIOException.class,
-                    () -> sync(SNAPSHOT_TOKEN, true, () -> assertTrue(copies.get(0).delete())));
+                    () -> sync(SNAPSHOT_TOKEN, Integer.MAX_VALUE, () -> assertTrue(copies.get(0).delete())));
             assertEquals(e.getMessage(), "File " + csvFile + " does not exist");
         });
 
@@ -1326,6 +1350,25 @@ public class SyncOpDiffTest {
                 throw new IllegalStateException("token not stored");
             }
         }, null);
+    }
+
+    // rejects every delta and fails in handleResult; returns the tokens of the offered deltas
+    private List<SyncToken> syncRejectingWithFailingHandleResult(final SyncToken token) {
+        final List<SyncToken> offered = new ArrayList<>();
+        expectThrows(IllegalStateException.class, () -> connector().sync(ObjectClass.ACCOUNT, token,
+                new SyncTokenResultsHandler() {
+                    @Override
+                    public boolean handle(SyncDelta delta) {
+                        offered.add(delta.getToken());
+                        return false;
+                    }
+
+                    @Override
+                    public void handleResult(SyncToken syncToken) {
+                        throw new IllegalStateException("token not stored");
+                    }
+                }, null));
+        return offered;
     }
 
     // syncs from no token, handles the given number of deltas and fails on the next one
@@ -1431,12 +1474,17 @@ public class SyncOpDiffTest {
     }
 
     private List<String> sync(SyncToken token, final boolean accept) {
-        return sync(token, accept, () -> { });
+        return syncAccepting(token, accept ? Integer.MAX_VALUE : 0);
+    }
+
+    // syncs like sync(token), but the handler returns false on the delta after the given number of accepted ones
+    private List<String> syncAccepting(SyncToken token, final int accepted) {
+        return sync(token, accepted, () -> { });
     }
 
     // syncs like sync(token), while an external writer replaces the live file with the given lines on the first delta
     private List<String> syncRewritingLive(SyncToken token, final String... live) {
-        return sync(token, true, () -> {
+        return sync(token, Integer.MAX_VALUE, () -> {
             try {
                 givenLive(live);
             } catch (IOException e) {
@@ -1445,7 +1493,7 @@ public class SyncOpDiffTest {
         });
     }
 
-    private List<String> sync(SyncToken token, final boolean accept, final Runnable onFirstDelta) {
+    private List<String> sync(SyncToken token, final int accepted, final Runnable onFirstDelta) {
         deltas = new ArrayList<>();
         connector().sync(ObjectClass.ACCOUNT, token, new SyncTokenResultsHandler() {
             @Override
@@ -1454,7 +1502,7 @@ public class SyncOpDiffTest {
                     onFirstDelta.run();
                 }
                 deltas.add(render(delta));
-                return accept;
+                return deltas.size() <= accepted;
             }
 
             @Override

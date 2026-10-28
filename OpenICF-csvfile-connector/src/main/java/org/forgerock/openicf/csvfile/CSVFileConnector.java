@@ -469,8 +469,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         final List<File> copies = new ArrayList<File>(2);
         // a copy of the live file taken before the diff, which reads it instead, so that a change an external
         // writer makes meanwhile is left to the next sync; it becomes the next snapshot once a delta is accepted
+        // and the handler did not stop the sync
         File next = null;
         boolean changesProcessed = false;
+        // set when the handler returns false: no further delta is offered
+        boolean stopped = false;
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
@@ -658,6 +661,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                     // the handler may have stored the token of this delta, so its snapshot must stay
                     copies.clear();
                     if (!more) {
+                        stopped = true;
                         break;
                     }
                     changesProcessed = true;
@@ -678,7 +682,9 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 }
             }
 
-            if (changesProcessed) {
+            // a stopped sync takes no snapshot and returns the token its deltas carry, so the next sync offers
+            // every delta of this one again
+            if (changesProcessed && !stopped) {
                 syncOrigin = snapshotFile(nextTimestamp);
                 try {
                     Files.move(next.toPath(), syncOrigin.toPath());
