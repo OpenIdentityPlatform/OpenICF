@@ -48,7 +48,8 @@ public class XMLHandlerOwnElementsTests {
     /** Entries below another element and entries inside another entry's value: XSD-invalid hand edits. */
     private static final String[] NESTED = {
             "<ri:__ACCOUNT__><icf:__UID__>u1</icf:__UID__><icf:__NAME__>nopass</icf:__NAME__>"
-                    + "<ri:lastname>L1</ri:lastname></ri:__ACCOUNT__>",
+                    + "<ri:lastname>L1</ri:lastname><ri:email>u1-a@example.com</ri:email>"
+                    + "<ri:email>u1-b@example.com</ri:email></ri:__ACCOUNT__>",
             "<ri:wrapper><ri:__ACCOUNT__><icf:__UID__>u8</icf:__UID__><icf:__NAME__>nested</icf:__NAME__>"
                     + "<icf:__PASSWORD__>p8</icf:__PASSWORD__><ri:lastname>L8</ri:lastname></ri:__ACCOUNT__></ri:wrapper>",
             "<ri:__ACCOUNT__><icf:__UID__>u11</icf:__UID__><icf:__NAME__>holder</icf:__NAME__><ri:lastname>"
@@ -117,7 +118,16 @@ public class XMLHandlerOwnElementsTests {
         handler.update(ObjectClass.ACCOUNT, new Uid("u20"),
                 Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW")));
         handler.dispose();
-        assertEquals(lastNamesInFile(file), List.of("NEW"));
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), List.of("NEW"));
+    }
+
+    @Test
+    public void updateReplacesEveryOwnValueOfAnAttribute() throws Exception {
+        open("icf", NESTED);
+        handler.update(ObjectClass.ACCOUNT, new Uid("u1"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "new@example.com")));
+        handler.dispose();
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_EMAIL), List.of("new@example.com"));
     }
 
     @Test
@@ -178,14 +188,14 @@ public class XMLHandlerOwnElementsTests {
         return new QueryBuilder(null, ObjectClass.ACCOUNT).toString();
     }
 
-    /** The lastname values in the file, in any namespace, in document order. */
-    private static List<String> lastNamesInFile(File file) throws Exception {
+    /** The values of the {@code localName} elements in the file, in any namespace, in document order. */
+    private static List<String> valuesInFile(File file, String localName) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware(true);
-        NodeList lastNames = factory.newDocumentBuilder().parse(file).getElementsByTagNameNS("*", ATTR_ACCOUNT_LAST_NAME);
+        NodeList elements = factory.newDocumentBuilder().parse(file).getElementsByTagNameNS("*", localName);
         List<String> result = new ArrayList<String>();
-        for (int i = 0; i < lastNames.getLength(); i++) {
-            result.add(lastNames.item(i).getTextContent());
+        for (int i = 0; i < elements.getLength(); i++) {
+            result.add(elements.item(i).getTextContent());
         }
         return result;
     }
