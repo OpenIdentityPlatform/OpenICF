@@ -1446,7 +1446,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
      * {@link FileChannel#force}, {@link java.io.FileDescriptor#sync} does not
      * fail on a thread whose interrupt flag is set.
      */
-    private static void completeRewrite(ICsvMapWriter writer, FileOutputStream copy) throws IOException {
+    void completeRewrite(ICsvMapWriter writer, FileOutputStream copy) throws IOException {
         writer.flush();
         copy.getFD().sync();
         writer.close();
