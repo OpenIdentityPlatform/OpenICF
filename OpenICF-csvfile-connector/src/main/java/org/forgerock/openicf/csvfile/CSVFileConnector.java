@@ -1224,7 +1224,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 throw new UnknownUidException("Object for uid " + uid.toString() + " does not exist");
             }
             // the last rows reach the copy only here: a failure must not replace the CSV
-            writer.close();
+            completeRewrite(writer, copy);
             rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
@@ -1297,7 +1297,7 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 throw new UnknownUidException("Uid " + uid.getUidValue() + " does not exist");
             }
             // the last rows reach the copy only here: a failure must not replace the CSV
-            writer.close();
+            completeRewrite(writer, copy);
             rewritten = true;
         } catch (FileNotFoundException e) {
             log.error(e, "File {0} does not exist!", config.getCsvFile().toString());
@@ -1439,15 +1439,29 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     }
 
     /**
+     * Writes the last rows of a rewrite to its copy, syncs the copy to disk and
+     * closes it. The copy is on disk before it is renamed over the CSV, so that
+     * a crash can not leave the CSV name pointing to a copy whose data was never
+     * written. It is synced through its own stream: unlike
+     * {@link FileChannel#force}, {@link java.io.FileDescriptor#sync} does not
+     * fail on a thread whose interrupt flag is set.
+     */
+    private static void completeRewrite(ICsvMapWriter writer, FileOutputStream copy) throws IOException {
+        writer.flush();
+        copy.getFD().sync();
+        writer.close();
+    }
+
+    /**
      * Puts the rewritten copy in place of the CSV when the rewrite completed:
-     * the copy is synced to disk, takes over the CSV's group if the process
-     * may set it and the CSV's mode bits (the owner becomes the process's
-     * user), and is renamed over the CSV. When the group can not be set, the
-     * copy keeps the process's group and gets no group permissions. When the
-     * mode bits can not be set (a file system whose modes are fixed by the
-     * mount), the copy keeps the mode it was created with. A copy that is not
-     * put in place - of a rewrite that failed half-way, or one whose
-     * replacement failed - is discarded so that the CSV stays as it was.
+     * the copy, synced to disk by {@link #completeRewrite}, takes over the
+     * CSV's group if the process may set it and the CSV's mode bits (the owner
+     * becomes the process's user), and is renamed over the CSV. When the group
+     * can not be set, the copy keeps the process's group and gets no group
+     * permissions. When the mode bits can not be set (a file system whose modes
+     * are fixed by the mount), the copy keeps the mode it was created with. A
+     * copy that is not put in place - of a rewrite that failed half-way, or one
+     * whose replacement failed - is discarded so that the CSV stays as it was.
      */
     private void finishRewrite(File tmp, boolean rewritten) {
         if (tmp == null) {
@@ -1459,11 +1473,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         }
         Path csv = config.getCsvFile().getAbsoluteFile().toPath();
         try {
-            // on disk before the rename, so that a crash can not leave the CSV
-            // name pointing to a copy whose data was never written
-            try (FileChannel channel = FileChannel.open(tmp.toPath(), StandardOpenOption.WRITE)) {
-                channel.force(true);
-            }
             try {
                 // EnumSet.copyOf would reject the empty mode of a 000 file
                 Set<PosixFilePermission> mode = EnumSet.noneOf(PosixFilePermission.class);

@@ -17,6 +17,7 @@ package org.forgerock.openicf.csvfile;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
@@ -79,6 +80,8 @@ public class RewriteSafetyTest {
 
     @AfterMethod
     public void after() {
+        // a failed interrupt test must not leave its flag to dispose() and the next tests
+        Thread.interrupted();
         connector.dispose();
         connector = null;
         for (File file : dir.listFiles()) {
@@ -119,6 +122,34 @@ public class RewriteSafetyTest {
         } finally {
             tmp.delete();
         }
+    }
+
+    @Test
+    public void updateOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Thread.currentThread().interrupt();
+        try {
+            connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
+        } finally {
+            // clears the flag too: read() goes through Files.readAllBytes, whose channel fails on it
+            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+        }
+        assertTrue(read().contains("updated"), read());
+        assertNoRewriteFileLeft();
+    }
+
+    @Test
+    public void deleteOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Thread.currentThread().interrupt();
+        try {
+            connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
+        } finally {
+            // clears the flag too: read() goes through Files.readAllBytes, whose channel fails on it
+            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+        }
+        String content = read();
+        assertFalse(content.contains("vilo"), content);
+        assertTrue(content.contains("miso"), content);
+        assertNoRewriteFileLeft();
     }
 
     @Test
