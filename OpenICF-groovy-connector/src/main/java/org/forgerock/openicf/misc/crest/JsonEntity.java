@@ -20,13 +20,16 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ *
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 
 package org.forgerock.openicf.misc.crest;
 
 import java.util.Map;
 
-import org.apache.http.annotation.NotThreadSafe;
+import org.apache.http.annotation.Contract;
+import org.apache.http.annotation.ThreadingBehavior;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.forgerock.json.JsonValue;
@@ -38,7 +41,7 @@ import groovy.json.JsonOutput;
  *
  * @author Laszlo Hordos
  */
-@NotThreadSafe
+@Contract(threading = ThreadingBehavior.UNSAFE)
 class JsonEntity extends StringEntity {
 
     /**
