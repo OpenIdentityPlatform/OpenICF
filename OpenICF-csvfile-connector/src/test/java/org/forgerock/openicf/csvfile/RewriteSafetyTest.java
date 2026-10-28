@@ -21,9 +21,12 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
@@ -150,6 +153,31 @@ public class RewriteSafetyTest {
         assertFalse(content.contains("vilo"), content);
         assertTrue(content.contains("miso"), content);
         assertNoRewriteFileLeft();
+    }
+
+    @Test
+    public void directorySyncOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        // a platform probe, not syncDirectory itself, on a clean thread: Windows can not open a directory
+        try (FileChannel channel = FileChannel.open(dir.toPath(), StandardOpenOption.READ)) {
+            channel.force(true);
+        } catch (IOException e) {
+            throw new SkipException("A directory can not be synced here: " + e);
+        }
+        Thread.currentThread().interrupt();
+        boolean synced;
+        try {
+            synced = CSVFileConnector.syncDirectory(dir.toPath());
+        } finally {
+            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+        }
+        assertTrue(synced, "the directory was not synced");
+    }
+
+    @Test
+    public void updateOnACleanThreadLeavesTheFlagClear() throws Exception {
+        connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
+
+        assertFalse(Thread.interrupted(), "the update set the interrupt flag");
     }
 
     @Test

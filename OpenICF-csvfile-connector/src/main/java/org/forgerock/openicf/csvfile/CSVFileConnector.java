@@ -1519,13 +1519,25 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
     /**
      * Makes the rename of the copy over the CSV durable. Best effort: not every
      * platform can open a directory (Windows can not), and the CSV is consistent
-     * either way - the crash would only undo the operation.
+     * either way - the crash would only undo the operation. A directory can be
+     * opened only as a {@link FileChannel}, whose force fails on a thread whose
+     * interrupt flag is set, so the flag is cleared for the call and set again
+     * afterwards.
+     *
+     * @return whether the directory was synced
      */
-    private static void syncDirectory(Path dir) {
+    static boolean syncDirectory(Path dir) {
+        final boolean interrupted = Thread.interrupted();
         try (FileChannel channel = FileChannel.open(dir, StandardOpenOption.READ)) {
             channel.force(true);
+            return true;
         } catch (IOException e) {
             log.ok(e, "Could not sync directory {0}", dir);
+            return false;
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
