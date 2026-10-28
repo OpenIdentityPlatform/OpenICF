@@ -42,7 +42,10 @@ import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
 import org.w3c.dom.NodeList;
 
-/** Update, delete and authenticate use an entry's own child elements, whatever their prefix, and no others (#182). */
+/**
+ * Update and authenticate use an entry's own child elements, whatever their prefix, and no others; delete removes the
+ * entry from its own parent (#182).
+ */
 public class XMLHandlerOwnElementsTests {
 
     /** Entries below another element and entries inside another entry's value: XSD-invalid hand edits. */

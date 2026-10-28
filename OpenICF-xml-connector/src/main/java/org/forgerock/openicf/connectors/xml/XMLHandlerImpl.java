@@ -847,8 +847,9 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     /**
-     * The child elements of {@code entry} named {@code localName}, in any namespace, in document order: the
-     * elements {@link ConnectorObjectCreator} reads the attribute from. Walks the children, not a NodeList.
+     * The child elements of {@code entry} named {@code localName}, in any namespace, in document order, by the name
+     * rule {@link ConnectorObjectCreator} reads the attribute with (it also skips elements that do not start with
+     * text). Walks the children, not a NodeList.
      */
     private static List<Element> ownElements(Element entry, String localName) {
         List<Element> elements = new ArrayList<Element>();
