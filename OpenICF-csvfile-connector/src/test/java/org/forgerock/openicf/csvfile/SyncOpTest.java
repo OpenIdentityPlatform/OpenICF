@@ -199,21 +199,12 @@ public class SyncOpTest {
             }
         }, null);
 
-        //test cleanup
-        SyncToken token = connector.getLatestSyncToken(ObjectClass.ACCOUNT);
-        if (!oldToken.getValue().equals(token.getValue())) {
-            assertEquals(token.getValue(), newToken.get().getValue());
-            CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
-            File syncFile = new File(config.getCsvFile() + "." + token.getValue());
-            syncFile.delete();
-        }
-
-        Map<String, SyncDelta> deltaMap = createSyncDeltaTestMap(token);
-        for (SyncDelta delta : deltas) {
-            SyncDelta syncDelta = deltaMap.get(delta.getUid().getUidValue());
-            deltaMap.remove(delta.getUid().getUidValue());
-        }
-        assertEquals(deltaMap.size(), 1);
+        // the first false ends the sync: no further delta, no snapshot, and the token stays
+        assertEquals(deltas.size(), 1);
+        assertEquals(deltas.get(0).getDeltaType(), SyncDeltaType.DELETE);
+        assertEquals(deltas.get(0).getUid().getUidValue(), "vilo");
+        assertEquals(newToken.get().getValue(), oldToken.getValue());
+        assertEquals(connector.getLatestSyncToken(ObjectClass.ACCOUNT).getValue(), oldToken.getValue());
     }
 
     private Map<String, SyncDelta> createSyncDeltaTestMap(SyncToken token) {

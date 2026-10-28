@@ -505,6 +505,44 @@ public class SyncOpDiffTest {
         assertEquals(snapshots(), Collections.singletonList("data.csv." + offered.get(0).getValue()));
     }
 
+    @Test
+    public void handlerStopInTheDeletePassEndsTheSync() throws Exception {
+        givenSnapshot(HEADER, "d1,Jane,Doe,pw1", "d2,John,Roe,pw2", "d3,Max,Moe,pw4", "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3", "c1,Eve,Low,pw5");
+
+        assertEquals(syncAccepting(SNAPSHOT_TOKEN, 1),
+                Arrays.asList("DELETE d1 [Jane, Doe, pw1]", "DELETE d2 [John, Roe, pw2]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+        assertEquals(snapshots(), Collections.singletonList("data.csv.1300000000000"));
+
+        // the stopped sync took no snapshot, so the next one offers every delta again, the accepted one too
+        assertEquals(sync(resultToken), Arrays.asList("DELETE d1 [Jane, Doe, pw1]", "DELETE d2 [John, Roe, pw2]",
+                "DELETE d3 [Max, Moe, pw4]", "CREATE c1 [Eve, Low, pw5]"));
+    }
+
+    @Test
+    public void handlerStopInTheDeletePassLeavesTheRestOfTheSnapshotUnread() throws Exception {
+        // the row after the stop has two columns, so reading it would fail the sync
+        givenSnapshot(HEADER, "d1,Jane,Doe,pw1", "d2,John", "k,Ann,Poe,pw3");
+        givenLive(HEADER, "k,Ann,Poe,pw3");
+
+        assertEquals(sync(SNAPSHOT_TOKEN, false), Collections.singletonList("DELETE d1 [Jane, Doe, pw1]"));
+        assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
+    }
+
+    @Test
+    public void rejectedDeleteKeepsTheSnapshotItsTokenNames() throws Exception {
+        givenLive(HEADER, "u1,Jane,Doe,pw1", "u2,John,Roe,pw2");
+        connector();
+        // relies on the header cached at init: the live rows are read with it, so every live uid is a password,
+        // while a fresh copy is read with its own header and reports two DELETEs
+        givenLive("password,lastName,uid,firstName", "pw1,Doe,u1,Jane", "pw2,Roe,u2,John");
+
+        List<SyncToken> offered = syncRejectingWithFailingHandleResult(null);
+
+        assertEquals(snapshots(), Collections.singletonList("data.csv." + offered.get(0).getValue()));
+    }
+
     @DataProvider
     public Object[][] singleChanges() {
         return new Object[][] {
