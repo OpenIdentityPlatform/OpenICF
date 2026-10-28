@@ -608,9 +608,7 @@ public class XMLHandlerImpl implements XMLHandler {
         Element entry = getEntry(ObjectClass.ACCOUNT, new Uid(username), ElementIdentifierFieldType.BY_NAME);
 
         if (entry != null) {
-            NodeList passwordElements = entry.getElementsByTagName(ICF_NAMESPACE_PREFIX + ":__PASSWORD__");
-
-            String xmlPassword = passwordElements.item(0).getTextContent();
+            String xmlPassword = firstOwnText(entry, "__PASSWORD__");
 
             GuardedStringAccessor accessor = new GuardedStringAccessor();
 
@@ -621,15 +619,12 @@ public class XMLHandlerImpl implements XMLHandler {
 
             String userPassword = sb.toString();
 
-            if (xmlPassword.equals(userPassword)) {
-                NodeList uidElements = entry.getElementsByTagName(ICF_NAMESPACE_PREFIX + ":" + Uid.NAME);
+            // An entry without a password of its own does not authenticate.
+            if (xmlPassword != null && xmlPassword.equals(userPassword)) {
+                String xmlUid = firstOwnText(entry, Uid.NAME);
 
-                if (uidElements.getLength() >= 1) {
-                    uid = new Uid(uidElements.item(0).getTextContent());
-                } else {
-                    NodeList nameElements = entry.getElementsByTagName(ICF_NAMESPACE_PREFIX + ":" + Name.NAME);
-                    uid = new Uid(nameElements.item(0).getTextContent());
-                }
+                // Found by name, so without a __UID__ it has a __NAME__ of its own.
+                uid = new Uid(xmlUid != null ? xmlUid : firstOwnText(entry, Name.NAME));
             }
         }
 
@@ -863,6 +858,12 @@ public class XMLHandlerImpl implements XMLHandler {
             }
         }
         return elements;
+    }
+
+    /** The text of the first of {@link #ownElements}, or null if there is none. */
+    private static String firstOwnText(Element entry, String localName) {
+        List<Element> elements = ownElements(entry, localName);
+        return elements.isEmpty() ? null : elements.get(0).getTextContent();
     }
 
     Document getDocument() {

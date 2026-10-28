@@ -20,6 +20,7 @@ import static org.forgerock.openicf.connectors.xml.XMLHandlerIndexTests.equalsQu
 import static org.forgerock.openicf.connectors.xml.XmlConnectorTestUtil.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -116,6 +118,40 @@ public class XMLHandlerOwnElementsTests {
                 Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "NEW")));
         handler.dispose();
         assertEquals(lastNamesInFile(file), List.of("NEW"));
+    }
+
+    @Test
+    public void authenticateReadsOnlyTheEntrysOwnPassword() throws Exception {
+        open("icf", NESTED);
+        assertNull(authenticate("holder", "p12")); // p12 is the password of u12, inside holder's lastname
+        assertEquals(authenticate("inner", "p12"), new Uid("u12"));
+        assertEquals(authenticate("nested", "p8"), new Uid("u8"));
+    }
+
+    @Test
+    public void authenticateWithoutAPasswordElementFails() throws Exception {
+        open("icf", NESTED);
+        assertNull(authenticate("nopass", "x"));
+    }
+
+    @Test
+    public void authenticateReturnsTheEntrysOwnIdentifier() throws Exception {
+        open("icf", NESTED);
+        // Neither entry has a __UID__ of its own, so the uid is its own __NAME__, not one inside its lastname.
+        assertEquals(authenticate("no-own-uid", "p14"), new Uid("no-own-uid"));
+        assertEquals(authenticate("outer-name", "p15"), new Uid("outer-name"));
+    }
+
+    @Test
+    public void authenticateFindsIcfElementsUnderAnotherPrefix() throws Exception {
+        open("x", PREFIXED);
+        assertEquals(authenticate("pfx", "p20"), new Uid("u20"));
+        assertNull(authenticate("pfx", "wrong"));
+        assertEquals(authenticate("pfx-no-uid", "p21"), new Uid("pfx-no-uid"));
+    }
+
+    private Uid authenticate(String username, String password) {
+        return handler.authenticate(username, new GuardedString(password.toCharArray()));
     }
 
     /** Writes a store with {@code entries} under a container whose ICF prefix is {@code icfPrefix}, and loads it. */
