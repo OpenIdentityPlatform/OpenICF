@@ -58,6 +58,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
+import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
@@ -284,6 +285,12 @@ public class XMLConnectorTests {
                 new GuardedString(ATTR_ACCOUNT_VALUE_PASSWORD.toCharArray()), null);
 
         AssertJUnit.assertEquals(insertedUid.getUidValue(), authenticatedUid.getUidValue());
+    }
+
+    @Test(expectedExceptions = InvalidPasswordException.class)
+    public void authenticateShouldThrowInvalidPasswordWhenPasswordIsWrong() {
+        facade.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
+        facade.authenticate(ObjectClass.ACCOUNT, ATTR_ACCOUNT_VALUE_NAME, new GuardedString("wrong".toCharArray()), null);
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

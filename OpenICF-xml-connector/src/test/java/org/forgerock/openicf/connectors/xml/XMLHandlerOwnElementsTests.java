@@ -73,6 +73,26 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><x:__NAME__>pfx-no-uid</x:__NAME__><x:__PASSWORD__>p21</x:__PASSWORD__></ri:__ACCOUNT__>",
     };
 
+    /** An own __NAME__ outside the ICF namespace next to the ICF one. */
+    private static final String[] FOREIGN_NAME = {
+            "<ri:__ACCOUNT__><icf:__UID__>u31</icf:__UID__><icf:__NAME__>own</icf:__NAME__>"
+                    + "<o:__NAME__ xmlns:o=\"urn:other\">foreign</o:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /** An own __PASSWORD__ outside the ICF namespace before the ICF one. */
+    private static final String[] FOREIGN_PASSWORD = {
+            "<ri:__ACCOUNT__><icf:__UID__>u30</icf:__UID__><icf:__NAME__>foreign-pw</icf:__NAME__>"
+                    + "<o:__PASSWORD__ xmlns:o=\"urn:other\">x30</o:__PASSWORD__>"
+                    + "<icf:__PASSWORD__>p30</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** An entry with two own __UID__ and two own __PASSWORD__ elements. */
+    private static final String[] TWO_OWN = {
+            "<ri:__ACCOUNT__><icf:__UID__>u40</icf:__UID__><icf:__UID__>u41</icf:__UID__>"
+                    + "<icf:__NAME__>two-own</icf:__NAME__><icf:__PASSWORD__>p40</icf:__PASSWORD__>"
+                    + "<icf:__PASSWORD__>p41</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
     private File file;
     private XMLHandlerImpl handler;
 
@@ -134,6 +154,16 @@ public class XMLHandlerOwnElementsTests {
     }
 
     @Test
+    public void updateReplacesOwnElementsOfTheSameLocalNameInAnotherNamespace() throws Exception {
+        open("icf", FOREIGN_NAME);
+        handler.update(ObjectClass.ACCOUNT, new Uid("u31"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed")));
+        handler.dispose();
+        // namesInFile reads only the ICF namespace, so it would not see a foreign __NAME__ left behind.
+        assertEquals(valuesInFile(file, Name.NAME), List.of("renamed"));
+    }
+
+    @Test
     public void authenticateReadsOnlyTheEntrysOwnPassword() throws Exception {
         open("icf", NESTED);
         assertNull(authenticate("holder", "p12")); // p12 is the password of u12, inside holder's lastname
@@ -161,6 +191,20 @@ public class XMLHandlerOwnElementsTests {
         assertEquals(authenticate("pfx", "p20"), new Uid("u20"));
         assertNull(authenticate("pfx", "wrong"));
         assertEquals(authenticate("pfx-no-uid", "p21"), new Uid("pfx-no-uid"));
+    }
+
+    @Test
+    public void authenticateReadsTheFirstOwnPasswordInAnyNamespace() throws Exception {
+        open("icf", FOREIGN_PASSWORD);
+        assertEquals(authenticate("foreign-pw", "x30"), new Uid("u30"));
+        assertNull(authenticate("foreign-pw", "p30"));
+    }
+
+    @Test
+    public void authenticateReadsTheFirstOwnPasswordAndUid() throws Exception {
+        open("icf", TWO_OWN);
+        assertEquals(authenticate("two-own", "p40"), new Uid("u40"));
+        assertNull(authenticate("two-own", "p41"));
     }
 
     private Uid authenticate(String username, String password) {
