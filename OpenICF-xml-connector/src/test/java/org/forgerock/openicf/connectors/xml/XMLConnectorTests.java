@@ -34,6 +34,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
@@ -43,6 +45,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.forgerock.openicf.connectors.xml.query.abstracts.Query;
@@ -489,6 +493,148 @@ public class XMLConnectorTests {
         }
     }
 
+    @Test
+    public void searchStopsAtTheFirstFalse() throws Exception {
+        writeAccounts(xmlFile, "a1", "a2", "a3", "a4", "a5");
+        APIConfiguration impl = TestHelpers.createTestConfiguration(XMLConnector.class, configFor(xmlFile));
+        impl.setProducerBufferSize(0); // the facade passes the handler's false straight back to the connector
+        ConnectorFacade unbuffered = ConnectorFacadeFactory.getInstance().newInstance(impl);
+        AtomicInteger calls = new AtomicInteger();
+        unbuffered.search(ObjectClass.ACCOUNT, null, o -> {
+            calls.incrementAndGet();
+            return false;
+        }, null);
+        AssertJUnit.assertEquals(1, calls.get());
+    }
+
+    @Test(timeOut = 60_000L)
+    public void searchHandlerDoesNotHoldUpAChangeOnTheSameFile() throws Exception {
+        File file = getRandomXMLFile();
+        writeAccounts(file, "alice");
+        XMLConnector searching = new XMLConnector();
+        XMLConnector creating = new XMLConnector();
+        searching.init(configFor(file));
+        creating.init(configFor(file));
+        CountDownLatch entered = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Future<?> search = null;
+        try {
+            search = executor.submit(() -> searching.executeQuery(ObjectClass.ACCOUNT, null, o -> {
+                entered.countDown();
+                try {
+                    release.await();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return true;
+            }, null));
+            AssertJUnit.assertTrue(entered.await(10, TimeUnit.SECONDS));
+
+            Uid bob = executor.submit(() -> creating.create(ObjectClass.ACCOUNT, account("bob"), null))
+                    .get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertNotNull(bob);
+        } finally {
+            release.countDown();
+            if (search != null) {
+                search.get(10, TimeUnit.SECONDS);
+            }
+            searching.dispose();
+            creating.dispose();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test(timeOut = 60_000L)
+    public void searchesOnOneFileStillTakeTurnsBuildingResults() throws Exception {
+        File file = getRandomXMLFile();
+        File sameFile = new File(file.getParentFile(), "." + File.separator + file.getName());
+        String key = file.getCanonicalPath();
+        SearchBlockingHandler stub = new SearchBlockingHandler();
+        ConcurrentXMLHandler shared = new ConcurrentXMLHandler(stub);
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, shared);
+        }
+        XMLConnector first = new XMLConnector();
+        XMLConnector second = new XMLConnector();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            // Both load before the first search blocks: init() takes the handler's write lock.
+            first.init(configFor(file));
+            second.init(configFor(sameFile));
+            Future<?> a = executor.submit(() -> first.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
+            AssertJUnit.assertTrue(stub.firstIn.await(10, TimeUnit.SECONDS));
+
+            AtomicReference<Thread> secondThread = new AtomicReference<>();
+            Future<?> b = executor.submit(() -> {
+                secondThread.set(Thread.currentThread());
+                second.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null);
+            });
+            // Wait until the second search either blocks on the file's shared handler or reaches the stub.
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            while (stub.entries.getCount() == 1 && !blockedOn(secondThread.get(), shared)) {
+                AssertJUnit.assertTrue("the second search neither blocked nor started", System.nanoTime() < deadline);
+                Thread.sleep(1);
+            }
+            AssertJUnit.assertEquals(1L, stub.entries.getCount()); // the second search waits for the first
+
+            stub.release.countDown();
+            a.get(10, TimeUnit.SECONDS);
+            b.get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertEquals(0L, stub.entries.getCount());
+        } finally {
+            stub.release.countDown();
+            executor.shutdownNow();
+            first.dispose();
+            second.dispose();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
+    @Test(timeOut = 60_000L)
+    public void searchOnOneFileDoesNotHoldUpAChangeOnAnotherFile() throws Exception {
+        File blockedFile = getRandomXMLFile();
+        String key = blockedFile.getCanonicalPath();
+        SearchBlockingHandler stub = new SearchBlockingHandler();
+        synchronized (XMLConnector.class) {
+            XMLConnector.XMLHandlerCache.put(key, new ConcurrentXMLHandler(stub));
+        }
+        File otherFile = getRandomXMLFile();
+        writeAccounts(otherFile, "alice");
+        XMLConnector searching = new XMLConnector();
+        XMLConnector creating = new XMLConnector();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            searching.init(configFor(blockedFile));
+            creating.init(configFor(otherFile));
+            executor.submit(() -> searching.executeQuery(ObjectClass.ACCOUNT, null, o -> true, null));
+            AssertJUnit.assertTrue(stub.firstIn.await(10, TimeUnit.SECONDS));
+
+            Uid bob = executor.submit(() -> creating.create(ObjectClass.ACCOUNT, account("bob"), null))
+                    .get(10, TimeUnit.SECONDS);
+            AssertJUnit.assertNotNull(bob);
+        } finally {
+            stub.release.countDown();
+            executor.shutdownNow();
+            searching.dispose();
+            creating.dispose();
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(key);
+            }
+        }
+    }
+
+    private static boolean blockedOn(Thread thread, Object monitor) {
+        if (thread == null || thread.getState() != Thread.State.BLOCKED) {
+            return false;
+        }
+        ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.getId());
+        return info != null && info.getLockInfo() != null
+                && info.getLockInfo().getIdentityHashCode() == System.identityHashCode(monitor);
+    }
+
     private static XMLConfiguration configFor(File xmlFile) {
         XMLConfiguration config = new XMLConfiguration();
         config.setXmlFilePath(xmlFile);
@@ -498,7 +644,7 @@ public class XMLConnectorTests {
     }
 
     /** A handler whose init() blocks until released. */
-    private static final class BlockingHandler implements XMLHandler {
+    private static final class BlockingHandler extends StubHandler {
         final CountDownLatch entered = new CountDownLatch(1);
         final CountDownLatch release = new CountDownLatch(1);
 
@@ -510,6 +656,35 @@ public class XMLConnectorTests {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
+            return this;
+        }
+    }
+
+    /** A handler whose search(Query, ObjectClass) counts each caller in and blocks until released. */
+    private static final class SearchBlockingHandler extends StubHandler {
+        final CountDownLatch firstIn = new CountDownLatch(1);
+        final CountDownLatch entries = new CountDownLatch(2);
+        final CountDownLatch release = new CountDownLatch(1);
+
+        @Override
+        public Collection<ConnectorObject> search(Query query, ObjectClass objectClass) {
+            // Count the caller in before opening firstIn, so whoever wakes on firstIn already sees it counted.
+            entries.countDown();
+            firstIn.countDown();
+            try {
+                release.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return Collections.<ConnectorObject>emptyList();
+        }
+    }
+
+    /** A handler that loads and releases nothing and supports no operation. */
+    private static class StubHandler implements XMLHandler {
+
+        @Override
+        public XMLHandler init() {
             return this;
         }
 
