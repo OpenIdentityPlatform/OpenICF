@@ -134,12 +134,14 @@ public class RewriteSafetyTest {
     @Test
     public void updateOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
         Thread.currentThread().interrupt();
+        boolean interrupted;
         try {
             connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
         } finally {
-            // clears the flag too: read() goes through Files.readAllBytes, whose channel fails on it
-            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+            // cleared even when the update throws, and asserted below so as not to mask its exception
+            interrupted = Thread.interrupted();
         }
+        assertTrue(interrupted, "the interrupt flag was cleared");
         assertTrue(read().contains("updated"), read());
         assertNoRewriteFileLeft();
     }
@@ -147,12 +149,14 @@ public class RewriteSafetyTest {
     @Test
     public void deleteOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
         Thread.currentThread().interrupt();
+        boolean interrupted;
         try {
             connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
         } finally {
-            // clears the flag too: read() goes through Files.readAllBytes, whose channel fails on it
-            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+            // cleared even when the delete throws, and asserted below so as not to mask its exception
+            interrupted = Thread.interrupted();
         }
+        assertTrue(interrupted, "the interrupt flag was cleared");
         String content = read();
         assertFalse(content.contains("vilo"), content);
         assertTrue(content.contains("miso"), content);
@@ -169,11 +173,13 @@ public class RewriteSafetyTest {
         }
         Thread.currentThread().interrupt();
         boolean synced;
+        boolean interrupted;
         try {
             synced = CSVFileConnector.syncDirectory(dir.toPath());
         } finally {
-            assertTrue(Thread.interrupted(), "the interrupt flag was cleared");
+            interrupted = Thread.interrupted();
         }
+        assertTrue(interrupted, "the interrupt flag was cleared");
         assertTrue(synced, "the directory was not synced");
     }
 
