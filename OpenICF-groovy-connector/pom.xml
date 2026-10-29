@@ -302,6 +302,27 @@
                  </configuration>
              </plugin>
              <plugin>
+                 <!-- Runs *BundleIT against the packaged bundle -->
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-failsafe-plugin</artifactId>
+                 <configuration>
+                     <includes>
+                         <include>**/*BundleIT.java</include>
+                     </includes>
+                     <systemPropertyVariables>
+                         <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
+                     </systemPropertyVariables>
+                 </configuration>
+                 <executions>
+                     <execution>
+                         <goals>
+                             <goal>integration-test</goal>
+                             <goal>verify</goal>
+                         </goals>
+                     </execution>
+                 </executions>
+             </plugin>
+             <plugin>
                  <groupId>org.apache.maven.plugins</groupId>
                  <artifactId>maven-checkstyle-plugin</artifactId>
                  <configuration>

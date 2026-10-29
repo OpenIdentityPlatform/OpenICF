@@ -21,6 +21,7 @@
   ! CCPL HEADER END
   !
   !      Copyright 2011-2014 ForgeRock AS
+  !      Portions Copyright 2026 3A Systems, LLC.
   !
 -->
 <chapter xml:id="install-org.forgerock.openicf.connectors-groovy-connector-${project.version}"
@@ -236,16 +237,16 @@
    <itemizedlist>
     <listitem>
      <para>
-      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.3.6.jar</filename>
-      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.6%7Cbundle"
-      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.3.6)</link>
+      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.5.13.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.5.13%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.5.13)</link>
      </para>
     </listitem>
     <listitem>
      <para>
-      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.3.2.jar</filename>
-      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
-      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.3.2)</link>
+      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.4.14.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.4.14%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.4.14)</link>
      </para>
     </listitem>
    </itemizedlist>
@@ -260,23 +261,23 @@
    <itemizedlist>
     <listitem>
      <para>
-      HttpComponents AsyncClient (OSGi bundle), <filename>httpasyncclient-osgi-4.0.2.jar</filename>
-      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpasyncclient-osgi%7C4.0.2%7Cbundle"
-      xlink:show="new">(org.apache.httpcomponents:httpasyncclient-osgi:4.0.2)</link>
+      HttpComponents AsyncClient (OSGi bundle), <filename>httpasyncclient-osgi-4.1.4.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpasyncclient-osgi%7C4.1.4%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpasyncclient-osgi:4.1.4)</link>
      </para>
     </listitem>
     <listitem>
      <para>
-      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.3.3.jar</filename>
-      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.3.3%7Cbundle"
-      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.3.3)</link>
+      HttpComponents Client (OSGi bundle), <filename>httpclient-osgi-4.5.13.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpclient-osgi%7C4.5.13%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpclient-osgi:4.5.13)</link>
      </para>
     </listitem>
     <listitem>
      <para>
-      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.3.2.jar</filename>
-      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.3.2%7Cbundle"
-      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.3.2)</link>
+      HttpComponents Core (OSGi bundle), <filename>httpcore-osgi-4.4.14.jar</filename>
+      <link xlink:href="http://search.maven.org/#artifactdetails%7Corg.apache.httpcomponents%7Chttpcore-osgi%7C4.4.14%7Cbundle"
+      xlink:show="new">(org.apache.httpcomponents:httpcore-osgi:4.4.14)</link>
      </para>
     </listitem>
    </itemizedlist>
