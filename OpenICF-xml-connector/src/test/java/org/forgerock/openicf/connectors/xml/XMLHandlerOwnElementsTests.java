@@ -93,6 +93,12 @@ public class XMLHandlerOwnElementsTests {
                     + "<icf:__PASSWORD__>p41</icf:__PASSWORD__></ri:__ACCOUNT__>",
     };
 
+    /** An empty own __PASSWORD__, as create() writes for an optional password that is not given. */
+    private static final String[] EMPTY_PASSWORD = {
+            "<ri:__ACCOUNT__><icf:__UID__>u50</icf:__UID__><icf:__NAME__>empty-pw</icf:__NAME__>"
+                    + "<icf:__PASSWORD__/></ri:__ACCOUNT__>",
+    };
+
     private File file;
     private XMLHandlerImpl handler;
 
@@ -175,6 +181,12 @@ public class XMLHandlerOwnElementsTests {
     public void authenticateWithoutAPasswordElementFails() throws Exception {
         open("icf", NESTED);
         assertNull(authenticate("nopass", "x"));
+    }
+
+    @Test
+    public void authenticateWithAnEmptyPasswordElementFails() throws Exception {
+        open("icf", EMPTY_PASSWORD);
+        assertNull(authenticate("empty-pw", ""));
     }
 
     @Test
