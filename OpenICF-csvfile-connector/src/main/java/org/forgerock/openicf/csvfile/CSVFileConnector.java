@@ -469,8 +469,11 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
         final List<File> copies = new ArrayList<File>(2);
         // a copy of the live file taken before the diff, which reads it instead, so that a change an external
         // writer makes meanwhile is left to the next sync; it becomes the next snapshot once a delta is accepted
+        // and the handler did not stop the sync
         File next = null;
         boolean changesProcessed = false;
+        // set when the handler returns false: no further delta is offered
+        boolean stopped = false;
 
         // start with a write-lock
         final ReentrantReadWriteLock rwLock = fileNameToLockMap.get(csvFilePath);
@@ -592,7 +595,6 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                 final CellProcessor[] processors = getProcessors(originHeader);
 
                 Map<String, Object> entry;
-                boolean reportDeletes = true;
                 while ((entry = reader.read(originHeader, processors)) != null) {
                     final String uid = (String) entry.get(config.getHeaderUid());
                     if (StringUtil.isBlank(uid)) {
@@ -602,18 +604,16 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
                         continue;
                     }
                     if (!index.containsKey(uid)) {
-                        if (reportDeletes) {
-                            SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);
-                            final boolean more = handler.handle(delta);
-                            // the handler may have stored the token of this delta, so its snapshot must stay
-                            copies.clear();
-                            if (more) {
-                                changesProcessed = true;
-                            } else {
-                                // keep reading: the next pass needs the fingerprints of the remaining origin rows
-                                reportDeletes = false;
-                            }
+                        SyncDelta delta = generateSyncDelta(SyncDeltaType.DELETE, newConnectorObject(entry), token);
+                        final boolean more = handler.handle(delta);
+                        // the handler may have stored the token of this delta, so its snapshot must stay
+                        copies.clear();
+                        if (!more) {
+                            // no later pass runs
+                            stopped = true;
+                            break;
                         }
+                        changesProcessed = true;
                     } else if (index.get(uid) == null) {
                         index.put(uid, fingerprint(entry, digest));
                     }
@@ -635,50 +635,58 @@ public class CSVFileConnector implements Connector, BatchOp, AuthenticateOp, Cre
             }
 
             // Sync creates/updates
-            reader = null;
-            try {
-                reader = new CsvMapReader(new FileReader(next), csvPreference);
+            // skipped after a stop: the origin rows the delete pass did not read have no fingerprint, so this
+            // pass would report them as CREATEs
+            if (!stopped) {
+                reader = null;
+                try {
+                    reader = new CsvMapReader(new FileReader(next), csvPreference);
 
-                final CellProcessor[] processors = getProcessors(header);
+                    final CellProcessor[] processors = getProcessors(header);
 
-                Map<String, Object> entry;
-                reader.read(header, processors); //consume header
-                while ((entry = reader.read(header, processors)) != null) {
-                    final byte[] originFingerprint = index.get(entry.get(config.getHeaderUid()));
-                    final SyncDeltaType type;
-                    if (originFingerprint == null) {
-                        type = SyncDeltaType.CREATE;
-                    } else if (!Arrays.equals(originFingerprint, fingerprint(entry, digest))) {
-                        type = SyncDeltaType.UPDATE;
-                    } else {
-                        continue;
+                    Map<String, Object> entry;
+                    reader.read(header, processors); //consume header
+                    while ((entry = reader.read(header, processors)) != null) {
+                        final byte[] originFingerprint = index.get(entry.get(config.getHeaderUid()));
+                        final SyncDeltaType type;
+                        if (originFingerprint == null) {
+                            type = SyncDeltaType.CREATE;
+                        } else if (!Arrays.equals(originFingerprint, fingerprint(entry, digest))) {
+                            type = SyncDeltaType.UPDATE;
+                        } else {
+                            continue;
+                        }
+                        SyncDelta delta = generateSyncDelta(type, newConnectorObject(entry), token);
+                        final boolean more = handler.handle(delta);
+                        // the handler may have stored the token of this delta, so its snapshot must stay
+                        copies.clear();
+                        if (!more) {
+                            stopped = true;
+                            break;
+                        }
+                        changesProcessed = true;
                     }
-                    SyncDelta delta = generateSyncDelta(type, newConnectorObject(entry), token);
-                    final boolean more = handler.handle(delta);
-                    // the handler may have stored the token of this delta, so its snapshot must stay
-                    copies.clear();
-                    if (!more) {
-                        break;
-                    }
-                    changesProcessed = true;
-                }
-            } catch (FileNotFoundException e) {
-                log.error(e, "Copy {0} of {1} does not exist!", next.toString(), config.getCsvFile().toString());
-                throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
-            } catch (IOException e) {
-                log.error(e, "Error reading from copy {0} of {1}!", next.toString(), config.getCsvFile().toString());
-                throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
-            } finally {
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (Exception e) {
-                        log.error(e, "Error closing file reader");
+                } catch (FileNotFoundException e) {
+                    log.error(e, "Copy {0} of {1} does not exist!", next.toString(), config.getCsvFile().toString());
+                    throw new ConnectorIOException("File " + config.getCsvFile().toString() + " does not exist", e);
+                } catch (IOException e) {
+                    log.error(e, "Error reading from copy {0} of {1}!", next.toString(),
+                            config.getCsvFile().toString());
+                    throw new ConnectorIOException("Error reading from file " + config.getCsvFile().toString(), e);
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (Exception e) {
+                            log.error(e, "Error closing file reader");
+                        }
                     }
                 }
             }
 
-            if (changesProcessed) {
+            // a stopped sync takes no snapshot and returns the token its deltas carry, so the next sync offers
+            // every delta of this one again
+            if (changesProcessed && !stopped) {
                 syncOrigin = snapshotFile(nextTimestamp);
                 try {
                     Files.move(next.toPath(), syncOrigin.toPath());
