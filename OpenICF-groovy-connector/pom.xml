@@ -22,7 +22,7 @@
  your own identifying information:
  "Portions Copyrighted [year] [name of copyright owner]"
 
- Portions Copyrighted 2018-2025 3A Systems, LLC
+ Portions Copyrighted 2018-2026 3A Systems, LLC
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -45,12 +45,26 @@
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>2.0</framework.releaseVersion>
+        <!--
+            bnd derives Import-Package from compiled classes only. The packages that only the
+            default CustomizerScript.groovy files use are named, so that the scripts, which compile
+            against the bundle's own loader, can resolve them (#214).
+        -->
         <openicf.osgi.import.defaults>
             org.codehaus.groovy*;version="[2.2,3)",
             groovy.*;version="[2.2,3)",
             groovyjar*;version="[2.2,3)",
             groovyx.net.http*;resolution:=optional,
-            org.apache.http*;version="[4.3.0, 4.4.0)";resolution:=optional
+            javax.net.ssl,
+            org.apache.http.client.config;resolution:=optional,
+            org.apache.http.conn.routing;resolution:=optional,
+            org.apache.http.conn.ssl;resolution:=optional,
+            org.apache.http.impl.conn;resolution:=optional,
+            org.apache.http.impl.nio.conn;resolution:=optional,
+            org.apache.http.impl.nio.reactor;resolution:=optional,
+            org.apache.http.nio.conn.ssl;resolution:=optional,
+            org.apache.http.nio.reactor;resolution:=optional,
+            org.apache.http*;resolution:=optional
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />
         <jetty.http.port>8888</jetty.http.port>
@@ -101,17 +115,19 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!--
+            The versions come from the parent's dependencyManagement. httpasyncclient 4.0.x fails a
+            request on a reused connection that the server has already answered (#207).
+        -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore-osgi</artifactId>
-            <version>4.3.2</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient-osgi</artifactId>
-            <version>4.3.5</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -122,7 +138,6 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpasyncclient-osgi</artifactId>
-            <version>4.0.2</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
@@ -299,6 +314,27 @@
                          <jetty.http.port>${jetty.http.port}</jetty.http.port>
                      </systemPropertyVariables>
                  </configuration>
+             </plugin>
+             <plugin>
+                 <!-- Runs *BundleIT against the packaged bundle -->
+                 <groupId>org.apache.maven.plugins</groupId>
+                 <artifactId>maven-failsafe-plugin</artifactId>
+                 <configuration>
+                     <includes>
+                         <include>**/*BundleIT.java</include>
+                     </includes>
+                     <systemPropertyVariables>
+                         <bundleJar>${project.build.directory}/${project.build.finalName}.jar</bundleJar>
+                     </systemPropertyVariables>
+                 </configuration>
+                 <executions>
+                     <execution>
+                         <goals>
+                             <goal>integration-test</goal>
+                             <goal>verify</goal>
+                         </goals>
+                     </execution>
+                 </executions>
              </plugin>
              <plugin>
                  <groupId>org.apache.maven.plugins</groupId>

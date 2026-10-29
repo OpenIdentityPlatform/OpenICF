@@ -62,7 +62,7 @@ public class ScriptedCRESTConfigurationTest {
         return configuration;
     }
 
-    /** Reads a private field of an httpasyncclient 4.0.2 class; the names follow that version. */
+    /** Reads a private field of an httpasyncclient 4.1 class; the names follow that version. */
     static Object field(final Object target, final String name) throws Exception {
         final Field field = target.getClass().getDeclaredField(name);
         field.setAccessible(true);
@@ -107,9 +107,9 @@ public class ScriptedCRESTConfigurationTest {
     public void testClientDropsConnectionsAfterTenIdleSeconds() throws Exception {
         final ScriptedCRESTConfiguration configuration = newConfiguration(null);
         try {
-            // InternalHttpAsyncClient.exec is a MainClientExec, which holds the keep-alive strategy.
-            final Object exec = field(configuration.getHttpAsyncClient(), "exec");
-            Assert.assertSame(field(exec, "keepaliveStrategy"), IdleKeepAliveStrategy.INSTANCE);
+            // InternalHttpAsyncClient holds the keep-alive strategy that its exchanges use.
+            Assert.assertSame(field(configuration.getHttpAsyncClient(), "keepaliveStrategy"),
+                    IdleKeepAliveStrategy.INSTANCE);
         } finally {
             configuration.release();
         }

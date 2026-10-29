@@ -45,7 +45,6 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
-import org.apache.http.annotation.Immutable;
 import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -590,7 +589,6 @@ public abstract class AbstractRemoteConnection implements Connection {
 
     // Internal Class definitions
 
-    @Immutable
     static abstract public class AbstractJsonValueResponseHandler<T> extends AbstractAsyncResponseConsumer<T> {
 
         protected volatile HttpResponse response;
@@ -653,7 +651,6 @@ public abstract class AbstractRemoteConnection implements Connection {
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
-    @Immutable
     public class JsonValueResponseHandler extends AbstractJsonValueResponseHandler<JsonValue> {
 
         /**
@@ -679,7 +676,6 @@ public abstract class AbstractRemoteConnection implements Connection {
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
-    @Immutable
     public class QueryResultResponseHandler extends AbstractJsonValueResponseHandler<QueryResponse> {
 
         private final QueryResourceHandler handler;
@@ -713,7 +709,6 @@ public abstract class AbstractRemoteConnection implements Connection {
      * {@link org.apache.http.client.HttpClient#execute(org.apache.http.client.methods.HttpUriRequest, org.apache.http.client.ResponseHandler)}
      * , HttpClient may handle redirects (3xx responses) internally.
      */
-    @Immutable
     public class ResourceResponseHandler extends AbstractJsonValueResponseHandler<ResourceResponse> {
 
         /**
