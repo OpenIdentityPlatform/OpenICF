@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted [year] [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.forgerock.openicf.connectors.xml;
 
@@ -118,6 +119,22 @@ public class CreateEntryTests {
         //thrown.expectMessage(expectedErrorMessage);
 
         handler.create(ObjectClass.ACCOUNT, convertToAttributeSet(requiredMap));
+    }
+
+    /**
+     * Two values of a single-valued GuardedString attribute are refused by the multi-value check, as for any other
+     * attribute. __PASSWORD__ cannot carry two values: the framework's Attribute refuses them.
+     */
+    @Test
+    public void twoSecretPinValuesAreRefusedAsNotMultivalued() {
+        Set<Attribute> attrSet = getRequiredAccountAttributes();
+        attrSet.add(AttributeBuilder.build(ATTR_ACCOUNT_SECRET_PIN,
+                new GuardedString("1234".toCharArray()), new GuardedString("5678".toCharArray())));
+
+        IllegalArgumentException e = Assert.expectThrows(IllegalArgumentException.class,
+                () -> handler.create(ObjectClass.ACCOUNT, attrSet));
+        AssertJUnit.assertEquals("Attribute field: " + ATTR_ACCOUNT_SECRET_PIN
+                + " is not multivalued and can not contain more than one value", e.getMessage());
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

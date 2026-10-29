@@ -39,7 +39,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 
 public class AttributeTypeUtil {
 
@@ -147,12 +146,12 @@ public class AttributeTypeUtil {
 
                 if (javaClass.equals(GuardedString.class)) {
                     GuardedStringAccessor accessor = new GuardedStringAccessor();
-                    GuardedString gs = AttributeUtil.getGuardedStringValue(attr);
+                    GuardedString gs = (GuardedString) value;
                     gs.access(accessor);
                     stringValue = String.valueOf(accessor.getArray());
                 } else if (javaClass.equals(GuardedByteArray.class)) {
                     GuardedByteArrayAccessor accessor = new GuardedByteArrayAccessor();
-                    GuardedByteArray gba = (GuardedByteArray) attr.getValue().get(0);
+                    GuardedByteArray gba = (GuardedByteArray) value;
                     gba.access(accessor);
                     stringValue = Base64.encode(accessor.getArray());
                 } else if (javaClass.isArray()) {
