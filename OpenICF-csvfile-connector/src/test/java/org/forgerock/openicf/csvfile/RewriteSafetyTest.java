@@ -17,12 +17,18 @@ package org.forgerock.openicf.csvfile;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.SyncFailedException;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
@@ -31,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -40,6 +47,7 @@ import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.SearchResult;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.spi.SearchResultsHandler;
+import org.supercsv.io.ICsvMapWriter;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -79,6 +87,8 @@ public class RewriteSafetyTest {
 
     @AfterMethod
     public void after() {
+        // a failed interrupt test must not leave its flag to dispose() and the next tests
+        Thread.interrupted();
         connector.dispose();
         connector = null;
         for (File file : dir.listFiles()) {
@@ -122,6 +132,65 @@ public class RewriteSafetyTest {
     }
 
     @Test
+    public void updateOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Thread.currentThread().interrupt();
+        boolean interrupted;
+        try {
+            connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
+        } finally {
+            // cleared even when the update throws, and asserted below so as not to mask its exception
+            interrupted = Thread.interrupted();
+        }
+        assertTrue(interrupted, "the interrupt flag was cleared");
+        assertTrue(read().contains("updated"), read());
+        assertNoRewriteFileLeft();
+    }
+
+    @Test
+    public void deleteOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        Thread.currentThread().interrupt();
+        boolean interrupted;
+        try {
+            connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
+        } finally {
+            // cleared even when the delete throws, and asserted below so as not to mask its exception
+            interrupted = Thread.interrupted();
+        }
+        assertTrue(interrupted, "the interrupt flag was cleared");
+        String content = read();
+        assertFalse(content.contains("vilo"), content);
+        assertTrue(content.contains("miso"), content);
+        assertNoRewriteFileLeft();
+    }
+
+    @Test
+    public void directorySyncOnAnInterruptedThreadSucceedsAndKeepsTheFlag() throws Exception {
+        // a platform probe, not syncDirectory itself, on a clean thread: Windows can not open a directory
+        try (FileChannel channel = FileChannel.open(dir.toPath(), StandardOpenOption.READ)) {
+            channel.force(true);
+        } catch (IOException e) {
+            throw new SkipException("A directory can not be synced here: " + e);
+        }
+        Thread.currentThread().interrupt();
+        boolean synced;
+        boolean interrupted;
+        try {
+            synced = CSVFileConnector.syncDirectory(dir.toPath());
+        } finally {
+            interrupted = Thread.interrupted();
+        }
+        assertTrue(interrupted, "the interrupt flag was cleared");
+        assertTrue(synced, "the directory was not synced");
+    }
+
+    @Test
+    public void updateOnACleanThreadLeavesTheFlagClear() throws Exception {
+        connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
+
+        assertFalse(Thread.interrupted(), "the update set the interrupt flag");
+    }
+
+    @Test
     public void failedUpdateLeavesFileUntouched() throws Exception {
         String original = HEADER + VILO + MALFORMED + MISO;
         write(original);
@@ -143,6 +212,34 @@ public class RewriteSafetyTest {
             fail("Expected the malformed row to fail the delete");
         } catch (RuntimeException expected) {
             assertEquals(read(), original, "the data file was replaced by the partial rewrite");
+            assertNoRewriteFileLeft();
+        }
+    }
+
+    @Test
+    public void updateWhoseCopyFailsToSyncLeavesFileUntouched() throws Exception {
+        String original = read();
+        useConnectorWhoseCopyFailsToSync();
+        try {
+            connector.update(ObjectClass.ACCOUNT, new Uid("vilo"), lastName("updated"), null);
+            fail("Expected the failed sync to fail the update");
+        } catch (ConnectorIOException expected) {
+            assertTrue(expected.getCause() instanceof SyncFailedException, String.valueOf(expected.getCause()));
+            assertEquals(read(), original, "the data file was replaced by a copy that was not synced");
+            assertNoRewriteFileLeft();
+        }
+    }
+
+    @Test
+    public void deleteWhoseCopyFailsToSyncLeavesFileUntouched() throws Exception {
+        String original = read();
+        useConnectorWhoseCopyFailsToSync();
+        try {
+            connector.delete(ObjectClass.ACCOUNT, new Uid("vilo"), null);
+            fail("Expected the failed sync to fail the delete");
+        } catch (ConnectorIOException expected) {
+            assertTrue(expected.getCause() instanceof SyncFailedException, String.valueOf(expected.getCause()));
+            assertEquals(read(), original, "the data file was replaced by a copy that was not synced");
             assertNoRewriteFileLeft();
         }
     }
@@ -177,6 +274,20 @@ public class RewriteSafetyTest {
         connector.create(ObjectClass.ACCOUNT, jano, null);
 
         assertEquals(pagedTotal(), 3);
+    }
+
+    /** Swaps in a connector whose rewrite writes the whole copy and then fails to sync it. */
+    private void useConnectorWhoseCopyFailsToSync() {
+        CSVFileConfiguration config = (CSVFileConfiguration) connector.getConfiguration();
+        connector.dispose();
+        connector = new CSVFileConnector() {
+            @Override
+            void completeRewrite(ICsvMapWriter writer, FileOutputStream copy) throws IOException {
+                writer.flush();
+                throw new SyncFailedException("sync failed");
+            }
+        };
+        connector.init(config);
     }
 
     private Set<PosixFilePermission> setDistinctMode() throws Exception {
