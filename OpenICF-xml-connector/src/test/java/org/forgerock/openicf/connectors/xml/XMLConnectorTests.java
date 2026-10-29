@@ -397,6 +397,7 @@ public class XMLConnectorTests {
                 XMLConnector.XMLHandlerCache.remove(store.getCanonicalPath());
             }
             Files.delete(multiXsd.toPath());
+            Files.deleteIfExists(store.toPath());
         }
     }
 
