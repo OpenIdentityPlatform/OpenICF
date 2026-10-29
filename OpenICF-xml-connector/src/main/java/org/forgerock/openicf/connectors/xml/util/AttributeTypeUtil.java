@@ -132,7 +132,6 @@ public class AttributeTypeUtil {
 
         Class<?> javaClass = attrInfo.getType();
         List<String> results = new ArrayList<String>();
-        String stringValue = null;
 
         if (attr != null && attr.getValue() != null) {
             if (attrInfo.getType().isPrimitive())
@@ -144,6 +143,8 @@ public class AttributeTypeUtil {
                     throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                 }
 
+                // No initializer: javac rejects a branch that neither sets the value nor throws (#189).
+                final String stringValue;
                 if (javaClass.equals(GuardedString.class)) {
                     GuardedStringAccessor accessor = new GuardedStringAccessor();
                     GuardedString gs = (GuardedString) value;
