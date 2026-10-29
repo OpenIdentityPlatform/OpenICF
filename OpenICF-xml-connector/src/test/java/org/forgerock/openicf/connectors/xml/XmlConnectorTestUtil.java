@@ -164,6 +164,18 @@ public class XmlConnectorTestUtil {
         return result;
     }
 
+    /** The values of the {@code localName} elements in the file, in any namespace, in document order. */
+    public static List<String> valuesInFile(File file, String localName) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        NodeList elements = factory.newDocumentBuilder().parse(file).getElementsByTagNameNS("*", localName);
+        List<String> result = new ArrayList<String>();
+        for (int i = 0; i < elements.getLength(); i++) {
+            result.add(elements.item(i).getTextContent());
+        }
+        return result;
+    }
+
     /** The attributes of a new account with the values {@link #writeAccounts} writes; create assigns its own __UID__. */
     public static Set<Attribute> account(String name) {
         Set<Attribute> attributes = new HashSet<Attribute>();

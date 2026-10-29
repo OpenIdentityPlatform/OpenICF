@@ -158,16 +158,16 @@ public class AttributeTypeUtil {
                 } else if (javaClass.isArray()) {
                     Class<?> sourceType = javaClass.getComponentType();
                     if (sourceType == byte.class) {
-                        results.add(Base64.encode((byte[])value));
+                        stringValue = Base64.encode((byte[]) value);
                     } else if (sourceType == char.class) {
-                        results.add(new String((char[]) value));
+                        stringValue = new String((char[]) value);
                     } else if (sourceType == Character.class) {
                         Character[] characterArray = (Character[]) value;
                         char[] charArray = new char[characterArray.length];
                         for (int i = 0; i < characterArray.length; i++) {
                             charArray[i] = characterArray[i];
                         }
-                        results.add(new String(charArray));
+                        stringValue = new String(charArray);
                     } else {
                         throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                     }

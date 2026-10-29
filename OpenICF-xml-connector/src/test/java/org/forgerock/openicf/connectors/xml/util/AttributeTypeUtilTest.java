@@ -21,8 +21,13 @@ import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.testng.annotations.Test;
 
 public class AttributeTypeUtilTest {
@@ -65,6 +70,15 @@ public class AttributeTypeUtilTest {
             assertEquals(e.getMessage(), "Value '" + value + "' is not a valid " + type);
             assertTrue(e.getCause() instanceof NumberFormatException);
         }
+    }
+
+    /** Each byte[] value is encoded once, with no null after it for the caller to write as an empty element. */
+    @Test
+    public void findAttributeValueEncodesEachByteArrayOnce() {
+        AttributeInfo info = new AttributeInfoBuilder("jpegPhoto", byte[].class).setMultiValued(true).build();
+        Attribute photo = AttributeBuilder.build("jpegPhoto", new byte[] { 1, 2, 3 }, new byte[] { 4, 5 });
+
+        assertEquals(AttributeTypeUtil.findAttributeValue(photo, info), Arrays.asList("AQID", "BAU="));
     }
 
     @org.testng.annotations.DataProvider
