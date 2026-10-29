@@ -45,11 +45,25 @@
         <connectorClass>ScriptedConnector</connectorClass>
         <framework.compatibilityVersion>1.5</framework.compatibilityVersion>
         <framework.releaseVersion>2.0</framework.releaseVersion>
+        <!--
+            bnd derives Import-Package from compiled classes only. The packages that only the
+            default CustomizerScript.groovy files use are named, so that the scripts, which compile
+            against the bundle's own loader, can resolve them (#214).
+        -->
         <openicf.osgi.import.defaults>
             org.codehaus.groovy*;version="[2.2,3)",
             groovy.*;version="[2.2,3)",
             groovyjar*;version="[2.2,3)",
             groovyx.net.http*;resolution:=optional,
+            javax.net.ssl,
+            org.apache.http.client.config;resolution:=optional,
+            org.apache.http.conn.routing;resolution:=optional,
+            org.apache.http.conn.ssl;resolution:=optional,
+            org.apache.http.impl.conn;resolution:=optional,
+            org.apache.http.impl.nio.conn;resolution:=optional,
+            org.apache.http.impl.nio.reactor;resolution:=optional,
+            org.apache.http.nio.conn.ssl;resolution:=optional,
+            org.apache.http.nio.reactor;resolution:=optional,
             org.apache.http*;resolution:=optional
         </openicf.osgi.import.defaults>
         <openicf.osgi.embed />

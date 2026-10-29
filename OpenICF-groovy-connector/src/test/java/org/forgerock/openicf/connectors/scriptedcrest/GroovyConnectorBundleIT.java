@@ -16,28 +16,44 @@
 package org.forgerock.openicf.connectors.scriptedcrest;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
+
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyCodeSource;
+import groovy.lang.Script;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.codehaus.groovy.control.CompilationFailedException;
 import org.testng.annotations.Test;
 
 /**
- * Pins the {@code org.apache.http} ranges that the packaged bundle imports (issue #207).
+ * Pins the {@code org.apache.http} ranges that the packaged bundle imports (issue #207), and
+ * checks that the bundle wires every package its default scripts use (issue #214).
  * <p>
- * bnd derives them from the httpcomponents versions that the build resolves through the imported
- * opendj-parent BOM. They decide which hosts wire a connector installed as a bundle, for example
- * into OpenIDM's {@code bundle/}, so a version bump there must not change them unnoticed.
+ * bnd derives the ranges from the httpcomponents versions that the build resolves through the
+ * imported opendj-parent BOM. They decide which hosts wire a connector installed as a bundle, for
+ * example into OpenIDM's {@code bundle/}, so a version bump there must not change them unnoticed.
  */
 public class GroovyConnectorBundleIT {
 
-    /** An Import-Package clause: the package, then its attributes and directives. */
+    /** An Import-Package or Export-Package clause: the package, then its attributes and directives. */
     private static final Pattern CLAUSE = Pattern.compile("([\\w.]+)((?:;[^,;\"]*(?:\"[^\"]*\")?)*)");
     private static final Pattern VERSION = Pattern.compile("version=\"([^\"]+)\"");
 
@@ -64,24 +80,92 @@ public class GroovyConnectorBundleIT {
         }
     }
 
-    private static Map<String, String> importPackage() throws IOException {
+    @Test
+    public void testDefaultScriptsCompileAgainstTheWiredPackages() throws IOException, URISyntaxException {
+        // The connector compiles its default customizer at runtime, with the thread's context
+        // loader as parent (ScriptedConfiguration.getParentLoader()). In OSGi that is the bundle's
+        // loader, which sees java.*, what Import-Package wires, what Require-Bundle: groovy-all
+        // exports and the bundle's own classes. bnd fills Import-Package from compiled classes only.
+        Set<String> wired = new HashSet<>(importPackage().keySet());
+        File groovyAll = new File(Script.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        wired.addAll(exportPackage(groovyAll));
+        Map<String, String> scripts = new HashMap<>();
+        try (JarFile jar = new JarFile(bundle())) {
+            for (JarEntry entry : Collections.list(jar.entries())) {
+                String name = entry.getName();
+                if (name.endsWith(".class")) {
+                    wired.add(name.substring(0, name.lastIndexOf('/')).replace('/', '.'));
+                } else if (name.endsWith(".groovy")) {
+                    try (InputStream in = jar.getInputStream(entry)) {
+                        scripts.put(name, new String(in.readAllBytes(), StandardCharsets.UTF_8));
+                    }
+                }
+            }
+        }
+        assertFalse(scripts.isEmpty(), "the bundle has no scripts");
+        List<String> failures = new ArrayList<>();
+        for (Map.Entry<String, String> script : scripts.entrySet()) {
+            // As ScriptedConfiguration.getCustomizerClass() compiles the default customizer
+            try (GroovyClassLoader loader = new GroovyClassLoader(new WiredLoader(wired))) {
+                loader.parseClass(new GroovyCodeSource(script.getValue(), script.getKey(), "/groovy/script"));
+            } catch (CompilationFailedException e) {
+                failures.add(e.getMessage());
+            }
+        }
+        assertTrue(failures.isEmpty(), String.join("\n", failures));
+    }
+
+    private static File bundle() {
         File bundle = new File(System.getProperty("bundleJar"));
         assertTrue(bundle.isFile(), "bundle jar: " + bundle);
-        String header;
-        try (JarFile jar = new JarFile(bundle)) {
-            header = jar.getManifest().getMainAttributes().getValue("Import-Package");
+        return bundle;
+    }
+
+    private static Map<String, String> importPackage() throws IOException {
+        try (JarFile jar = new JarFile(bundle())) {
+            return clauses(jar.getManifest().getMainAttributes().getValue("Import-Package"));
         }
-        Map<String, String> imports = new HashMap<>();
+    }
+
+    private static Set<String> exportPackage(File bundle) throws IOException {
+        try (JarFile jar = new JarFile(bundle)) {
+            return clauses(jar.getManifest().getMainAttributes().getValue("Export-Package")).keySet();
+        }
+    }
+
+    private static Map<String, String> clauses(String header) {
+        Map<String, String> clauses = new HashMap<>();
         Matcher clause = CLAUSE.matcher(header);
         while (clause.find()) {
-            imports.put(clause.group(1), clause.group(2));
+            clauses.put(clause.group(1), clause.group(2));
         }
-        return imports;
+        return clauses;
     }
 
     private static String version(Map<String, String> imports, String pkg) {
         assertTrue(imports.containsKey(pkg), "Import-Package has no " + pkg);
         Matcher version = VERSION.matcher(imports.get(pkg));
         return version.find() ? version.group(1) : null;
+    }
+
+    /** Loads only the classes of the given packages and of java.*, as a bundle's loader does. */
+    private static final class WiredLoader extends ClassLoader {
+
+        private final Set<String> packages;
+
+        WiredLoader(Set<String> packages) {
+            // No parent: javax.* comes from the boot loader, but a bundle has to import it
+            super(null);
+            this.packages = packages;
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            int dot = name.lastIndexOf('.');
+            if (!name.startsWith("java.") && (dot < 0 || !packages.contains(name.substring(0, dot)))) {
+                throw new ClassNotFoundException(name);
+            }
+            return Class.forName(name, resolve, GroovyConnectorBundleIT.class.getClassLoader());
+        }
     }
 }
