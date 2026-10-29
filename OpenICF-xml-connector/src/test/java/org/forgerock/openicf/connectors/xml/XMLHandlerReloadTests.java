@@ -67,7 +67,6 @@ import org.testng.SkipException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
-import org.w3c.dom.DOMException;
 
 public class XMLHandlerReloadTests {
 
@@ -127,17 +126,15 @@ public class XMLHandlerReloadTests {
     public void failedUpdateLeavesTheFileInAgreementWithMemory(Set<Attribute> attributes, String changedInMemory)
             throws Exception {
         writeAccounts(file, "alice");
-        // An XSD-invalid hand edit (#182): update's descendant lookup finds the inner lastname after alice's own,
-        // and removeChild rejects it, so the update fails midway. Once #182 is fixed, this needs another midway failure.
-        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
-                .replace("    <ri:lastname>Last-alice</ri:lastname>\n",
-                        "    <ri:lastname>Last-alice</ri:lastname>\n    <ri:wrapper><ri:lastname>inner</ri:lastname></ri:wrapper>\n");
-        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
         setModified(file, now() - HOUR);
+        MidwayFailingXMLHandler failing =
+                new MidwayFailingXMLHandler(config(file), schemaParser().parseSchema(), schemaParser().getXsdSchema());
+        handler = new ConcurrentXMLHandler(failing);
         List<String> inMemory;
         handler.init(); // holds the document: no reload and no save until the last dispose()
         try {
-            expectThrows(DOMException.class,
+            failing.failOnce(ATTR_ACCOUNT_LAST_NAME); // after alice's own lastname is removed
+            expectThrows(IllegalStateException.class,
                     () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes)));
             inMemory = firstAndLastNames(handler.search(allAccounts(), ObjectClass.ACCOUNT));
         } finally {
@@ -739,27 +736,6 @@ public class XMLHandlerReloadTests {
         call(h -> null); // creates the file
         String log = captureStdOut(() -> call(h -> null));
         assertTrue(log.contains("Exit serialize: nothing to save"), log);
-    }
-
-    @Test
-    public void failedDeleteOfANestedEntryLeavesTheFileAlone() throws Exception {
-        writeAccounts(file, "alice");
-        // An XSD-invalid hand edit: getEntry's descendant query finds the entry, removeChild on the container rejects it.
-        String xml = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8)
-                .replace("  <ri:__ACCOUNT__>\n", "  <ri:wrapper>\n  <ri:__ACCOUNT__>\n")
-                .replace("  </ri:__ACCOUNT__>\n", "  </ri:__ACCOUNT__>\n  </ri:wrapper>\n");
-        Files.write(file.toPath(), xml.getBytes(StandardCharsets.UTF_8));
-        FileTime past = FileTime.fromMillis(now() - HOUR);
-        Files.setLastModifiedTime(file.toPath(), past);
-        byte[] before = Files.readAllBytes(file.toPath());
-
-        expectThrows(DOMException.class, () -> call(h -> {
-            h.delete(ObjectClass.ACCOUNT, new Uid("uid-alice"));
-            return null;
-        }));
-
-        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
-        assertEquals(Files.readAllBytes(file.toPath()), before);
     }
 
     @Test
