@@ -489,7 +489,7 @@ public class SyncOpDiffTest {
         assertEquals(syncAccepting(SNAPSHOT_TOKEN, 1),
                 Arrays.asList("CREATE c1 [Jane, Doe, pw1]", "CREATE c2 [John, Roe, pw2]"));
         assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
-        assertEquals(snapshots(), Collections.singletonList("data.csv.1300000000000"));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
 
         // the stopped sync took no snapshot, so the next one offers every delta again, the accepted one too
         assertEquals(sync(resultToken), Arrays.asList("CREATE c1 [Jane, Doe, pw1]", "CREATE c2 [John, Roe, pw2]",
@@ -502,7 +502,7 @@ public class SyncOpDiffTest {
 
         List<SyncToken> offered = syncRejectingWithFailingHandleResult(null);
 
-        assertEquals(snapshots(), Collections.singletonList("data.csv." + offered.get(0).getValue()));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + offered.get(0).getValue()));
     }
 
     @Test
@@ -513,7 +513,7 @@ public class SyncOpDiffTest {
         assertEquals(syncAccepting(SNAPSHOT_TOKEN, 1),
                 Arrays.asList("DELETE d1 [Jane, Doe, pw1]", "DELETE d2 [John, Roe, pw2]"));
         assertEquals(resultToken.getValue(), SNAPSHOT_TOKEN.getValue());
-        assertEquals(snapshots(), Collections.singletonList("data.csv.1300000000000"));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + SNAPSHOT_TOKEN.getValue()));
 
         // the stopped sync took no snapshot, so the next one offers every delta again, the accepted one too
         assertEquals(sync(resultToken), Arrays.asList("DELETE d1 [Jane, Doe, pw1]", "DELETE d2 [John, Roe, pw2]",
@@ -540,7 +540,7 @@ public class SyncOpDiffTest {
 
         List<SyncToken> offered = syncRejectingWithFailingHandleResult(null);
 
-        assertEquals(snapshots(), Collections.singletonList("data.csv." + offered.get(0).getValue()));
+        assertEquals(snapshots(), Collections.singletonList(csvFile.getName() + "." + offered.get(0).getValue()));
     }
 
     @DataProvider
