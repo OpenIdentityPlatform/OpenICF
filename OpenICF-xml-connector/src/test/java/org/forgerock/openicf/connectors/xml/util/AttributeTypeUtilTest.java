@@ -23,7 +23,9 @@ import static org.testng.Assert.fail;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.identityconnectors.common.security.GuardedByteArray;
 import org.identityconnectors.common.security.GuardedString;
@@ -94,7 +96,10 @@ public class AttributeTypeUtilTest {
         assertEquals(AttributeTypeUtil.findAttributeValue(secret, info), expected);
     }
 
-    /** A null value, first or not, is refused with a message that names the attribute, not a type (#190). */
+    /**
+     * A null value, first or not, is refused with a message that names the attribute as the schema spells it, not a
+     * type (#190).
+     */
     @Test(dataProvider = "nullValues")
     public void findAttributeValueRefusesANullValue(Attribute firstName) {
         AttributeInfo info = new AttributeInfoBuilder("firstname", String.class).setMultiValued(true).build();
@@ -104,12 +109,31 @@ public class AttributeTypeUtilTest {
         assertEquals(e.getMessage(), "firstname contains a null value");
     }
 
+    /** A Map value is refused: createInstantiatedObject has no Map branch, so its text would read back as null. */
+    @Test(dataProvider = "mapTypes")
+    public void findAttributeValueRefusesAMapValue(Class<?> type) {
+        AttributeInfo info = new AttributeInfoBuilder("settings", type).build();
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("k", "v");
+        Attribute settings = AttributeBuilder.build("settings", map);
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> AttributeTypeUtil.findAttributeValue(settings, info));
+        assertEquals(e.getMessage(), "settings contains values of illegal type");
+    }
+
     @org.testng.annotations.DataProvider
     public Object[][] nullValues() {
         return new Object[][] {
             { AttributeBuilder.build("firstname", (Object) null) },
             { AttributeBuilder.build("firstname", "a", null) },
+            { AttributeBuilder.build("FirstName", (Object) null) },
         };
+    }
+
+    @org.testng.annotations.DataProvider
+    public Object[][] mapTypes() {
+        return new Object[][] { { Map.class }, { HashMap.class } };
     }
 
     @org.testng.annotations.DataProvider

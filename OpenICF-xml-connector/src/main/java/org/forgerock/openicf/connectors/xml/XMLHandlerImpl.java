@@ -204,7 +204,8 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         // Every given attribute is checked as update checks it, so one the schema does not have is refused rather than
-        // dropped (#192). Keyed by the given name: of two attributes with one name the map above keeps the last.
+        // dropped (#192). AttributeUtil.toMap is case-insensitive: of two names that differ only in case it keeps the
+        // first spelling as the key and the last attribute as the value (#212).
         Map<String, List<String>> checked = new HashMap<String, List<String>>();
         for (Map.Entry<String, Attribute> provided : providedAttributesMap.entrySet()) {
             checked.put(provided.getKey(), checkAttribute(provided.getValue(), objAttributes, Change.CREATE));
@@ -223,8 +224,9 @@ public class XMLHandlerImpl implements XMLHandler {
                     + name.getNameValue() + " already exists.");
         }
 
-        // Create or get UID
-        if (objAttributes.containsKey(Uid.NAME)) {
+        // Create or get UID. The lookup is case-insensitive, but the loop below writes the uid only into __UID__.
+        AttributeInfo uidInfo = objAttributes.get(Uid.NAME);
+        if (uidInfo != null && uidInfo.getName().equals(Uid.NAME)) {
             uidValue = UUID.randomUUID().toString();
         } else {
             uidValue = name.getNameValue();

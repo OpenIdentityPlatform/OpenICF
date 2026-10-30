@@ -293,7 +293,10 @@ public class XMLHandlerReloadTests {
         assertEquals(Files.readAllBytes(file.toPath()), before);
     }
 
-    /** Of two attributes with one name, create keeps the last, as AttributeUtil.toMap does, and writes only that one. */
+    /**
+     * Of two attributes with exactly one name, create keeps the last, as AttributeUtil.toMap does, and writes only that
+     * one. The framework's CreateImpl refuses such a pair before it reaches the connector; this calls the handler.
+     */
     @Test
     public void createKeepsOneOfTwoSameNamedAttributes() throws Exception {
         writeAccounts(file, "alice");

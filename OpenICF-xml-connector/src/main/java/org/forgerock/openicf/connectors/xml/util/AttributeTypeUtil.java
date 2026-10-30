@@ -146,6 +146,10 @@ public class AttributeTypeUtil {
                 if (!javaClass.isInstance(value)) {
                     throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                 }
+                // createInstantiatedObject has no Map branch: Map.toString() text would read back as null.
+                if (value instanceof Map) {
+                    throw new IllegalArgumentException(attrInfo.getName() + " contains values of illegal type");
+                }
 
                 // No initializer: javac rejects a branch that neither sets the value nor throws (#189).
                 final String stringValue;
