@@ -39,7 +39,6 @@ import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeInfo;
-import org.identityconnectors.framework.common.objects.AttributeUtil;
 
 public class AttributeTypeUtil {
 
@@ -133,7 +132,6 @@ public class AttributeTypeUtil {
 
         Class<?> javaClass = attrInfo.getType();
         List<String> results = new ArrayList<String>();
-        String stringValue = null;
 
         if (attr != null && attr.getValue() != null) {
             if (attrInfo.getType().isPrimitive())
@@ -145,29 +143,31 @@ public class AttributeTypeUtil {
                     throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                 }
 
+                // No initializer: javac rejects a branch that neither sets the value nor throws (#189).
+                final String stringValue;
                 if (javaClass.equals(GuardedString.class)) {
                     GuardedStringAccessor accessor = new GuardedStringAccessor();
-                    GuardedString gs = AttributeUtil.getGuardedStringValue(attr);
+                    GuardedString gs = (GuardedString) value;
                     gs.access(accessor);
                     stringValue = String.valueOf(accessor.getArray());
                 } else if (javaClass.equals(GuardedByteArray.class)) {
                     GuardedByteArrayAccessor accessor = new GuardedByteArrayAccessor();
-                    GuardedByteArray gba = (GuardedByteArray) attr.getValue().get(0);
+                    GuardedByteArray gba = (GuardedByteArray) value;
                     gba.access(accessor);
                     stringValue = Base64.encode(accessor.getArray());
                 } else if (javaClass.isArray()) {
                     Class<?> sourceType = javaClass.getComponentType();
                     if (sourceType == byte.class) {
-                        results.add(Base64.encode((byte[])value));
+                        stringValue = Base64.encode((byte[]) value);
                     } else if (sourceType == char.class) {
-                        results.add(new String((char[]) value));
+                        stringValue = new String((char[]) value);
                     } else if (sourceType == Character.class) {
                         Character[] characterArray = (Character[]) value;
                         char[] charArray = new char[characterArray.length];
                         for (int i = 0; i < characterArray.length; i++) {
                             charArray[i] = characterArray[i];
                         }
-                        results.add(new String(charArray));
+                        stringValue = new String(charArray);
                     } else {
                         throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                     }

@@ -61,9 +61,11 @@ import org.identityconnectors.framework.common.exceptions.ConnectorIOException;
 import org.identityconnectors.framework.common.exceptions.InvalidPasswordException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfoUtil;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.OperationOptionsBuilder;
 import org.identityconnectors.framework.common.objects.Schema;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.EqualsFilter;
@@ -340,6 +342,63 @@ public class XMLConnectorTests {
         ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, uid, null);
         AssertJUnit.assertEquals(lastName,
                 AttributeUtil.getStringValue(read.getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+    }
+
+    /** A single-valued byte[] attribute is one element after a create and one element after an update. */
+    @Test
+    public void singleValuedBinaryAttributeIsCreatedAndReplaced() throws Exception {
+        Set<Attribute> attributes = getRequiredAccountAttributes();
+        attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_PHOTO, new byte[] { 1, 2, 3 }));
+        Uid uid = facade.create(ObjectClass.ACCOUNT, attributes, null);
+        AssertJUnit.assertEquals(Arrays.asList("AQID"), valuesInFile(xmlFile, ATTR_ACCOUNT_PHOTO));
+        assertPhoto(uid, new byte[] { 1, 2, 3 });
+
+        facade.update(ObjectClass.ACCOUNT, uid,
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_PHOTO, new byte[] { 4, 5 })), null);
+        AssertJUnit.assertEquals(Arrays.asList("BAU="), valuesInFile(xmlFile, ATTR_ACCOUNT_PHOTO));
+        assertPhoto(uid, new byte[] { 4, 5 });
+    }
+
+    private void assertPhoto(Uid uid, byte[] expected) {
+        ConnectorObject read = facade.getObject(ObjectClass.ACCOUNT, uid,
+                new OperationOptionsBuilder().setAttributesToGet(ATTR_ACCOUNT_PHOTO).build());
+        Attribute photo = read.getAttributeByName(ATTR_ACCOUNT_PHOTO);
+        AssertJUnit.assertNotNull(photo);
+        AssertJUnit.assertEquals(1, photo.getValue().size());
+        AssertJUnit.assertTrue(Arrays.equals(expected, (byte[]) photo.getValue().get(0)));
+    }
+
+    /** Each value of a multi-valued byte[] attribute is one element, with no empty element after it. */
+    @Test
+    public void multiValuedBinaryAttributeWritesNoEmptyElements() throws Exception {
+        // Next to the original, so that its import of resource-schema-1.xsd resolves.
+        File multiXsd = getTestFile("multi-valued-photo.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String photo = "<xsd:element name=\"jpegPhoto\" type=\"xsd:base64Binary\" minOccurs=\"0\"";
+        Files.write(multiXsd.toPath(),
+                xsd.replace(photo, photo + " maxOccurs=\"unbounded\"").getBytes(StandardCharsets.UTF_8));
+        // XMLHandlerCache is keyed by the store path: only a new store gets a handler with this schema.
+        File store = getRandomXMLFile();
+        try {
+            XMLConfiguration config = configFor(store);
+            config.setXsdFilePath(multiXsd);
+            ConnectorFacade multi = ConnectorFacadeFactory.getInstance()
+                    .newInstance(TestHelpers.createTestConfiguration(XMLConnector.class, config));
+            AssertJUnit.assertTrue(AttributeInfoUtil.find(ATTR_ACCOUNT_PHOTO,
+                    multi.schema().findObjectClassInfo(ObjectClass.ACCOUNT_NAME).getAttributeInfo()).isMultiValued());
+
+            Set<Attribute> attributes = getRequiredAccountAttributes();
+            attributes.add(AttributeBuilder.build(ATTR_ACCOUNT_PHOTO, new byte[] { 1, 2, 3 }, new byte[] { 4, 5 }));
+            multi.create(ObjectClass.ACCOUNT, attributes, null);
+
+            AssertJUnit.assertEquals(Arrays.asList("AQID", "BAU="), valuesInFile(store, ATTR_ACCOUNT_PHOTO));
+        } finally {
+            synchronized (XMLConnector.class) {
+                XMLConnector.XMLHandlerCache.remove(store.getCanonicalPath());
+            }
+            Files.delete(multiXsd.toPath());
+            Files.deleteIfExists(store.toPath());
+        }
     }
 
     @Test

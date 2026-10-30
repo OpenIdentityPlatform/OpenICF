@@ -21,8 +21,16 @@ import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
 
+import org.identityconnectors.common.security.GuardedByteArray;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.objects.Attribute;
+import org.identityconnectors.framework.common.objects.AttributeBuilder;
+import org.identityconnectors.framework.common.objects.AttributeInfo;
+import org.identityconnectors.framework.common.objects.AttributeInfoBuilder;
 import org.testng.annotations.Test;
 
 public class AttributeTypeUtilTest {
@@ -65,6 +73,34 @@ public class AttributeTypeUtilTest {
             assertEquals(e.getMessage(), "Value '" + value + "' is not a valid " + type);
             assertTrue(e.getCause() instanceof NumberFormatException);
         }
+    }
+
+    /** Each byte[] value is encoded once, with no null after it for the caller to write as an empty element. */
+    @Test
+    public void findAttributeValueEncodesEachByteArrayOnce() {
+        AttributeInfo info = new AttributeInfoBuilder("jpegPhoto", byte[].class).setMultiValued(true).build();
+        Attribute photo = AttributeBuilder.build("jpegPhoto", new byte[] { 1, 2, 3 }, new byte[] { 4, 5 });
+
+        assertEquals(AttributeTypeUtil.findAttributeValue(photo, info), Arrays.asList("AQID", "BAU="));
+    }
+
+    /** Each value of a multi-valued guarded attribute is read from that value, not from the attribute's first one. */
+    @Test(dataProvider = "guardedValues")
+    public void findAttributeValueReadsEachGuardedValue(Class<?> type, Object first, Object second, List<String> expected) {
+        AttributeInfo info = new AttributeInfoBuilder("secret", type).setMultiValued(true).build();
+        Attribute secret = AttributeBuilder.build("secret", first, second);
+
+        assertEquals(AttributeTypeUtil.findAttributeValue(secret, info), expected);
+    }
+
+    @org.testng.annotations.DataProvider
+    public Object[][] guardedValues() {
+        return new Object[][] {
+            { GuardedString.class, new GuardedString("a".toCharArray()), new GuardedString("b".toCharArray()),
+                    Arrays.asList("a", "b") },
+            { GuardedByteArray.class, new GuardedByteArray(new byte[] { 1, 2, 3 }),
+                    new GuardedByteArray(new byte[] { 4, 5 }), Arrays.asList("AQID", "BAU=") },
+        };
     }
 
     @org.testng.annotations.DataProvider

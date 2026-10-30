@@ -26,11 +26,8 @@ import static org.testng.Assert.assertTrue;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
@@ -40,7 +37,6 @@ import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
 import org.identityconnectors.framework.common.objects.Uid;
 import org.testng.annotations.Test;
-import org.w3c.dom.NodeList;
 
 /**
  * Update and authenticate use an entry's own child elements, whatever their prefix, and no others; delete removes the
@@ -245,17 +241,5 @@ public class XMLHandlerOwnElementsTests {
 
     private static String allAccounts() {
         return new QueryBuilder(null, ObjectClass.ACCOUNT).toString();
-    }
-
-    /** The values of the {@code localName} elements in the file, in any namespace, in document order. */
-    private static List<String> valuesInFile(File file, String localName) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        NodeList elements = factory.newDocumentBuilder().parse(file).getElementsByTagNameNS("*", localName);
-        List<String> result = new ArrayList<String>();
-        for (int i = 0; i < elements.getLength(); i++) {
-            result.add(elements.item(i).getTextContent());
-        }
-        return result;
     }
 }

@@ -20,6 +20,7 @@
  * with the fields enclosed by brackets [] replaced by
  * your own identifying information:
  * "Portions Copyrighted 2010 [name of copyright owner]"
+ * Portions Copyrighted 2026 3A Systems, LLC
  *
  * $Id$
  */
@@ -36,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
@@ -169,6 +171,24 @@ public class UpdateEntryTests {
         newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, "1234"));
 
         handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes);
+    }
+
+    /**
+     * Two values of a single-valued GuardedString attribute are refused by the multi-value check, as for any other
+     * attribute. __PASSWORD__ cannot carry two values: the framework's Attribute refuses them.
+     */
+    @Test
+    public void twoSecretPinValuesAreRefusedAsNotMultivalued() {
+        Uid insertedUid = createTestAccount();
+
+        Set<Attribute> newAttributes = new HashSet<Attribute>();
+        newAttributes.add(AttributeBuilder.build(ATTR_ACCOUNT_SECRET_PIN,
+                new GuardedString("1234".toCharArray()), new GuardedString("5678".toCharArray())));
+
+        IllegalArgumentException e = Assert.expectThrows(IllegalArgumentException.class,
+                () -> handler.update(ObjectClass.ACCOUNT, insertedUid, newAttributes));
+        AssertJUnit.assertEquals("Data field: " + ATTR_ACCOUNT_SECRET_PIN
+                + " is not multivalued  can not have more than one value", e.getMessage());
     }
 
     @Test(expectedExceptions = UnknownUidException.class)
