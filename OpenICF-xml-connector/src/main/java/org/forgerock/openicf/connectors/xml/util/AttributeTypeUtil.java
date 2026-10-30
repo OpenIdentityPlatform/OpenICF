@@ -139,8 +139,16 @@ public class AttributeTypeUtil {
 
             for (Object value : attr.getValue()) {
 
+                // A null is no value of any type, so the message names the attribute rather than a type (#190).
+                if (value == null) {
+                    throw new IllegalArgumentException(attrInfo.getName() + " contains a null value");
+                }
                 if (!javaClass.isInstance(value)) {
                     throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
+                }
+                // createInstantiatedObject has no Map branch: Map.toString() text would read back as null.
+                if (value instanceof Map) {
+                    throw new IllegalArgumentException(attrInfo.getName() + " contains values of illegal type");
                 }
 
                 // No initializer: javac rejects a branch that neither sets the value nor throws (#189).

@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -154,14 +155,22 @@ public class XMLHandlerReloadTests {
                 {attributes(changedFirstName, AttributeBuilder.build(Name.NAME, "  ")), "Parameter '__NAME__' must not be blank."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, Boolean.TRUE)),
                         "is-deleted is not updatable."},
-                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")), "age contains values of illegal type"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")),
+                        "age contains invalid type. Value(s) should be of type java.lang.Integer"},
                 {attributes(changedFirstName, AttributeBuilder.build("no-such-attribute", "x")),
                         "Data field: no-such-attribute is not supported."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME)),
                         "No values provided for required attribute: lastname"},
-                // A required attribute's values are read before the type check, which then never runs.
+                // The values of any attribute are read and type-checked before the other checks on them.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5))),
                         "lastname contains invalid type. Value(s) should be of type java.lang.String"},
+                // A null is no value of any type: the message names the attribute, not a type (#190).
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, (Object) null)),
+                        "lastname contains a null value"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, (Object) null)),
+                        "firstname contains a null value"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a@example.com", null)),
+                        "email contains a null value"},
                 // is-deleted fails two checks and an unsupported attribute follows it: only the first check of the first
                 // failing attribute is reported.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, "true"),
@@ -184,6 +193,120 @@ public class XMLHandlerReloadTests {
         assertEquals(Files.readAllBytes(file.toPath()), before);
         // The file is unchanged, so the next call keeps the document in memory: it must be unchanged as well.
         assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
+    }
+
+    @DataProvider
+    public Object[][] refusedAttributes() {
+        return new Object[][] {
+                {AttributeBuilder.build("no-such-attribute", "x"), "Data field: no-such-attribute is not supported."},
+                {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME), "No values provided for required attribute: lastname"},
+                {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "  "), "Parameter 'lastname' must not be blank."},
+                {AttributeBuilder.build(Name.NAME, "  "), "Parameter '__NAME__' must not be blank."},
+                {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5)),
+                        "lastname contains invalid type. Value(s) should be of type java.lang.String"},
+                {AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12"),
+                        "age contains invalid type. Value(s) should be of type java.lang.Integer"},
+                {AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, (Object) null), "firstname contains a null value"},
+                {AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a@example.com", null), "email contains a null value"},
+                {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B"),
+                        "Data field: lastname is not multivalued  can not have more than one value"},
+        };
+    }
+
+    /** create and update check a given attribute with one method, so they refuse it with one message (#192). */
+    @Test(dataProvider = "refusedAttributes")
+    public void createAndUpdateRefuseAnAttributeAlike(Attribute refused, String message) throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+        Map<String, Attribute> carol = new LinkedHashMap<String, Attribute>();
+        for (Attribute a : attributes(AttributeBuilder.build(Name.NAME, "carol"),
+                AttributeBuilder.buildPassword("secret-carol".toCharArray()),
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol"), refused)) {
+            carol.put(a.getName(), a); // the row's attribute replaces carol's attribute of the same name
+        }
+
+        IllegalArgumentException onCreate = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, new LinkedHashSet<Attribute>(carol.values()))));
+        IllegalArgumentException onUpdate = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(refused))));
+
+        assertEquals(onCreate.getMessage(), message);
+        assertEquals(onUpdate.getMessage(), message);
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
+    }
+
+    /** avg-wage can be updated but not created; account-created-timestamp can be created but not updated. */
+    @Test
+    public void eachOperationAppliesItsOwnRule() throws Exception {
+        writeAccounts(file, "alice");
+        Set<Attribute> carolWithWage = account("carol");
+        carolWithWage.add(AttributeBuilder.build(ATTR_ACCOUNT_AVERAGE_WAGE, 1.5f));
+        Set<Attribute> carolWithTimestamp = account("carol");
+        carolWithTimestamp.add(AttributeBuilder.build(ATTR_ACCOUNT_CREATED_TIMESTAMP, 5L));
+
+        IllegalArgumentException onCreate = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, carolWithWage)));
+        assertEquals(onCreate.getMessage(), "avg-wage is not a creatable field.");
+        call(h -> h.create(ObjectClass.ACCOUNT, carolWithTimestamp));
+
+        IllegalArgumentException onUpdate = expectThrows(IllegalArgumentException.class, () -> call(h -> h.update(
+                ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(AttributeBuilder.build(ATTR_ACCOUNT_CREATED_TIMESTAMP, 6L)))));
+        assertEquals(onUpdate.getMessage(), "account-created-timestamp is not updatable.");
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"),
+                attributes(AttributeBuilder.build(ATTR_ACCOUNT_AVERAGE_WAGE, 2.5f))));
+
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_CREATED_TIMESTAMP), List.of("5"));
+        assertTrue(valuesInFile(file, ATTR_ACCOUNT_AVERAGE_WAGE).contains("2.5"));
+    }
+
+    @DataProvider
+    public Object[][] attributesWithoutLastName() {
+        return new Object[][] {
+                {attributes(AttributeBuilder.build(Name.NAME, "alice"), AttributeBuilder.buildPassword("secret-x".toCharArray()))},
+                // A required attribute is looked up by the schema's spelling, so another case does not stand in for it
+                // (unchanged, see #212).
+                {attributes(AttributeBuilder.build(Name.NAME, "alice"), AttributeBuilder.buildPassword("secret-x".toCharArray()),
+                        AttributeBuilder.build("LASTNAME", "X"))},
+        };
+    }
+
+    /**
+     * alice is taken, yet the refusal is the missing lastname: every check on the attributes comes before create looks
+     * the name up.
+     */
+    @Test(dataProvider = "attributesWithoutLastName")
+    public void createRefusesAMissingRequiredAttribute(Set<Attribute> attributes) throws Exception {
+        writeAccounts(file, "alice");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, attributes)));
+
+        assertEquals(e.getMessage(), "No values provided for required attribute: lastname");
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+    }
+
+    /**
+     * Of two attributes with exactly one name, create keeps the last, as AttributeUtil.toMap does, and writes only that
+     * one. The framework's CreateImpl refuses such a pair before it reaches the connector; this calls the handler.
+     */
+    @Test
+    public void createKeepsOneOfTwoSameNamedAttributes() throws Exception {
+        writeAccounts(file, "alice");
+
+        call(h -> h.create(ObjectClass.ACCOUNT, attributes(AttributeBuilder.build(Name.NAME, "carol"),
+                AttributeBuilder.buildPassword("secret-carol".toCharArray()),
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol"),
+                AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a"), AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "b"))));
+
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_EMAIL), List.of("b"));
     }
 
     @Test

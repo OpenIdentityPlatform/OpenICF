@@ -160,7 +160,7 @@ public class UpdateEntryTests {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void withAttributeContainingValuesOfIllegalTypeShouldThrowException() {
-        final String expectedErrorMessage = ATTR_ACCOUNT_MS_EMPLOYED + " contains values of illegal type";
+        final String expectedErrorMessage = ATTR_ACCOUNT_MS_EMPLOYED + " contains invalid type. Value(s) should be of type java.lang.Long";
 
         // Setup account
         Uid insertedUid = createTestAccount();

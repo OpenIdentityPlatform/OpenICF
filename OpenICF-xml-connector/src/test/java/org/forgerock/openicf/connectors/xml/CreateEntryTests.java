@@ -98,7 +98,7 @@ public class CreateEntryTests {
 
     @Test(expectedExceptions = IllegalArgumentException.class)
     public void withMissingRequiredFieldShouldThrowException() {
-        final String expectedErrorMessage = "Missing required field: " + ATTR_PASSWORD;
+        final String expectedErrorMessage = "No values provided for required attribute: " + ATTR_PASSWORD;
 
         Map<String, Attribute> requiredMap = convertToAttributeMap(getRequiredAccountAttributes());
         requiredMap.remove(ATTR_PASSWORD);
@@ -133,8 +133,8 @@ public class CreateEntryTests {
 
         IllegalArgumentException e = Assert.expectThrows(IllegalArgumentException.class,
                 () -> handler.create(ObjectClass.ACCOUNT, attrSet));
-        AssertJUnit.assertEquals("Attribute field: " + ATTR_ACCOUNT_SECRET_PIN
-                + " is not multivalued and can not contain more than one value", e.getMessage());
+        AssertJUnit.assertEquals("Data field: " + ATTR_ACCOUNT_SECRET_PIN
+                + " is not multivalued  can not have more than one value", e.getMessage());
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

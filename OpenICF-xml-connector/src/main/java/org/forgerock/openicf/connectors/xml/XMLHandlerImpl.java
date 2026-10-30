@@ -190,20 +190,30 @@ public class XMLHandlerImpl implements XMLHandler {
         XmlHandlerUtil.checkObjectType(objClass, riSchema);
 
         ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
-        Set<AttributeInfo> objAttributes = null;
-        Map<String, AttributeInfo> supportedAttributeInfoMap = null;
+        Map<String, AttributeInfo> objAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
         Map<String, Attribute> providedAttributesMap = null;
         String uidValue = null;
 
         if (attributes != null) {
-            objAttributes = objInfo.getAttributeInfo();
-            supportedAttributeInfoMap = new HashMap<String, AttributeInfo>(AttributeInfoUtil.toMap(objAttributes));
             providedAttributesMap = new HashMap<String, Attribute>(AttributeUtil.toMap(attributes));
         }
 
         // Check if __NAME__ is defined
         if (providedAttributesMap == null || !providedAttributesMap.containsKey(Name.NAME) || providedAttributesMap.get(Name.NAME).getValue().isEmpty()) {
             throw new IllegalArgumentException(Name.NAME + " must be defined.");
+        }
+
+        // Every given attribute is checked as update checks it, so one the schema does not have is refused rather than
+        // dropped (#192). AttributeUtil.toMap is case-insensitive: of two names that differ only in case it keeps the
+        // first spelling as the key and the last attribute as the value (#212).
+        Map<String, List<String>> checked = new HashMap<String, List<String>>();
+        for (Map.Entry<String, Attribute> provided : providedAttributesMap.entrySet()) {
+            checked.put(provided.getKey(), checkAttribute(provided.getValue(), objAttributes, Change.CREATE));
+        }
+        for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
+            if (attributeInfo.isRequired() && !checked.containsKey(attributeInfo.getName())) {
+                throw new IllegalArgumentException("No values provided for required attribute: " + attributeInfo.getName());
+            }
         }
 
         Name name = AttributeUtil.getNameFromAttributes(attributes);
@@ -214,8 +224,9 @@ public class XMLHandlerImpl implements XMLHandler {
                     + name.getNameValue() + " already exists.");
         }
 
-        // Create or get UID
-        if (supportedAttributeInfoMap.containsKey(Uid.NAME)) {
+        // Create or get UID. The lookup is case-insensitive, but the loop below writes the uid only into __UID__.
+        AttributeInfo uidInfo = objAttributes.get(Uid.NAME);
+        if (uidInfo != null && uidInfo.getName().equals(Uid.NAME)) {
             uidValue = UUID.randomUUID().toString();
         } else {
             uidValue = name.getNameValue();
@@ -226,48 +237,18 @@ public class XMLHandlerImpl implements XMLHandler {
         objElement.setPrefix(RI_NAMESPACE_PREFIX);
 
         // Add child elements
-        for (AttributeInfo attributeInfo : objAttributes) {
+        for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
 
             String attributeName = attributeInfo.getName();
-
-            List<String> values = AttributeTypeUtil.findAttributeValue(providedAttributesMap.get(attributeName), attributeInfo);
-
-            // Check if required attributes contain values
-            if (attributeInfo.isRequired()) {
-                if (providedAttributesMap.containsKey(attributeName) && !values.isEmpty()) {
-                    for (String value : values) {
-                        Assertions.blankCheck(value, attributeName);
-                    }
-                } else {
-                    throw new IllegalArgumentException("Missing required field: " + attributeName);
-                }
-            }
-
-            if (!attributeInfo.isMultiValued() && values.size() > 1) {
-                throw new IllegalArgumentException("Attribute field: " + attributeName + " is not multivalued and can not contain more than one value");
-            }
-
-            if (!supportedAttributeInfoMap.containsKey(attributeName)) {
-                continue;
-            }
-
-            if (!attributeInfo.isCreateable() && providedAttributesMap.containsKey(attributeName)) {
-                throw new IllegalArgumentException(attributeName + " is not a creatable field.");
-            }
 
             Element childElement = null;
 
             if (attributeName.equals(Uid.NAME)) {
                 childElement = createDomElement(attributeName, uidValue);
                 objElement.appendChild(childElement);
-            } else if (providedAttributesMap.containsKey(attributeName)) {
-                // Check if provided value is instance of the class defined in schema
-                Class expectedClass = attributeInfo.getType();
-                if (!valuesAreExpectedClass(expectedClass, providedAttributesMap.get(attributeName).getValue())) {
-                    throw new IllegalArgumentException(attributeName + " contains values of illegal type");
-                }
+            } else if (checked.containsKey(attributeName)) {
                 // Create elements
-                for (String value : values) {
+                for (String value : checked.get(attributeName)) {
                     childElement = createDomElement(attributeName, value);
                     objElement.appendChild(childElement);
                 }
@@ -310,48 +291,8 @@ public class XMLHandlerImpl implements XMLHandler {
         Uid newUid = null;
         for (Attribute attribute : replaceAttributes) {
 
-            if (!objAttributes.containsKey(attribute.getName())) {
-                throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
-            }
-
-            AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
             String attributeName = attribute.getName();
-
-            if (!attributeInfo.isUpdateable()) {
-                throw new IllegalArgumentException(attributeName + " is not updatable.");
-            }
-
-            List<String> values = null;
-            // create() requires __NAME__ whatever the XSD says, and an object without a name cannot be built, so a
-            // cleared __NAME__ would leave an entry that no search of the class can read back.
-            if (attributeInfo.isRequired() || Name.NAME.equals(attributeName)) {
-                values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
-                if (values.isEmpty()) {
-                    throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
-                }
-                for (String value : values) {
-                    Assertions.blankCheck(value, attributeName);
-                    Assertions.nullCheck(value, attributeName);
-                }
-            }
-
-            // Check if the provided value is the same as the class defined in schema
-            Class expectedClass = attributeInfo.getType();
-
-            if (attribute.getValue() != null) {
-                if (!valuesAreExpectedClass(expectedClass, attribute.getValue())) {
-                    throw new IllegalArgumentException(attributeName + " contains values of illegal type");
-                }
-            }
-
-            // Values read above are not read again: that would decrypt a password twice.
-            if (values == null) {
-                values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
-            }
-
-            if (!attributeInfo.isMultiValued() && values.size() > 1) {
-                throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
-            }
+            List<String> values = checkAttribute(attribute, objAttributes, Change.UPDATE);
 
             if (Name.NAME.equals(attributeName)) {
                 for (String value : values) {
@@ -825,21 +766,6 @@ public class XMLHandlerImpl implements XMLHandler {
         return elementField;
     }
 
-    private boolean valuesAreExpectedClass(Class expectedClass, List<Object> values) {
-        if (null != values) {
-            if (expectedClass.isPrimitive()) {
-                expectedClass = AttributeTypeUtil.convertPrimitiveToWrapper(expectedClass.getName());
-            }
-
-            for (Object obj : values) {
-                if (expectedClass != obj.getClass()) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
     private void removeChildrenFromElement(Element element, String childName) {
         for (Element e : ownElements(element, childName)) {
             element.removeChild(e);
@@ -873,6 +799,72 @@ public class XMLHandlerImpl implements XMLHandler {
             throw new ConnectorException("Data file does not exists: " + config.getXmlFilePath().toString());
         }
         return document;
+    }
+
+    /** The operation an attribute is given to, and the schema rule that operation applies. */
+    private enum Change {
+        CREATE {
+            @Override
+            boolean allows(AttributeInfo info) {
+                return info.isCreateable();
+            }
+
+            @Override
+            String refusal(String attributeName) {
+                return attributeName + " is not a creatable field.";
+            }
+        },
+        UPDATE {
+            @Override
+            boolean allows(AttributeInfo info) {
+                return info.isUpdateable();
+            }
+
+            @Override
+            String refusal(String attributeName) {
+                return attributeName + " is not updatable.";
+            }
+        };
+
+        abstract boolean allows(AttributeInfo info);
+
+        abstract String refusal(String attributeName);
+    }
+
+    /**
+     * Checks one attribute given to create or update and returns its values as text. Both operations check an attribute
+     * with this method; only the operation's own schema rule differs (#192). The values are read once, so a guarded
+     * value is decrypted once.
+     */
+    private static List<String> checkAttribute(Attribute attribute, Map<String, AttributeInfo> objAttributes,
+            Change change) {
+        String attributeName = attribute.getName();
+        AttributeInfo attributeInfo = objAttributes.get(attributeName);
+        if (attributeInfo == null) {
+            throw new IllegalArgumentException("Data field: " + attributeName + " is not supported.");
+        }
+        if (!change.allows(attributeInfo)) {
+            throw new IllegalArgumentException(change.refusal(attributeName));
+        }
+
+        // The only type and null check of the values.
+        List<String> values = AttributeTypeUtil.findAttributeValue(attribute, attributeInfo);
+
+        // create() requires __NAME__ whatever the XSD says, and an object without a name cannot be built, so a
+        // cleared __NAME__ would leave an entry that no search of the class can read back.
+        if (attributeInfo.isRequired() || Name.NAME.equals(attributeName)) {
+            if (values.isEmpty()) {
+                throw new IllegalArgumentException("No values provided for required attribute: " + attributeName);
+            }
+            for (String value : values) {
+                Assertions.blankCheck(value, attributeName);
+            }
+        }
+
+        if (!attributeInfo.isMultiValued() && values.size() > 1) {
+            throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
+        }
+        return values;
     }
 
     /**
