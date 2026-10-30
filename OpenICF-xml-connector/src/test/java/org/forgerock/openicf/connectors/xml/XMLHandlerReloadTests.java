@@ -154,17 +154,22 @@ public class XMLHandlerReloadTests {
                 {attributes(changedFirstName, AttributeBuilder.build(Name.NAME, "  ")), "Parameter '__NAME__' must not be blank."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, Boolean.TRUE)),
                         "is-deleted is not updatable."},
-                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")), "age contains values of illegal type"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")),
+                        "age contains invalid type. Value(s) should be of type java.lang.Integer"},
                 {attributes(changedFirstName, AttributeBuilder.build("no-such-attribute", "x")),
                         "Data field: no-such-attribute is not supported."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME)),
                         "No values provided for required attribute: lastname"},
-                // A required attribute's values are read before the type check, which then never runs.
+                // The values of any attribute are read and type-checked before the other checks on them.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5))),
                         "lastname contains invalid type. Value(s) should be of type java.lang.String"},
                 // A null is no value of any type: the message names the attribute, not a type (#190).
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, (Object) null)),
                         "lastname contains a null value"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, (Object) null)),
+                        "firstname contains a null value"},
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a@example.com", null)),
+                        "email contains a null value"},
                 // is-deleted fails two checks and an unsupported attribute follows it: only the first check of the first
                 // failing attribute is reported.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, "true"),
