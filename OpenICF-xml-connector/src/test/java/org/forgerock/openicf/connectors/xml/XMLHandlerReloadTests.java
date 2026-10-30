@@ -162,6 +162,9 @@ public class XMLHandlerReloadTests {
                 // A required attribute's values are read before the type check, which then never runs.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, Integer.valueOf(5))),
                         "lastname contains invalid type. Value(s) should be of type java.lang.String"},
+                // A null is no value of any type: the message names the attribute, not a type (#190).
+                {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, (Object) null)),
+                        "lastname contains a null value"},
                 // is-deleted fails two checks and an unsupported attribute follows it: only the first check of the first
                 // failing attribute is reported.
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, "true"),

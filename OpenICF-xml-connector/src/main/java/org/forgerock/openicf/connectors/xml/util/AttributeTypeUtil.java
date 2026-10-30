@@ -139,6 +139,10 @@ public class AttributeTypeUtil {
 
             for (Object value : attr.getValue()) {
 
+                // A null is no value of any type, so the message names the attribute rather than a type (#190).
+                if (value == null) {
+                    throw new IllegalArgumentException(attrInfo.getName() + " contains a null value");
+                }
                 if (!javaClass.isInstance(value)) {
                     throw new IllegalArgumentException(attrInfo.getName() + " contains invalid type. Value(s) should be of type " + javaClass.getName());
                 }

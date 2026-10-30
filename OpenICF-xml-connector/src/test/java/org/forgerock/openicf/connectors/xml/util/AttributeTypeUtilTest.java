@@ -17,6 +17,7 @@ package org.forgerock.openicf.connectors.xml.util;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 import static org.testng.Assert.fail;
 
 import java.math.BigDecimal;
@@ -91,6 +92,24 @@ public class AttributeTypeUtilTest {
         Attribute secret = AttributeBuilder.build("secret", first, second);
 
         assertEquals(AttributeTypeUtil.findAttributeValue(secret, info), expected);
+    }
+
+    /** A null value, first or not, is refused with a message that names the attribute, not a type (#190). */
+    @Test(dataProvider = "nullValues")
+    public void findAttributeValueRefusesANullValue(Attribute firstName) {
+        AttributeInfo info = new AttributeInfoBuilder("firstname", String.class).setMultiValued(true).build();
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> AttributeTypeUtil.findAttributeValue(firstName, info));
+        assertEquals(e.getMessage(), "firstname contains a null value");
+    }
+
+    @org.testng.annotations.DataProvider
+    public Object[][] nullValues() {
+        return new Object[][] {
+            { AttributeBuilder.build("firstname", (Object) null) },
+            { AttributeBuilder.build("firstname", "a", null) },
+        };
     }
 
     @org.testng.annotations.DataProvider
