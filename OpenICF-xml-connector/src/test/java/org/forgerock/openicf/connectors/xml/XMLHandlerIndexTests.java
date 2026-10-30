@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.forgerock.openicf.connectors.xml.query.ComparisonQuery;
@@ -213,10 +214,17 @@ public class XMLHandlerIndexTests {
             XMLHandlerImpl optional = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
             optional.init();
 
-            // The uid is the name, so a cleared name would leave an entry that no search could read back.
+            // The uid is the name, so a cleared name would leave an entry that no search could read back. create refuses a
+            // blank name with the same check.
             for (String blank : Arrays.asList("", "   ")) {
                 IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
                         ObjectClass.GROUP, new Uid("dup"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
+                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+
+                Map<String, Attribute> blankName = convertToAttributeMap(getRequiredGroupAttributes());
+                blankName.put(Name.NAME, AttributeBuilder.build(Name.NAME, blank));
+                e = expectThrows(IllegalArgumentException.class,
+                        () -> optional.create(ObjectClass.GROUP, convertToAttributeSet(blankName)));
                 assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
             }
             assertEquals(describe(optional.search(equalsQuery(Name.NAME, "dup"), ObjectClass.GROUP)),
