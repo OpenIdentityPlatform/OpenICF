@@ -16,11 +16,14 @@
 package org.identityconnectors.ldap;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.net.ServerSocket;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.testng.annotations.Test;
 
@@ -43,6 +46,25 @@ public class LdapConnectorTestBaseTests {
 
             assertEquals(LdapConnectorTestBase.listening(ports), "open " + open.getLocalPort());
         }
+    }
+
+    @Test
+    public void stillUpNamesWhatTheWaitLoopSawLast() {
+        String stillUp = LdapConnectorTestBase.stillUp(false, "LDAPS 36323");
+
+        assertTrue(stillUp.startsWith(
+                "EmbeddedUtils.isRunning() is false, ports still accepting connections: [LDAPS 36323]; logs in "),
+                stillUp);
+        assertTrue(stillUp.endsWith(File.separator + "logs"), stillUp);
+    }
+
+    /** A port left out of the map would let the next start find it still bound. */
+    @Test
+    public void theStopWaitWatchesTheLdapAdminAndReplicationPorts() {
+        Set<String> watched = LdapConnectorTestBase.serverPorts().keySet();
+
+        assertTrue(watched.containsAll(Arrays.asList("LDAP", "LDAPS", "admin", "replication")),
+                watched.toString());
     }
 
     /** The work directory is deleted recursively, so it must never be the directory given. */

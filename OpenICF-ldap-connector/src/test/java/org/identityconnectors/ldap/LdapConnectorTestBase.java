@@ -292,8 +292,9 @@ public abstract class LdapConnectorTestBase {
             server.stop(LdapConnectorTestBase.class.getName(), null);
             server = null;
         }
-        if (!waitUntilStopped()) {
-            Assert.fail("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS + " ms: " + stillUp());
+        String stillUp = waitUntilStopped();
+        if (stillUp != null) {
+            Assert.fail("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS + " ms: " + stillUp);
         }
     }
 
@@ -302,31 +303,38 @@ public abstract class LdapConnectorTestBase {
      * has to be free before the next start can bind it again, and isRunning() has to agree the
      * server is down, or before() would decide there is nothing to restart and leave the next
      * test without a server.
+     *
+     * @return null once the server is down, else what the last check saw, for the failure message
      */
-    private static boolean waitUntilStopped() {
-        for (int i = 1; EmbeddedUtils.isRunning() || isAnyPortStillBound(); i++) {
+    private static String waitUntilStopped() {
+        for (int i = 1; ; i++) {
+            boolean running = EmbeddedUtils.isRunning();
+            String ports = running ? "" : listening(SERVER_PORTS);
+            if (!running && ports.isEmpty()) {
+                return null;
+            }
             if (i >= STOP_ITERATIONS) {
-                return false;
+                // While isRunning() is true the ports were not probed; probing them now cannot
+                // contradict the reason the loop gave up.
+                return stillUp(running, running ? listening(SERVER_PORTS) : ports);
             }
             try {
                 Thread.sleep(STOP_WAIT);
             } catch (InterruptedException e) {}
         }
-        return true;
     }
 
-    /** What waitUntilStopped() is waiting for, for the message when it gives up. */
-    private static String stillUp() {
-        return "EmbeddedUtils.isRunning() is " + EmbeddedUtils.isRunning()
-                + ", ports still accepting connections: [" + listening(SERVER_PORTS) + "]; logs in "
+    /**
+     * What waitUntilStopped() saw at its last check, for the message when it gives up. Probing
+     * again here could describe a server that has finished stopping in the meantime.
+     */
+    static String stillUp(boolean running, String ports) {
+        return "EmbeddedUtils.isRunning() is " + running
+                + ", ports still accepting connections: [" + ports + "]; logs in "
                 + new File(SERVER_ROOT, "logs");
     }
 
-    private static boolean isAnyPortStillBound() {
-        return !listening(SERVER_PORTS).isEmpty();
-    }
-
-    private static Map<String, Integer> serverPorts() {
+    static Map<String, Integer> serverPorts() {
         Map<String, Integer> ports = new LinkedHashMap<>();
         ports.put("LDAP", PORT);
         ports.put("LDAPS", SSL_PORT);
@@ -495,9 +503,10 @@ public abstract class LdapConnectorTestBase {
         } finally {
             target.stop(LdapConnectorTestBase.class.getName(), null);
         }
-        if (!waitUntilStopped()) {
+        String stillUp = waitUntilStopped();
+        if (stillUp != null) {
             throw new IOException("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS
-                    + " ms after applying " + resource + ": " + stillUp());
+                    + " ms after applying " + resource + ": " + stillUp);
         }
     }
 
