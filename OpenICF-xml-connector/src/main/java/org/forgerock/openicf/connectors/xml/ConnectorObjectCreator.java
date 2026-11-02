@@ -175,8 +175,9 @@ class ConnectorObjectCreator {
 
     /**
      * The uid of {@code entry}: the last value of its own __UID__ or, without one, the last value of its own
-     * __NAME__; null if it has neither. The search, authenticate and the uid lookup read an entry's uid by this one
-     * rule.
+     * __NAME__; null if it has neither. The search and authenticate read an entry's uid by this rule. The uid lookup
+     * first takes from the index the entries whose ICF __UID__ or __NAME__ has the uid as its whole text, and only
+     * then applies this rule.
      */
     static String uidOf(Node entry) {
         List<String> uids = ownValues(entry, Uid.NAME);

@@ -34,6 +34,7 @@ import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -148,6 +149,18 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><icf:__UID__><!--c-->v1</icf:__UID__><icf:__NAME__>n1</icf:__NAME__></ri:__ACCOUNT__>",
             "<ri:__ACCOUNT__><icf:__UID__><!--c-->v2</icf:__UID__><icf:__NAME__>n2</icf:__NAME__></ri:__ACCOUNT__>",
             "<ri:__ACCOUNT__><icf:__UID__>v2</icf:__UID__><icf:__NAME__>holder-v2</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /** An own __NAME__ whose first child is a comment, and no __UID__ element. */
+    private static final String[] COMMENT_FIRST_NAME = {
+            "<ri:__ACCOUNT__><icf:__NAME__><!--c-->bob</icf:__NAME__><icf:__PASSWORD__>p60</icf:__PASSWORD__>"
+                    + "</ri:__ACCOUNT__>",
+    };
+
+    /** Two groups, a class without __UID__ in the XSD; the first carries a stray __UID__ element. */
+    private static final String[] GROUP_WITH_A_STRAY_UID = {
+            "<ri:__GROUP__><icf:__UID__>x</icf:__UID__><icf:__NAME__>g1</icf:__NAME__></ri:__GROUP__>",
+            "<ri:__GROUP__><icf:__NAME__>g2</icf:__NAME__></ri:__GROUP__>",
     };
 
     /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
@@ -343,6 +356,9 @@ public class XMLHandlerOwnElementsTests {
         open("icf", TWO_UIDS_SAME_NAME);
         assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "shared"), ObjectClass.ACCOUNT)),
                 List.of("shared|shared"));
+        // delete looks the uid up the same way, so it removes the entry without a uid, not the one with u90 and u91.
+        handler.delete(ObjectClass.ACCOUNT, new Uid("shared"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u91|shared"));
     }
 
     @Test
@@ -352,6 +368,10 @@ public class XMLHandlerOwnElementsTests {
         assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-a"), ObjectClass.ACCOUNT)), List.of());
         assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-b"), ObjectClass.ACCOUNT)),
                 List.of("name-b|name-b"));
+        // update and delete look the uid up the same way.
+        expectThrows(UnknownUidException.class, () -> handler.update(ObjectClass.ACCOUNT, new Uid("name-a"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "LA"))));
+        expectThrows(UnknownUidException.class, () -> handler.delete(ObjectClass.ACCOUNT, new Uid("name-a")));
     }
 
     @Test
@@ -397,6 +417,22 @@ public class XMLHandlerOwnElementsTests {
         AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
                 new Uid("n2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "v2"))));
         assertTrue(e.getMessage().contains(Uid.NAME + " of v2"), e.getMessage());
+    }
+
+    @Test
+    public void renamingAGroupIgnoresAStrayUid() throws Exception {
+        open("icf", GROUP_WITH_A_STRAY_UID);
+        // __GROUP__ has no __UID__ in the XSD, so another group's __UID__ element is no uid to clash with.
+        assertEquals(handler.update(ObjectClass.GROUP, new Uid("g2"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "x"))), new Uid("x"));
+    }
+
+    @Test
+    public void authenticateOnACommentFirstNameHasNoUid() throws Exception {
+        open("icf", COMMENT_FIRST_NAME);
+        // The index finds the entry by the name's whole text, but uidOf reads no value from it, as the search does.
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> authenticate("bob", "p60"));
+        assertTrue(e.getMessage().contains("must not be blank"), e.getMessage());
     }
 
     private Uid authenticate(String username, String password) {

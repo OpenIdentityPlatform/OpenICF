@@ -566,7 +566,8 @@ public class XMLHandlerImpl implements XMLHandler {
             // An entry without a password of its own does not authenticate. An empty one counts as none, the way
             // ConnectorObjectCreator reads an empty element as no value.
             if (xmlPassword != null && !xmlPassword.isEmpty() && xmlPassword.equals(userPassword)) {
-                // The uid the search reports for this entry. Found by name, so it has one.
+                // The uid the search reports for this entry. Found by name, so it has one, unless that name starts
+                // with a comment: then uidOf gives null, and Uid refuses it as blank, as in the search.
                 uid = new Uid(ConnectorObjectCreator.uidOf(entry));
             }
         }
@@ -735,10 +736,12 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     /**
-     * The entries of {@code objClass} whose uid is {@code uid}, in document order: those with a __UID__ of that value
-     * or, only if there are none, those with the name {@code uid} that {@link ConnectorObjectCreator#uidOf} gives
-     * that uid, which are the entries without a __UID__ value whose last name it is. An entry with two __UID__ values
-     * is found by either.
+     * The entries of {@code objClass} whose uid is {@code uid}, in document order: those with an ICF __UID__ of that
+     * value or, only if there are none, those with the ICF name {@code uid} that {@link ConnectorObjectCreator#uidOf}
+     * gives that uid. Unless an entry has a __UID__ outside the ICF namespace, these are the entries without a __UID__
+     * value whose last name it is. An entry with two __UID__ values is found by either. The index keys only ICF
+     * elements, each by its whole text, so the lookup misses an entry whose uid is read from a name split by a
+     * comment, or from an element outside the ICF namespace, unless that uid is also one of its keys.
      */
     private List<Element> entriesByUid(ObjectClass objClass, String uid) {
         getDocument(); // throws if there is no document, as the XQuery search did
