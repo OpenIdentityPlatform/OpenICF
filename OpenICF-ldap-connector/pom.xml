@@ -150,6 +150,13 @@
                         -->
                         <opendj.workDirParent>${project.build.directory}</opendj.workDirParent>
                     </systemPropertyVariables>
+                    <!--
+                        Without OpenDJ's SLF4J binding, unpacked below, SLF4J falls back to its
+                        no-operation logger and the server's errors log stays empty.
+                    -->
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.build.directory}/opendj-slf4j-adapter/opendj/lib/opendj-slf4j-adapter.jar</additionalClasspathElement>
+                    </additionalClasspathElements>
                 </configuration>
             </plugin>
             <plugin>
@@ -163,6 +170,30 @@
                         <goals>
                             <goal>properties</goal>
                         </goals>
+                    </execution>
+                    <execution>
+                        <!--
+                            The opendj-server-legacy jar leaves its SLF4J binding out; the distribution
+                            archive carries it as a jar of its own.
+                        -->
+                        <id>unpack-opendj-slf4j-adapter</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>unpack</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.openidentityplatform.opendj</groupId>
+                                    <artifactId>opendj-server-legacy</artifactId>
+                                    <version>${opendj.version}</version>
+                                    <classifier>slim</classifier>
+                                    <type>zip</type>
+                                    <includes>opendj/lib/opendj-slf4j-adapter.jar</includes>
+                                    <outputDirectory>${project.build.directory}/opendj-slf4j-adapter</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
