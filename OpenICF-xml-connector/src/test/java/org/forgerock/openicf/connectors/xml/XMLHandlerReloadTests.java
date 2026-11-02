@@ -301,6 +301,10 @@ public class XMLHandlerReloadTests {
                 // __name__ is __NAME__ in another case; with no values its value is null, not an empty list (#212).
                 {attributes(AttributeBuilder.build("__name__"), AttributeBuilder.buildPassword("secret-x".toCharArray()),
                         AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "X"))},
+                // An empty list is no value either; it reaches the isEmpty check, not the null check (#212).
+                {attributes(AttributeBuilder.build("__name__", Collections.emptyList()),
+                        AttributeBuilder.buildPassword("secret-x".toCharArray()),
+                        AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "X"))},
         };
     }
 
@@ -421,6 +425,24 @@ public class XMLHandlerReloadTests {
         assertEquals(Files.readAllBytes(file.toPath()), before);
         assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))),
                 List.of("null|Last-alice", "null|Last-bob"));
+    }
+
+    /** update checks the name for a clash only once every attribute has passed its checks, as create does (#212). */
+    @Test
+    public void renameIntoATakenNameWithABadAttributeIsRefusedForTheAttribute() throws Exception {
+        writeAccounts(file, "alice", "bob");
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+
+        // The taken name comes first, so a clash check made as the name is reached would throw AlreadyExistsException.
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> call(h -> h.update(
+                ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(AttributeBuilder.build(Name.NAME, "bob"),
+                        AttributeBuilder.build("no-such-attribute", "x")))));
+
+        assertEquals(e.getMessage(), "Data field: no-such-attribute is not supported.");
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
     }
 
     @Test

@@ -194,6 +194,8 @@ public class XMLHandlerImpl implements XMLHandler {
         String uidValue = null;
 
         // Check if __NAME__ is defined. The framework names attributes in any case, so __name__ defines it too (#212).
+        // Only the first spelling found is looked at. So __NAME__ given along with a __name__ without a value is refused
+        // for the missing value, here or in checkAttribute as the order of the set falls, not as a name given twice.
         Attribute givenName = AttributeUtil.find(Name.NAME, attributes);
         if (givenName == null || givenName.getValue() == null || givenName.getValue().isEmpty()) {
             throw new IllegalArgumentException(Name.NAME + " must be defined.");
