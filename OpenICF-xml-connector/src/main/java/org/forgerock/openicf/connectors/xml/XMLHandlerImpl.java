@@ -203,7 +203,7 @@ public class XMLHandlerImpl implements XMLHandler {
         // dropped (#192). It is kept under the schema's name, which the checks below and the file use, whatever case it
         // was given in (#212).
         Map<String, List<String>> checked = new HashMap<String, List<String>>();
-        for (CheckedAttribute c : checkAttributes(attributes, objAttributes, Change.CREATE)) {
+        for (CheckedAttribute c : checkAttributes(attributes, objInfo, Change.CREATE)) {
             checked.put(c.name, c.values);
         }
         for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
@@ -276,7 +276,6 @@ public class XMLHandlerImpl implements XMLHandler {
         XmlHandlerUtil.checkObjectType(objClass, riSchema);
 
         ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
-        Map<String, AttributeInfo> objAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
 
         Element entry = getEntry(objClass, uid, ElementIdentifierFieldType.AUTO);
         if (entry == null) {
@@ -285,7 +284,7 @@ public class XMLHandlerImpl implements XMLHandler {
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         // The name is checked for a clash once every attribute has passed, as create() checks it.
-        List<CheckedAttribute> checkedAttributes = checkAttributes(replaceAttributes, objAttributes, Change.UPDATE);
+        List<CheckedAttribute> checkedAttributes = checkAttributes(replaceAttributes, objInfo, Change.UPDATE);
         Uid newUid = null;
         for (CheckedAttribute checked : checkedAttributes) {
             if (Name.NAME.equals(checked.name)) {
@@ -828,12 +827,17 @@ public class XMLHandlerImpl implements XMLHandler {
      * operations check an attribute with this method; only the operation's own schema rule differs (#192). The values
      * are read once, so a guarded value is decrypted once.
      * <p>
-     * The schema lookup is case-insensitive, as the framework names attributes, while the file and the XSD name them
-     * exactly: so from here on the attribute is named, written and reported as the schema spells it (#212).
+     * A name the schema spells exactly is that attribute. Any other name is looked up without regard to case, as the
+     * framework names attributes, while the file and the XSD name them exactly: so from here on the attribute is named,
+     * written and reported as the schema spells it (#212). An XSD may declare two names that differ only in case, and
+     * the case-insensitive map holds one of the two for both, so the exact lookup comes first.
      */
-    private static CheckedAttribute checkAttribute(Attribute attribute, Map<String, AttributeInfo> objAttributes,
-            Change change) {
-        AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
+    private static CheckedAttribute checkAttribute(Attribute attribute, Map<String, AttributeInfo> exactAttributes,
+            Map<String, AttributeInfo> anyCaseAttributes, Change change) {
+        AttributeInfo attributeInfo = exactAttributes.get(attribute.getName());
+        if (attributeInfo == null) {
+            attributeInfo = anyCaseAttributes.get(attribute.getName());
+        }
         if (attributeInfo == null) {
             throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
         }
@@ -864,16 +868,23 @@ public class XMLHandlerImpl implements XMLHandler {
 
     /**
      * Checks the attributes given to create or update, in the order given, and refuses a schema attribute given more than
-     * once. The framework names attributes in any case, so lastname and LastName are one attribute (#212), and an
-     * attribute set can hold exactly one name twice with other values: either way neither value is surely the one meant.
-     * The framework's CreateImpl refuses only exactly one name given twice, and UpdateImpl neither.
+     * once. The framework names attributes in any case, so lastname and LastName are one attribute unless the schema
+     * has both (#212), and an attribute set can hold exactly one name twice with other values: either way neither value
+     * is surely the one meant. The framework's CreateImpl refuses only exactly one name given twice, and UpdateImpl
+     * neither.
      */
-    private static List<CheckedAttribute> checkAttributes(Set<Attribute> attributes,
-            Map<String, AttributeInfo> objAttributes, Change change) {
+    private static List<CheckedAttribute> checkAttributes(Set<Attribute> attributes, ObjectClassInfo objInfo,
+            Change change) {
+        Map<String, AttributeInfo> exactAttributes = new HashMap<String, AttributeInfo>();
+        for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
+            exactAttributes.put(attributeInfo.getName(), attributeInfo);
+        }
+        Map<String, AttributeInfo> anyCaseAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
+
         List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
         Map<String, String> givenNames = new HashMap<String, String>();
         for (Attribute attribute : attributes) {
-            CheckedAttribute checked = checkAttribute(attribute, objAttributes, change);
+            CheckedAttribute checked = checkAttribute(attribute, exactAttributes, anyCaseAttributes, change);
             String firstGiven = givenNames.put(checked.name, attribute.getName());
             if (firstGiven != null) {
                 throw new IllegalArgumentException("Data field: " + checked.name + " is given more than once, as "

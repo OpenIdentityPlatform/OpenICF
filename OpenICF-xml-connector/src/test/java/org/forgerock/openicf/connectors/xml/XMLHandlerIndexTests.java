@@ -238,6 +238,45 @@ public class XMLHandlerIndexTests {
     }
 
     /**
+     * An XSD may declare two attributes whose names differ only in case, and the framework's case-insensitive map holds
+     * one of them for both names. A name given exactly as the schema spells it is that attribute, so create and update
+     * write each value into its own element, as before #212.
+     */
+    @Test
+    public void attributesWhoseNamesDifferOnlyInCaseAreWrittenApart() throws Exception {
+        File casePairXsd = getTestFile("case-pair.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String lastName = "<xsd:element name=\"lastname\" type=\"xsd:string\" >";
+        // __ACCOUNT__'s required lastname gets an optional sibling LastName.
+        Files.write(casePairXsd.toPath(), xsd.replace(lastName,
+                "<xsd:element name=\"LastName\" type=\"xsd:string\" minOccurs=\"0\"/>" + lastName)
+                .getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            writeAccounts(file, "alice");
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(casePairXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, casePairXsd);
+            XMLHandlerImpl pair = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            pair.init();
+
+            Set<Attribute> carol = account("carol");
+            carol.add(AttributeBuilder.build("LastName", "Other-carol"));
+            pair.create(ObjectClass.ACCOUNT, carol);
+            pair.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), new LinkedHashSet<Attribute>(Arrays.asList(
+                    AttributeBuilder.build("LastName", "Other-alice"),
+                    AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "New-alice"))));
+            pair.dispose();
+
+            assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), Arrays.asList("New-alice", "Last-carol"));
+            assertEquals(valuesInFile(file, "LastName"), Arrays.asList("Other-alice", "Other-carol"));
+        } finally {
+            Files.delete(casePairXsd.toPath());
+        }
+    }
+
+    /**
      * Renames to {@code newName} along with an unknown attribute. update() rejects the unknown attribute
      * before it changes the entry, so the rename is not applied. A two-valued __NAME__ cannot be used:
      * AttributeBuilder.build(Name.NAME, "a", "b") throws before update() runs.
