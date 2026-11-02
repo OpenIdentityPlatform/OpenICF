@@ -315,6 +315,32 @@ public class XMLConnectorTests {
     }
 
     @Test
+    public void entryWithAnEmptyUidIsFoundByTheUidAuthenticateReturns() throws Exception {
+        // The entry from #213: an empty own __UID__, so its uid is its __NAME__.
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                + "<icf:OpenICFContainer xmlns:icf=\"" + ICF_NAMESPACE + "\" xmlns:ri=\"" + RI_NAMESPACE + "\">\n"
+                + "  <ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>emptyuid</icf:__NAME__><ri:lastname>L70</ri:lastname>"
+                + "<icf:__PASSWORD__>p70</icf:__PASSWORD__></ri:__ACCOUNT__>\n"
+                + "</icf:OpenICFContainer>\n";
+        Files.write(xmlFile.toPath(), xml.getBytes(StandardCharsets.UTF_8));
+
+        Uid uid = facade.authenticate(ObjectClass.ACCOUNT, "emptyuid", new GuardedString("p70".toCharArray()), null);
+        AssertJUnit.assertEquals(new Uid("emptyuid"), uid);
+        ConnectorObject object = facade.getObject(ObjectClass.ACCOUNT, uid, null);
+        AssertJUnit.assertNotNull(object);
+        AssertJUnit.assertEquals(uid, object.getUid());
+
+        Uid updated = facade.update(ObjectClass.ACCOUNT, uid,
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L71")), null);
+        AssertJUnit.assertEquals(uid, updated);
+        AssertJUnit.assertEquals("L71", AttributeUtil.getStringValue(
+                facade.getObject(ObjectClass.ACCOUNT, uid, null).getAttributeByName(ATTR_ACCOUNT_LAST_NAME)));
+
+        facade.delete(ObjectClass.ACCOUNT, uid, null);
+        AssertJUnit.assertNull(facade.getObject(ObjectClass.ACCOUNT, uid, null));
+    }
+
+    @Test
     public void newFileDeclaresNamespacesAsBefore() throws Exception {
         facade.create(ObjectClass.ACCOUNT, getRequiredAccountAttributes(), null);
         String content = new String(Files.readAllBytes(xmlFile.toPath()), StandardCharsets.UTF_8);

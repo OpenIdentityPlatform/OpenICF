@@ -287,6 +287,9 @@ public class XMLHandlerImpl implements XMLHandler {
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         // The name is checked for a clash once every attribute has passed, as create() checks it.
         List<CheckedAttribute> checkedAttributes = checkAttributes(replaceAttributes, objInfo, Change.UPDATE);
+        // Without a __UID__ element, as create() makes it, or without a __UID__ value, the uid is the name, as the
+        // search reads it, so a new name is the new uid.
+        boolean uidIsName = !isSupportUid(objClass) || ConnectorObjectCreator.ownValues(entry, Uid.NAME).isEmpty();
         Uid newUid = null;
         for (CheckedAttribute checked : checkedAttributes) {
             if (Name.NAME.equals(checked.name)) {
@@ -295,8 +298,12 @@ public class XMLHandlerImpl implements XMLHandler {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
                     }
-                    // Without a __UID__ element the uid is the name, as create() makes it.
-                    if (!isSupportUid(objClass)) {
+                    if (uidIsName) {
+                        // Another entry's __UID__ would be this entry's uid too, and a uid lookup finds that entry.
+                        if (isSupportUid(objClass) && uidTakenByAnother(objClass, entry, value)) {
+                            throw new AlreadyExistsException("Could not update entry. An entry with the " + Uid.NAME
+                                    + " of " + value + " already exists.");
+                        }
                         newUid = new Uid(value);
                     }
                 }
@@ -392,7 +399,10 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public Collection<ConnectorObject> search(Query query, ObjectClass objClass) {
-        List<Element> entries = indexedEntries(query, objClass);
+        // A uid lookup also finds an entry whose uid is its name, as getEntry does; the index and the XQuery do not.
+        List<Element> entries = query != null && Uid.NAME.equals(identifierField(query))
+                ? entriesByUid(objClass, ((ComparisonQuery) query.getParts().iterator().next()).getValue())
+                : indexedEntries(query, objClass);
         if (entries == null) {
             return search(new QueryBuilder(query, objClass).toString(), objClass);
         }
@@ -556,10 +566,9 @@ public class XMLHandlerImpl implements XMLHandler {
             // An entry without a password of its own does not authenticate. An empty one counts as none, the way
             // ConnectorObjectCreator reads an empty element as no value.
             if (xmlPassword != null && !xmlPassword.isEmpty() && xmlPassword.equals(userPassword)) {
-                String xmlUid = firstOwnText(entry, Uid.NAME);
-
-                // Found by name, so without a __UID__ it has a __NAME__ of its own.
-                uid = new Uid(xmlUid != null ? xmlUid : firstOwnText(entry, Name.NAME));
+                // The uid the search reports for this entry. Found by name, so it has one, unless that name starts
+                // with a comment: then uidOf gives null, and Uid refuses it as blank, as in the search.
+                uid = new Uid(ConnectorObjectCreator.uidOf(entry));
             }
         }
 
@@ -718,7 +727,36 @@ public class XMLHandlerImpl implements XMLHandler {
 
     private Element getEntry(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
         getDocument();
-        return entryIndex.first(objClass.getObjectClassValue(), identifierElement(objClass, identifierField), uid.getUidValue());
+        String field = identifierElement(objClass, identifierField);
+        if (Uid.NAME.equals(field)) {
+            List<Element> entries = entriesByUid(objClass, uid.getUidValue());
+            return entries.isEmpty() ? null : entries.get(0);
+        }
+        return entryIndex.first(objClass.getObjectClassValue(), field, uid.getUidValue());
+    }
+
+    /**
+     * The entries of {@code objClass} whose uid is {@code uid}, in document order: those with an ICF __UID__ of that
+     * value or, only if there are none, those with the ICF name {@code uid} that {@link ConnectorObjectCreator#uidOf}
+     * gives that uid. Unless an entry has a __UID__ outside the ICF namespace, these are the entries without a __UID__
+     * value whose last name it is. An entry with two __UID__ values is found by either. The index keys only ICF
+     * elements, each by its whole text, so the lookup misses an entry whose uid is read from a name split by a
+     * comment, or from an element outside the ICF namespace, unless that uid is also one of its keys.
+     */
+    private List<Element> entriesByUid(ObjectClass objClass, String uid) {
+        getDocument(); // throws if there is no document, as the XQuery search did
+        String objectClass = objClass.getObjectClassValue();
+        List<Element> entries = entryIndex.find(objectClass, Uid.NAME, uid);
+        if (!entries.isEmpty() || !isSupportUid(objClass)) {
+            return entries;
+        }
+        List<Element> byName = new ArrayList<Element>();
+        for (Element entry : entryIndex.find(objectClass, Name.NAME, uid)) {
+            if (uid.equals(ConnectorObjectCreator.uidOf(entry))) {
+                byName.add(entry);
+            }
+        }
+        return byName;
     }
 
     /** The identifier element to match, by the rule that XMLFilterTranslator applies to a search. */
@@ -735,6 +773,20 @@ public class XMLHandlerImpl implements XMLHandler {
         List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
                 identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
         return !holders.isEmpty() && !holders.contains(entry);
+    }
+
+    /**
+     * Whether an entry other than {@code entry} has {@code uid} as an ICF __UID__ in the index. The index keys an own
+     * __UID__ that starts with a comment by its text, though {@code entry} then has no __UID__ value, so {@code entry}
+     * itself does not count; another holder does, even when {@code entry} holds {@code uid} too.
+     */
+    private boolean uidTakenByAnother(ObjectClass objClass, Element entry, String uid) {
+        for (Element holder : entryIndex.find(objClass.getObjectClassValue(), Uid.NAME, uid)) {
+            if (holder != entry) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {

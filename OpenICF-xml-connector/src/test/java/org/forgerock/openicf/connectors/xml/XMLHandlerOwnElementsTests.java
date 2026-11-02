@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,8 @@ import java.util.List;
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -40,7 +43,7 @@ import org.testng.annotations.Test;
 
 /**
  * Update and authenticate use an entry's own child elements, whatever their prefix, and no others; delete removes the
- * entry from its own parent (#182).
+ * entry from its own parent (#182); and agree with the search on an entry's uid (#213).
  */
 public class XMLHandlerOwnElementsTests {
 
@@ -94,6 +97,76 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><icf:__UID__>u50</icf:__UID__><icf:__NAME__>empty-pw</icf:__NAME__>"
                     + "<icf:__PASSWORD__/></ri:__ACCOUNT__>",
     };
+
+    /** An empty own __UID__, as in #213, and one that holds only whitespace. */
+    private static final String[] EMPTY_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>emptyuid</icf:__NAME__><ri:lastname>L70</ri:lastname>"
+                    + "<icf:__PASSWORD__>p70</icf:__PASSWORD__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>  </icf:__UID__><icf:__NAME__>blankuid</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p71</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** A valued own __UID__ after and before an empty one. */
+    private static final String[] EMPTY_BESIDE_VALUED = {
+            "<ri:__ACCOUNT__><icf:__UID__>u42</icf:__UID__><icf:__UID__/><icf:__NAME__>after</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p42</icf:__PASSWORD__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__UID__>u43</icf:__UID__><icf:__NAME__>before</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p43</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** An empty own __UID__ and two own __NAME__ elements. */
+    private static final String[] TWO_NAMES = {
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>name-a</icf:__NAME__><icf:__NAME__>name-b</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p80</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** An entry whose __UID__ is the __NAME__ of an entry without a __UID__ value. */
+    private static final String[] COLLISION = {
+            "<ri:__ACCOUNT__><icf:__UID__>x</icf:__UID__><icf:__NAME__>holder-x</icf:__NAME__>"
+                    + "<ri:lastname>LH</ri:lastname></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>x</icf:__NAME__><ri:lastname>LN</ri:lastname></ri:__ACCOUNT__>",
+    };
+
+    /** An entry with two __UID__ values and an entry without one, both with the same __NAME__. */
+    private static final String[] TWO_UIDS_SAME_NAME = {
+            "<ri:__ACCOUNT__><icf:__UID__>u90</icf:__UID__><icf:__UID__>u91</icf:__UID__>"
+                    + "<icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /** An entry without a __UID__ value between two entries with one. */
+    private static final String[] RENAME_INTO_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__>taken</icf:__UID__><icf:__NAME__>holder</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>old</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>u3</icf:__UID__><icf:__NAME__>third</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /**
+     * Two entries whose own __UID__ starts with a comment, so neither has a __UID__ value, though the index keys each
+     * by its text; a third entry has the second one's text as its __UID__.
+     */
+    private static final String[] COMMENT_FIRST_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__><!--c-->v1</icf:__UID__><icf:__NAME__>n1</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__><!--c-->v2</icf:__UID__><icf:__NAME__>n2</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>v2</icf:__UID__><icf:__NAME__>holder-v2</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /** An own __NAME__ whose first child is a comment, and no __UID__ element. */
+    private static final String[] COMMENT_FIRST_NAME = {
+            "<ri:__ACCOUNT__><icf:__NAME__><!--c-->bob</icf:__NAME__><icf:__PASSWORD__>p60</icf:__PASSWORD__>"
+                    + "</ri:__ACCOUNT__>",
+    };
+
+    /** Two groups, a class without __UID__ in the XSD; the first carries a stray __UID__ element. */
+    private static final String[] GROUP_WITH_A_STRAY_UID = {
+            "<ri:__GROUP__><icf:__UID__>x</icf:__UID__><icf:__NAME__>g1</icf:__NAME__></ri:__GROUP__>",
+            "<ri:__GROUP__><icf:__NAME__>g2</icf:__NAME__></ri:__GROUP__>",
+    };
+
+    /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
+    private static final String VALID =
+            "<ri:__ACCOUNT__><icf:__UID__>u44</icf:__UID__><icf:__NAME__>valid</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p44</icf:__PASSWORD__></ri:__ACCOUNT__>";
 
     private File file;
     private XMLHandlerImpl handler;
@@ -209,10 +282,157 @@ public class XMLHandlerOwnElementsTests {
     }
 
     @Test
-    public void authenticateReadsTheFirstOwnPasswordAndUid() throws Exception {
+    public void authenticateReportsTheUidTheSearchReports() throws Exception {
         open("icf", TWO_OWN);
-        assertEquals(authenticate("two-own", "p40"), new Uid("u40"));
+        // The first own password, and the last valued own uid, as the search reports it.
+        assertEquals(authenticate("two-own", "p40"), new Uid("u41"));
         assertNull(authenticate("two-own", "p41"));
+    }
+
+    @Test
+    public void aFullSearchReportsTheLastValuedUidOfTwo() throws Exception {
+        open("icf", TWO_OWN[0], VALID);
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u41|two-own", "u44|valid"));
+    }
+
+    @Test
+    public void authenticateWithAnEmptyOwnUidReturnsItsName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(authenticate("emptyuid", "p70"), new Uid("emptyuid"));
+        assertEquals(authenticate("blankuid", "p71"), new Uid("blankuid"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)),
+                List.of("emptyuid|emptyuid", "blankuid|blankuid"));
+    }
+
+    @Test
+    public void aValuedUidBesideAnEmptyOneIsTheUid() throws Exception {
+        open("icf", EMPTY_BESIDE_VALUED);
+        assertEquals(authenticate("after", "p42"), new Uid("u42"));
+        assertEquals(authenticate("before", "p43"), new Uid("u43"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u42|after", "u43|before"));
+    }
+
+    @Test
+    public void authenticateReportsTheNameTheSearchReportsAsUid() throws Exception {
+        open("icf", TWO_NAMES);
+        assertEquals(authenticate("name-a", "p80"), new Uid("name-b"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("name-b|name-b"));
+    }
+
+    @Test
+    public void uidLookupFindsAnEntryWithoutAUidByItsName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "emptyuid"), ObjectClass.ACCOUNT)),
+                List.of("emptyuid|emptyuid"));
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("emptyuid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L71"))), new Uid("emptyuid"));
+        handler.delete(ObjectClass.ACCOUNT, new Uid("blankuid"));
+        handler.dispose();
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), List.of("L71"));
+        assertEquals(namesInFile(file), List.of("emptyuid"));
+    }
+
+    @Test
+    public void uidLookupFindsAnEntryWithoutAUidElement() throws Exception {
+        open("x", PREFIXED);
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("pfx-no-uid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L21"))), new Uid("pfx-no-uid"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "pfx-no-uid"), ObjectClass.ACCOUNT)),
+                List.of("pfx-no-uid|pfx-no-uid"));
+    }
+
+    @Test
+    public void uidLookupPrefersARealUid() throws Exception {
+        open("icf", COLLISION);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "x"), ObjectClass.ACCOUNT)), List.of("x|holder-x"));
+        handler.update(ObjectClass.ACCOUNT, new Uid("x"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "LX")));
+        handler.dispose();
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), List.of("LX", "LN"));
+    }
+
+    @Test
+    public void uidLookupByNameSkipsEntriesWithAUid() throws Exception {
+        open("icf", TWO_UIDS_SAME_NAME);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "shared"), ObjectClass.ACCOUNT)),
+                List.of("shared|shared"));
+        // delete looks the uid up the same way, so it removes the entry without a uid, not the one with u90 and u91.
+        handler.delete(ObjectClass.ACCOUNT, new Uid("shared"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u91|shared"));
+    }
+
+    @Test
+    public void uidLookupByNameMatchesOnlyTheLastName() throws Exception {
+        open("icf", TWO_NAMES);
+        // The entry's uid is name-b, the last of its names, so name-a is not a uid.
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-a"), ObjectClass.ACCOUNT)), List.of());
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-b"), ObjectClass.ACCOUNT)),
+                List.of("name-b|name-b"));
+        // update and delete look the uid up the same way.
+        expectThrows(UnknownUidException.class, () -> handler.update(ObjectClass.ACCOUNT, new Uid("name-a"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "LA"))));
+        expectThrows(UnknownUidException.class, () -> handler.delete(ObjectClass.ACCOUNT, new Uid("name-a")));
+    }
+
+    @Test
+    public void eitherUidFindsAnEntryWithTwoForUpdateAndDelete() throws Exception {
+        open("icf", TWO_OWN);
+        handler.update(ObjectClass.ACCOUNT, new Uid("u40"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L40")));
+        handler.delete(ObjectClass.ACCOUNT, new Uid("u41"));
+        handler.dispose();
+        assertEquals(namesInFile(file), List.of());
+    }
+
+    @Test
+    public void renamingAnEntryWithoutAUidReturnsTheNewName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("emptyuid"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed"))), new Uid("renamed"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "renamed"), ObjectClass.ACCOUNT)),
+                List.of("renamed|renamed"));
+    }
+
+    @Test
+    public void renamingAnEntryWithoutAUidToAnotherEntrysUidIsRefused() throws Exception {
+        open("icf", RENAME_INTO_UID);
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                new Uid("old"), Collections.singleton(AttributeBuilder.build(Name.NAME, "taken"))));
+        assertTrue(e.getMessage().contains(Uid.NAME + " of taken"), e.getMessage());
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)),
+                List.of("taken|holder", "old|old", "u3|third"));
+        // An entry with a __UID__ value keeps it, so a new name that is another entry's uid takes no uid from it.
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("taken"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "u3"))), new Uid("taken"));
+    }
+
+    @Test
+    public void renamingToTheTextOfAnOwnUidWithoutAValueClashesOnlyWithAnotherEntry() throws Exception {
+        open("icf", COMMENT_FIRST_UID);
+        // The entry is not another entry, though the index keys its own __UID__ as v1.
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("n1"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "v1"))), new Uid("v1"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "v1"), ObjectClass.ACCOUNT)), List.of("v1|v1"));
+        // Another entry holds v2 as well, so the entry is refused even though it holds v2 itself.
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                new Uid("n2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "v2"))));
+        assertTrue(e.getMessage().contains(Uid.NAME + " of v2"), e.getMessage());
+    }
+
+    @Test
+    public void renamingAGroupIgnoresAStrayUid() throws Exception {
+        open("icf", GROUP_WITH_A_STRAY_UID);
+        // __GROUP__ has no __UID__ in the XSD, so another group's __UID__ element is no uid to clash with.
+        assertEquals(handler.update(ObjectClass.GROUP, new Uid("g2"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "x"))), new Uid("x"));
+    }
+
+    @Test
+    public void authenticateOnACommentFirstNameHasNoUid() throws Exception {
+        open("icf", COMMENT_FIRST_NAME);
+        // The index finds the entry by the name's whole text, but uidOf reads no value from it, as the search does.
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> authenticate("bob", "p60"));
+        assertTrue(e.getMessage().contains("must not be blank"), e.getMessage());
     }
 
     private Uid authenticate(String username, String password) {
