@@ -140,6 +140,16 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><icf:__UID__>u3</icf:__UID__><icf:__NAME__>third</icf:__NAME__></ri:__ACCOUNT__>",
     };
 
+    /**
+     * Two entries whose own __UID__ starts with a comment, so neither has a __UID__ value, though the index keys each
+     * by its text; a third entry has the second one's text as its __UID__.
+     */
+    private static final String[] COMMENT_FIRST_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__><!--c-->v1</icf:__UID__><icf:__NAME__>n1</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__><!--c-->v2</icf:__UID__><icf:__NAME__>n2</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>v2</icf:__UID__><icf:__NAME__>holder-v2</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
     /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
     private static final String VALID =
             "<ri:__ACCOUNT__><icf:__UID__>u44</icf:__UID__><icf:__NAME__>valid</icf:__NAME__>"
@@ -374,6 +384,19 @@ public class XMLHandlerOwnElementsTests {
         // An entry with a __UID__ value keeps it, so a new name that is another entry's uid takes no uid from it.
         assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("taken"),
                 Collections.singleton(AttributeBuilder.build(Name.NAME, "u3"))), new Uid("taken"));
+    }
+
+    @Test
+    public void renamingToTheTextOfAnOwnUidWithoutAValueClashesOnlyWithAnotherEntry() throws Exception {
+        open("icf", COMMENT_FIRST_UID);
+        // The entry is not another entry, though the index keys its own __UID__ as v1.
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("n1"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "v1"))), new Uid("v1"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "v1"), ObjectClass.ACCOUNT)), List.of("v1|v1"));
+        // Another entry holds v2 as well, so the entry is refused even though it holds v2 itself.
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                new Uid("n2"), Collections.singleton(AttributeBuilder.build(Name.NAME, "v2"))));
+        assertTrue(e.getMessage().contains(Uid.NAME + " of v2"), e.getMessage());
     }
 
     private Uid authenticate(String username, String password) {

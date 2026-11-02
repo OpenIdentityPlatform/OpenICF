@@ -300,8 +300,7 @@ public class XMLHandlerImpl implements XMLHandler {
                     }
                     if (uidIsName) {
                         // Another entry's __UID__ would be this entry's uid too, and a uid lookup finds that entry.
-                        if (isSupportUid(objClass)
-                                && !entryIndex.find(objClass.getObjectClassValue(), Uid.NAME, value).isEmpty()) {
+                        if (isSupportUid(objClass) && uidTakenByAnother(objClass, entry, value)) {
                             throw new AlreadyExistsException("Could not update entry. An entry with the " + Uid.NAME
                                     + " of " + value + " already exists.");
                         }
@@ -771,6 +770,20 @@ public class XMLHandlerImpl implements XMLHandler {
         List<Element> holders = entryIndex.find(objClass.getObjectClassValue(),
                 identifierElement(objClass, ElementIdentifierFieldType.BY_NAME), name);
         return !holders.isEmpty() && !holders.contains(entry);
+    }
+
+    /**
+     * Whether an entry other than {@code entry} has {@code uid} as an ICF __UID__ in the index. The index keys an own
+     * __UID__ that starts with a comment by its text, though {@code entry} then has no __UID__ value, so {@code entry}
+     * itself does not count; another holder does, even when {@code entry} holds {@code uid} too.
+     */
+    private boolean uidTakenByAnother(ObjectClass objClass, Element entry, String uid) {
+        for (Element holder : entryIndex.find(objClass.getObjectClassValue(), Uid.NAME, uid)) {
+            if (holder != entry) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getElementIdentifierField(ObjectClass objClass, ElementIdentifierFieldType identifierField) {
