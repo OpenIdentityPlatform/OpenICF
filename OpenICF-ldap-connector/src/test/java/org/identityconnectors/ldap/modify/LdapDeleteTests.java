@@ -19,13 +19,20 @@
  * enclosed by brackets [] replaced by your own identifying information: 
  * "Portions Copyrighted [year] [name of copyright owner]"
  * ====================
+ * Portions Copyrighted 2026 3A Systems, LLC
  */
 package org.identityconnectors.ldap.modify;
 
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 import static org.testng.AssertJUnit.assertNull;
+
+import javax.naming.ContextNotEmptyException;
+
 import org.testng.annotations.Test;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.common.exceptions.ConnectorException;
+import org.identityconnectors.framework.common.exceptions.UnknownUidException;
 import org.identityconnectors.framework.common.objects.ConnectorObject;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -38,22 +45,23 @@ public class LdapDeleteTests extends LdapConnectorTestBase{
         return false;
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test
     public void testCannotDeleteExistingUidButWrongObjectClass() {
         ConnectorFacade facade = newFacade();
         ConnectorObject organization = searchByAttribute(facade, new ObjectClass("organization"), new Name(BIG_COMPANY_DN));
         // Should fail because the object class passed to delete() is not ORGANIZATION.
-        facade.delete(ObjectClass.ACCOUNT, organization.getUid(), null);
+        expectThrows(UnknownUidException.class, () -> facade.delete(ObjectClass.ACCOUNT, organization.getUid(), null));
     }
 
-    @Test(expectedExceptions = ConnectorException.class)
+    @Test
     public void testCannotDeleteNonEmptyDN() {
         // TODO: not sure this is the right behavior. Perhaps should instead
         // recursively delete everything under the deleted entry.
         ConnectorFacade facade = newFacade();
         ObjectClass oclass = new ObjectClass("organization");
         ConnectorObject organization = searchByAttribute(facade, oclass, new Name(ACME_DN));
-        facade.delete(oclass, organization.getUid(), null);
+        ConnectorException e = expectThrows(ConnectorException.class, () -> facade.delete(oclass, organization.getUid(), null));
+        assertTrue(e.getCause() instanceof ContextNotEmptyException, String.valueOf(e.getCause()));
     }
 
     @Test()
