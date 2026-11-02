@@ -25,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.LoggerFactory;
+import org.testng.SkipException;
 import org.testng.annotations.Test;
 
 /**
@@ -35,16 +37,18 @@ public class LdapConnectorTestBaseTests {
 
     @Test
     public void listeningNamesOnlyPortsThatAcceptConnections() throws Exception {
-        try (ServerSocket open = new ServerSocket(0)) {
+        try (ServerSocket first = new ServerSocket(0); ServerSocket second = new ServerSocket(0)) {
             int closed;
             try (ServerSocket s = new ServerSocket(0)) {
                 closed = s.getLocalPort();
             }
             Map<String, Integer> ports = new LinkedHashMap<>();
-            ports.put("open", open.getLocalPort());
+            ports.put("first", first.getLocalPort());
             ports.put("closed", closed);
+            ports.put("second", second.getLocalPort());
 
-            assertEquals(LdapConnectorTestBase.listening(ports), "open " + open.getLocalPort());
+            assertEquals(LdapConnectorTestBase.listening(ports),
+                    "first " + first.getLocalPort() + ", second " + second.getLocalPort());
         }
     }
 
@@ -65,6 +69,23 @@ public class LdapConnectorTestBaseTests {
 
         assertTrue(watched.containsAll(Arrays.asList("LDAP", "LDAPS", "admin", "replication")),
                 watched.toString());
+    }
+
+    /**
+     * OpenDJ's errors log only gets the server's messages through OpenDJ's own SLF4J binding;
+     * without it SLF4J falls back to its no-operation logger. The build adds the binding to the
+     * classpath from a file it unpacks, and neither a missing file nor an unpack that matched
+     * nothing fails the build.
+     */
+    @Test
+    public void slf4jLogsThroughOpenDJ() {
+        if (System.getProperty("opendj.workDirParent") == null) {
+            throw new SkipException("Not run by the build, which adds OpenDJ's SLF4J binding to the classpath");
+        }
+        assertEquals(LoggerFactory.getILoggerFactory().getClass().getName(),
+                "org.opends.server.loggers.slf4j.OpenDJLoggerFactory",
+                "Without OpenDJ's SLF4J binding its logs/errors stays empty: is "
+                        + "target/opendj-slf4j-adapter/opendj/lib/opendj-slf4j-adapter.jar there?");
     }
 
     /** The work directory is deleted recursively, so it must never be the directory given. */
