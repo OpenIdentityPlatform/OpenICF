@@ -141,7 +141,11 @@ public abstract class LdapConnectorTestBase {
     /** EmbeddedDirectoryServer.extractArchiveForSetup() insists on this server root name. */
     private static final String SERVER_ROOT_NAME = "opendj";
 
-    private static final File WORK_DIR = new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+    /**
+     * Where the instance lives. The build points this into target/, so that the CI failure
+     * artifact carries the server's logs; runs from an IDE fall back to the temporary directory.
+     */
+    private static final File WORK_DIR = workDir();
     private static final File SERVER_ROOT = new File(new File(WORK_DIR, "instance"), SERVER_ROOT_NAME);
     /** Pristine copy of the directories below, taken once the instance is fully populated. */
     private static final File PRISTINE_DIR = new File(WORK_DIR, "pristine");
@@ -377,6 +381,15 @@ public abstract class LdapConnectorTestBase {
             IOUtil.delete(target);
             copyDirectory(new File(PRISTINE_DIR, dir).toPath(), target.toPath());
         }
+    }
+
+    private static File workDir() {
+        String path = System.getProperty("opendj.workDir");
+        // A blank value must not reach IOUtil.delete(WORK_DIR) as the current directory.
+        if (path == null || path.trim().isEmpty()) {
+            return new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+        }
+        return new File(path);
     }
 
     /** The OpenDJ distribution archive, handed over by the build; cf. the pom. */
