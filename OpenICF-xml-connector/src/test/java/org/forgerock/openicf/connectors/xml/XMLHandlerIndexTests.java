@@ -182,11 +182,14 @@ public class XMLHandlerIndexTests {
             optional.init();
 
             // create() requires a name whatever the XSD says, and an object without one cannot be built:
-            // a cleared entry would fail every search of the class.
-            for (String blank : Arrays.asList("", "   ")) {
-                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
-                        ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
-                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            // a cleared entry would fail every search of the class. __name__ is the name in another case (#212).
+            for (String nameAttribute : Arrays.asList(Name.NAME, "__name__")) {
+                for (String blank : Arrays.asList("", "   ")) {
+                    IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                            ObjectClass.ACCOUNT, new Uid("uid-alice"),
+                            Collections.singleton(AttributeBuilder.build(nameAttribute, blank))));
+                    assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+                }
             }
             assertEquals(describe(optional.search((Query) null, ObjectClass.ACCOUNT)),
                     Arrays.asList("uid-alice|alice", "uid-bob|bob"));
@@ -231,6 +234,45 @@ public class XMLHandlerIndexTests {
                     Collections.singletonList("dup|dup"));
         } finally {
             Files.delete(optionalNameXsd.toPath());
+        }
+    }
+
+    /**
+     * An XSD may declare two attributes whose names differ only in case, and the framework's case-insensitive map holds
+     * one of them for both names. A name given exactly as the schema spells it is that attribute, so create and update
+     * write each value into its own element, as before #212.
+     */
+    @Test
+    public void attributesWhoseNamesDifferOnlyInCaseAreWrittenApart() throws Exception {
+        File casePairXsd = getTestFile("case-pair.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String lastName = "<xsd:element name=\"lastname\" type=\"xsd:string\" >";
+        // __ACCOUNT__'s required lastname gets an optional sibling LastName.
+        Files.write(casePairXsd.toPath(), xsd.replace(lastName,
+                "<xsd:element name=\"LastName\" type=\"xsd:string\" minOccurs=\"0\"/>" + lastName)
+                .getBytes(StandardCharsets.UTF_8));
+        try {
+            File file = getRandomXMLFile();
+            writeAccounts(file, "alice");
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(file);
+            config.setXsdFilePath(casePairXsd);
+            SchemaParser parser = new SchemaParser(XMLConnector.class, casePairXsd);
+            XMLHandlerImpl pair = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+            pair.init();
+
+            Set<Attribute> carol = account("carol");
+            carol.add(AttributeBuilder.build("LastName", "Other-carol"));
+            pair.create(ObjectClass.ACCOUNT, carol);
+            pair.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), new LinkedHashSet<Attribute>(Arrays.asList(
+                    AttributeBuilder.build("LastName", "Other-alice"),
+                    AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "New-alice"))));
+            pair.dispose();
+
+            assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), Arrays.asList("New-alice", "Last-carol"));
+            assertEquals(valuesInFile(file, "LastName"), Arrays.asList("Other-alice", "Other-carol"));
+        } finally {
+            Files.delete(casePairXsd.toPath());
         }
     }
 

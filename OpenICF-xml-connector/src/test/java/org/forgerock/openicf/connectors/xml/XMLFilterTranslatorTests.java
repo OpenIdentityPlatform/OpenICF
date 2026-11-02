@@ -86,8 +86,8 @@ public class XMLFilterTranslatorTests {
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_MS_EMPLOYED, ATTR_ACCOUNT_VALUE_MS_EMPLOYED));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_SIXTH_SENSE, ATTR_ACCOUNT_VALUE_SIXTH_SENSE));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, ATTR_ACCOUNT_VALUE_FIRST_NAME));
-        attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, ATTR_ACCOUNT_VALUE_EMAIL_1));
-        attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, ATTR_ACCOUNT_VALUE_EMAIL_2));
+        // One attribute with both values: create refuses an attribute given twice (#212).
+        attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, ATTR_ACCOUNT_VALUE_EMAIL_1, ATTR_ACCOUNT_VALUE_EMAIL_2));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_SECRET_PIN, new GuardedString(ATTR_ACCOUNT_VALUE_SECRET_PIN.toCharArray())));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_PERMANTENT_EMPLOYEE, ATTR_ACCOUNT_VALUE_PERMANENT_EPLOYEE));
         attributesFirst.add(AttributeBuilder.build(ATTR_ACCOUNT_YEARS_EMPLOYED, ATTR_ACCOUNT_VALUE_YEARS_EPLOYED));
