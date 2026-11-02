@@ -40,7 +40,7 @@ import org.testng.annotations.Test;
 
 /**
  * Update and authenticate use an entry's own child elements, whatever their prefix, and no others; delete removes the
- * entry from its own parent (#182).
+ * entry from its own parent (#182); and agree with the search on an entry's uid (#213).
  */
 public class XMLHandlerOwnElementsTests {
 
@@ -94,6 +94,33 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><icf:__UID__>u50</icf:__UID__><icf:__NAME__>empty-pw</icf:__NAME__>"
                     + "<icf:__PASSWORD__/></ri:__ACCOUNT__>",
     };
+
+    /** An empty own __UID__, as in #213, and one that holds only whitespace. */
+    private static final String[] EMPTY_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>emptyuid</icf:__NAME__><ri:lastname>L70</ri:lastname>"
+                    + "<icf:__PASSWORD__>p70</icf:__PASSWORD__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>  </icf:__UID__><icf:__NAME__>blankuid</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p71</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** A valued own __UID__ after and before an empty one. */
+    private static final String[] EMPTY_BESIDE_VALUED = {
+            "<ri:__ACCOUNT__><icf:__UID__>u42</icf:__UID__><icf:__UID__/><icf:__NAME__>after</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p42</icf:__PASSWORD__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__UID__>u43</icf:__UID__><icf:__NAME__>before</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p43</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** An empty own __UID__ and two own __NAME__ elements. */
+    private static final String[] TWO_NAMES = {
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>name-a</icf:__NAME__><icf:__NAME__>name-b</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p80</icf:__PASSWORD__></ri:__ACCOUNT__>",
+    };
+
+    /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
+    private static final String VALID =
+            "<ri:__ACCOUNT__><icf:__UID__>u44</icf:__UID__><icf:__NAME__>valid</icf:__NAME__>"
+                    + "<icf:__PASSWORD__>p44</icf:__PASSWORD__></ri:__ACCOUNT__>";
 
     private File file;
     private XMLHandlerImpl handler;
@@ -209,10 +236,41 @@ public class XMLHandlerOwnElementsTests {
     }
 
     @Test
-    public void authenticateReadsTheFirstOwnPasswordAndUid() throws Exception {
+    public void authenticateReportsTheUidTheSearchReports() throws Exception {
         open("icf", TWO_OWN);
-        assertEquals(authenticate("two-own", "p40"), new Uid("u40"));
+        // The first own password, and the last valued own uid, as the search reports it.
+        assertEquals(authenticate("two-own", "p40"), new Uid("u41"));
         assertNull(authenticate("two-own", "p41"));
+    }
+
+    @Test
+    public void aFullSearchReportsTheLastValuedUidOfTwo() throws Exception {
+        open("icf", TWO_OWN[0], VALID);
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u41|two-own", "u44|valid"));
+    }
+
+    @Test
+    public void authenticateWithAnEmptyOwnUidReturnsItsName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(authenticate("emptyuid", "p70"), new Uid("emptyuid"));
+        assertEquals(authenticate("blankuid", "p71"), new Uid("blankuid"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)),
+                List.of("emptyuid|emptyuid", "blankuid|blankuid"));
+    }
+
+    @Test
+    public void aValuedUidBesideAnEmptyOneIsTheUid() throws Exception {
+        open("icf", EMPTY_BESIDE_VALUED);
+        assertEquals(authenticate("after", "p42"), new Uid("u42"));
+        assertEquals(authenticate("before", "p43"), new Uid("u43"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("u42|after", "u43|before"));
+    }
+
+    @Test
+    public void authenticateReportsTheNameTheSearchReportsAsUid() throws Exception {
+        open("icf", TWO_NAMES);
+        assertEquals(authenticate("name-a", "p80"), new Uid("name-b"));
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("name-b|name-b"));
     }
 
     private Uid authenticate(String username, String password) {

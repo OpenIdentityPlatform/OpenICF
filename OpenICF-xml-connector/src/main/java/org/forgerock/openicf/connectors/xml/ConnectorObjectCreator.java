@@ -29,6 +29,7 @@ package org.forgerock.openicf.connectors.xml;
 import org.forgerock.openicf.connectors.xml.util.AttributeTypeUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.identityconnectors.common.logging.Log;
@@ -69,12 +70,8 @@ class ConnectorObjectCreator {
     // Add all the attributes to the connectorbuilder-object
     private void addAllAttributesToBuilder(Node entry) {
 
-        boolean hasUid = false;
-
         // map for storing multivalued attributes
         HashMap<String, ArrayList<String>> multivalues = new HashMap<String, ArrayList<String>>();
-
-        String nameTmp = "";
 
         for (Node attributeNode = entry.getFirstChild(); attributeNode != null; attributeNode = attributeNode.getNextSibling()) {
             if (attributeNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -84,14 +81,6 @@ class ConnectorObjectCreator {
                 if (isTextNode(textNode)) {
                     String attrName = attributeNode.getLocalName();
                     String attrValue = textNode.getNodeValue();
-
-                    if (attrName.equals(Uid.NAME)) {
-                        conObjBuilder.setUid(attrValue);
-                        hasUid = true;
-                    }
-                    if (!hasUid && attrName.equals(Name.NAME)) {
-                        nameTmp = attrValue;
-                    }
 
                     Attribute attribute = null;
                     AttributeInfo info = attributeInfoMap.get(attrName);
@@ -119,10 +108,8 @@ class ConnectorObjectCreator {
             }
         }
 
-        // set __NAME__ attribute as UID if no UID was wound
-        if (!hasUid) {
-            conObjBuilder.setUid(nameTmp);
-        }
+        // After the loop: a __UID__ in the schema is also added there, as an attribute.
+        conObjBuilder.setUid(uidOf(entry));
 
         //add multivalued attributes
         for (String s : multivalues.keySet()) {
@@ -167,8 +154,41 @@ class ConnectorObjectCreator {
         return null;
     }
 
+    /**
+     * The values of the child elements of {@code entry} named {@code localName}, in any namespace, in document order:
+     * the text of each one whose first child is a Text node, the rule an attribute is read by. An empty element, or
+     * one that held only whitespace before the document was normalized, has no value. Walks the children, not a
+     * NodeList.
+     */
+    static List<String> ownValues(Node entry, String localName) {
+        List<String> values = new ArrayList<String>();
+        for (Node child = entry.getFirstChild(); child != null; child = child.getNextSibling()) {
+            if (child.getNodeType() == Node.ELEMENT_NODE && localName.equals(child.getLocalName())) {
+                Node textNode = child.getFirstChild();
+                if (isTextNode(textNode)) {
+                    values.add(textNode.getNodeValue());
+                }
+            }
+        }
+        return values;
+    }
+
+    /**
+     * The uid of {@code entry}: the last value of its own __UID__ or, without one, the last value of its own
+     * __NAME__; null if it has neither. The search, authenticate and the uid lookup read an entry's uid by this one
+     * rule.
+     */
+    static String uidOf(Node entry) {
+        List<String> uids = ownValues(entry, Uid.NAME);
+        if (!uids.isEmpty()) {
+            return uids.get(uids.size() - 1);
+        }
+        List<String> names = ownValues(entry, Name.NAME);
+        return names.isEmpty() ? null : names.get(names.size() - 1);
+    }
+
     // see if an attribute-node has text-content
-    private boolean isTextNode(Node node) {
+    private static boolean isTextNode(Node node) {
         return node != null && node.getNodeType() == Node.TEXT_NODE;
     }
 }

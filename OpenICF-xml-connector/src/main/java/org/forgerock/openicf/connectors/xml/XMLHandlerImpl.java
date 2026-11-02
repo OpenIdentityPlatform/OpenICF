@@ -556,10 +556,8 @@ public class XMLHandlerImpl implements XMLHandler {
             // An entry without a password of its own does not authenticate. An empty one counts as none, the way
             // ConnectorObjectCreator reads an empty element as no value.
             if (xmlPassword != null && !xmlPassword.isEmpty() && xmlPassword.equals(userPassword)) {
-                String xmlUid = firstOwnText(entry, Uid.NAME);
-
-                // Found by name, so without a __UID__ it has a __NAME__ of its own.
-                uid = new Uid(xmlUid != null ? xmlUid : firstOwnText(entry, Name.NAME));
+                // The uid the search reports for this entry. Found by name, so it has one.
+                uid = new Uid(ConnectorObjectCreator.uidOf(entry));
             }
         }
 
