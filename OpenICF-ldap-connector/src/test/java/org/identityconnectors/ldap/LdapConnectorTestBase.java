@@ -151,10 +151,10 @@ public abstract class LdapConnectorTestBase {
     private static final String SERVER_ROOT_NAME = "opendj";
 
     /**
-     * Where the instance lives. The build points this into target/, so that the CI failure
+     * Where the instance lives. The build puts this under target/, so that the CI failure
      * artifact carries the server's logs; runs from an IDE fall back to the temporary directory.
      */
-    private static final File WORK_DIR = workDir();
+    private static final File WORK_DIR = workDir(System.getProperty("opendj.workDirParent"));
     private static final File SERVER_ROOT = new File(new File(WORK_DIR, "instance"), SERVER_ROOT_NAME);
     /** Pristine copy of the directories below, taken once the instance is fully populated. */
     private static final File PRISTINE_DIR = new File(WORK_DIR, "pristine");
@@ -421,13 +421,13 @@ public abstract class LdapConnectorTestBase {
         }
     }
 
-    private static File workDir() {
-        String path = System.getProperty("opendj.workDir");
-        // A blank value must not reach IOUtil.delete(WORK_DIR) as the current directory.
-        if (path == null || path.trim().isEmpty()) {
-            return new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
-        }
-        return new File(path);
+    /**
+     * A directory of its own below the given one, or below the temporary directory if none is
+     * given: createInstance() deletes it recursively, so it must never be the directory given.
+     */
+    static File workDir(String parent) {
+        boolean given = parent != null && !parent.trim().isEmpty();
+        return new File(given ? parent : System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
     }
 
     /** The OpenDJ distribution archive, handed over by the build; cf. the pom. */

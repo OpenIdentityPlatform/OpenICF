@@ -17,6 +17,7 @@ package org.identityconnectors.ldap;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.File;
 import java.net.ServerSocket;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -42,5 +43,18 @@ public class LdapConnectorTestBaseTests {
 
             assertEquals(LdapConnectorTestBase.listening(ports), "open " + open.getLocalPort());
         }
+    }
+
+    /** The work directory is deleted recursively, so it must never be the directory given. */
+    @Test
+    public void workDirIsADedicatedChildOfTheGivenDirectory() {
+        assertEquals(LdapConnectorTestBase.workDir("/some/dir"), new File("/some/dir", "openicf-ldap-opendj"));
+    }
+
+    @Test
+    public void workDirFallsBackToTheTemporaryDirectory() {
+        File expected = new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+        assertEquals(LdapConnectorTestBase.workDir(null), expected);
+        assertEquals(LdapConnectorTestBase.workDir(" "), expected);
     }
 }

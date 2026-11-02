@@ -144,8 +144,11 @@
                         <opendj.port>${opendj.port}</opendj.port>
                         <!-- Set from the dependency above; LdapConnectorTestBase sets the instance up from it. -->
                         <opendj.archive>${org.openidentityplatform.opendj:opendj-server-legacy:zip:slim}</opendj.archive>
-                        <!-- Kept under target/ so that the CI failure artifact carries the server's logs. -->
-                        <opendj.workDir>${project.build.directory}/opendj</opendj.workDir>
+                        <!--
+                            The instance goes into openicf-ldap-opendj below this, under target/ so that
+                            the CI failure artifact carries the server's logs.
+                        -->
+                        <opendj.workDirParent>${project.build.directory}</opendj.workDirParent>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>
