@@ -203,8 +203,7 @@ public class XMLHandlerImpl implements XMLHandler {
         // dropped (#192). It is kept under the schema's name, which the checks below and the file use, whatever case it
         // was given in (#212).
         Map<String, List<String>> checked = new HashMap<String, List<String>>();
-        for (Attribute attribute : attributes) {
-            CheckedAttribute c = checkAttribute(attribute, objAttributes, Change.CREATE);
+        for (CheckedAttribute c : checkAttributes(attributes, objAttributes, Change.CREATE)) {
             checked.put(c.name, c.values);
         }
         for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
@@ -285,12 +284,10 @@ public class XMLHandlerImpl implements XMLHandler {
         }
 
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
-        List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
+        // The name is checked for a clash once every attribute has passed, as create() checks it.
+        List<CheckedAttribute> checkedAttributes = checkAttributes(replaceAttributes, objAttributes, Change.UPDATE);
         Uid newUid = null;
-        for (Attribute attribute : replaceAttributes) {
-
-            CheckedAttribute checked = checkAttribute(attribute, objAttributes, Change.UPDATE);
-
+        for (CheckedAttribute checked : checkedAttributes) {
             if (Name.NAME.equals(checked.name)) {
                 for (String value : checked.values) {
                     if (nameTakenByAnother(objClass, entry, value)) {
@@ -303,8 +300,6 @@ public class XMLHandlerImpl implements XMLHandler {
                     }
                 }
             }
-
-            checkedAttributes.add(checked);
         }
 
         try {
@@ -868,9 +863,28 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     /**
-     * An attribute that passed every check, under the schema's name, with the values to write. update keeps them in a
-     * list, not a map, so a name given twice is applied twice, in order.
+     * Checks the attributes given to create or update, in the order given, and refuses a schema attribute given more than
+     * once. The framework names attributes in any case, so lastname and LastName are one attribute (#212), and an
+     * attribute set can hold exactly one name twice with other values: either way neither value is surely the one meant.
+     * The framework's CreateImpl refuses only exactly one name given twice, and UpdateImpl neither.
      */
+    private static List<CheckedAttribute> checkAttributes(Set<Attribute> attributes,
+            Map<String, AttributeInfo> objAttributes, Change change) {
+        List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
+        Map<String, String> givenNames = new HashMap<String, String>();
+        for (Attribute attribute : attributes) {
+            CheckedAttribute checked = checkAttribute(attribute, objAttributes, change);
+            String firstGiven = givenNames.put(checked.name, attribute.getName());
+            if (firstGiven != null) {
+                throw new IllegalArgumentException("Data field: " + checked.name + " is given more than once, as "
+                        + firstGiven + " and as " + attribute.getName() + ".");
+            }
+            checkedAttributes.add(checked);
+        }
+        return checkedAttributes;
+    }
+
+    /** An attribute that passed every check, under the schema's name, with the values to write. */
     private static final class CheckedAttribute {
         final String name;
         final List<String> values;

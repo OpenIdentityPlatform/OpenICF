@@ -354,20 +354,48 @@ public class XMLHandlerReloadTests {
         assertEquals(valuesInFile(file, given.getName()), List.of());
     }
 
+    /** A schema attribute given twice, in any case; the message that refuses it. */
+    @DataProvider
+    public Object[][] attributesGivenTwice() {
+        return new Object[][] {
+                {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L4"), AttributeBuilder.build("LastName", "X4"),
+                        "Data field: lastname is given more than once, as lastname and as LastName."},
+                {AttributeBuilder.build("LastName", "X4"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L4"),
+                        "Data field: lastname is given more than once, as LastName and as lastname."},
+                // Attribute.equals compares the values too, so a set can hold exactly one name twice.
+                {AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a"), AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "b"),
+                        "Data field: email is given more than once, as email and as email."},
+                {AttributeBuilder.build(Name.NAME, "carol"), AttributeBuilder.build("__name__", "dave"),
+                        "Data field: __NAME__ is given more than once, as __NAME__ and as __name__."},
+        };
+    }
+
     /**
-     * Of two attributes with exactly one name, create keeps the last, as AttributeUtil.toMap does, and writes only that
-     * one. The framework's CreateImpl refuses such a pair before it reaches the connector; this calls the handler.
+     * Of a schema attribute given twice, in any case, either value may be the one meant, so create and update refuse it
+     * before they change anything (#212). The framework's CreateImpl refuses only exactly one name given twice, and
+     * UpdateImpl neither.
      */
-    @Test
-    public void createKeepsOneOfTwoSameNamedAttributes() throws Exception {
+    @Test(dataProvider = "attributesGivenTwice")
+    public void createAndUpdateRefuseAnAttributeGivenTwice(Attribute first, Attribute second, String message)
+            throws Exception {
         writeAccounts(file, "alice");
-
-        call(h -> h.create(ObjectClass.ACCOUNT, attributes(AttributeBuilder.build(Name.NAME, "carol"),
+        FileTime past = FileTime.fromMillis(now() - HOUR);
+        Files.setLastModifiedTime(file.toPath(), past);
+        byte[] before = Files.readAllBytes(file.toPath());
+        Set<Attribute> carol = withAttributes(attributes(AttributeBuilder.build(Name.NAME, "carol"),
                 AttributeBuilder.buildPassword("secret-carol".toCharArray()),
-                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol"),
-                AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a"), AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "b"))));
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol")), first, second);
 
-        assertEquals(valuesInFile(file, ATTR_ACCOUNT_EMAIL), List.of("b"));
+        IllegalArgumentException onCreate = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, carol)));
+        IllegalArgumentException onUpdate = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(first, second))));
+
+        assertEquals(onCreate.getMessage(), message);
+        assertEquals(onUpdate.getMessage(), message);
+        assertEquals(Files.getLastModifiedTime(file.toPath()), past);
+        assertEquals(Files.readAllBytes(file.toPath()), before);
+        assertEquals(call(h -> firstAndLastNames(h.search(allAccounts(), ObjectClass.ACCOUNT))), List.of("null|Last-alice"));
     }
 
     @DataProvider
@@ -415,16 +443,6 @@ public class XMLHandlerReloadTests {
 
         assertEquals(Files.getLastModifiedTime(file.toPath()), past);
         assertEquals(Files.readAllBytes(file.toPath()), before);
-    }
-
-    @Test
-    public void repeatedAttributeKeepsTheLastValue() throws Exception {
-        writeAccounts(file, "alice");
-        setModified(file, now() - HOUR);
-        // Attribute.equals compares the values too, so a set can hold the same name twice: update applies both, in order.
-        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(
-                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A"), AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "B"))));
-        assertEquals(firstAndLastNamesIn(file), List.of("null|B"));
     }
 
     /** The attributes in the order given, which is the order update() goes through them. */
