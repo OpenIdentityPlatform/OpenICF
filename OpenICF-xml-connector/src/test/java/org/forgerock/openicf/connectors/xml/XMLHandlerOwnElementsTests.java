@@ -117,6 +117,20 @@ public class XMLHandlerOwnElementsTests {
                     + "<icf:__PASSWORD__>p80</icf:__PASSWORD__></ri:__ACCOUNT__>",
     };
 
+    /** An entry whose __UID__ is the __NAME__ of an entry without a __UID__ value. */
+    private static final String[] COLLISION = {
+            "<ri:__ACCOUNT__><icf:__UID__>x</icf:__UID__><icf:__NAME__>holder-x</icf:__NAME__>"
+                    + "<ri:lastname>LH</ri:lastname></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>x</icf:__NAME__><ri:lastname>LN</ri:lastname></ri:__ACCOUNT__>",
+    };
+
+    /** An entry with two __UID__ values and an entry without one, both with the same __NAME__. */
+    private static final String[] TWO_UIDS_SAME_NAME = {
+            "<ri:__ACCOUNT__><icf:__UID__>u90</icf:__UID__><icf:__UID__>u91</icf:__UID__>"
+                    + "<icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
     /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
     private static final String VALID =
             "<ri:__ACCOUNT__><icf:__UID__>u44</icf:__UID__><icf:__NAME__>valid</icf:__NAME__>"
@@ -271,6 +285,64 @@ public class XMLHandlerOwnElementsTests {
         open("icf", TWO_NAMES);
         assertEquals(authenticate("name-a", "p80"), new Uid("name-b"));
         assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)), List.of("name-b|name-b"));
+    }
+
+    @Test
+    public void uidLookupFindsAnEntryWithoutAUidByItsName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "emptyuid"), ObjectClass.ACCOUNT)),
+                List.of("emptyuid|emptyuid"));
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("emptyuid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L71"))), new Uid("emptyuid"));
+        handler.delete(ObjectClass.ACCOUNT, new Uid("blankuid"));
+        handler.dispose();
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), List.of("L71"));
+        assertEquals(namesInFile(file), List.of("emptyuid"));
+    }
+
+    @Test
+    public void uidLookupFindsAnEntryWithoutAUidElement() throws Exception {
+        open("x", PREFIXED);
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("pfx-no-uid"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L21"))), new Uid("pfx-no-uid"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "pfx-no-uid"), ObjectClass.ACCOUNT)),
+                List.of("pfx-no-uid|pfx-no-uid"));
+    }
+
+    @Test
+    public void uidLookupPrefersARealUid() throws Exception {
+        open("icf", COLLISION);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "x"), ObjectClass.ACCOUNT)), List.of("x|holder-x"));
+        handler.update(ObjectClass.ACCOUNT, new Uid("x"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "LX")));
+        handler.dispose();
+        assertEquals(valuesInFile(file, ATTR_ACCOUNT_LAST_NAME), List.of("LX", "LN"));
+    }
+
+    @Test
+    public void uidLookupByNameSkipsEntriesWithAUid() throws Exception {
+        open("icf", TWO_UIDS_SAME_NAME);
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "shared"), ObjectClass.ACCOUNT)),
+                List.of("shared|shared"));
+    }
+
+    @Test
+    public void uidLookupByNameMatchesOnlyTheLastName() throws Exception {
+        open("icf", TWO_NAMES);
+        // The entry's uid is name-b, the last of its names, so name-a is not a uid.
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-a"), ObjectClass.ACCOUNT)), List.of());
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "name-b"), ObjectClass.ACCOUNT)),
+                List.of("name-b|name-b"));
+    }
+
+    @Test
+    public void eitherUidFindsAnEntryWithTwoForUpdateAndDelete() throws Exception {
+        open("icf", TWO_OWN);
+        handler.update(ObjectClass.ACCOUNT, new Uid("u40"),
+                Collections.singleton(AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "L40")));
+        handler.delete(ObjectClass.ACCOUNT, new Uid("u41"));
+        handler.dispose();
+        assertEquals(namesInFile(file), List.of());
     }
 
     private Uid authenticate(String username, String password) {

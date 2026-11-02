@@ -380,6 +380,7 @@ public class XMLHandlerIndexTests {
         {"__ACCOUNT__", "__UID__", "u1"}, {"__ACCOUNT__", "__UID__", "u7"},
         {"__ACCOUNT__", "__UID__", "u8"}, {"__ACCOUNT__", "__UID__", "u12"},
         {"__ACCOUNT__", "__UID__", ""}, {"__ACCOUNT__", "__UID__", "missing"},
+        {"__ACCOUNT__", "__UID__", "no-uid"},
         {"__GROUP__", "__NAME__", "dup"},
     };
 

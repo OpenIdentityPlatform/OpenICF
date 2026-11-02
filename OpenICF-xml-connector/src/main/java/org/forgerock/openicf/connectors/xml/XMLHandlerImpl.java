@@ -392,7 +392,10 @@ public class XMLHandlerImpl implements XMLHandler {
 
     @Override
     public Collection<ConnectorObject> search(Query query, ObjectClass objClass) {
-        List<Element> entries = indexedEntries(query, objClass);
+        // A uid lookup also finds an entry whose uid is its name, as getEntry does; the index and the XQuery do not.
+        List<Element> entries = query != null && Uid.NAME.equals(identifierField(query))
+                ? entriesByUid(objClass, ((ComparisonQuery) query.getParts().iterator().next()).getValue())
+                : indexedEntries(query, objClass);
         if (entries == null) {
             return search(new QueryBuilder(query, objClass).toString(), objClass);
         }
@@ -716,7 +719,34 @@ public class XMLHandlerImpl implements XMLHandler {
 
     private Element getEntry(ObjectClass objClass, Uid uid, ElementIdentifierFieldType identifierField) {
         getDocument();
-        return entryIndex.first(objClass.getObjectClassValue(), identifierElement(objClass, identifierField), uid.getUidValue());
+        String field = identifierElement(objClass, identifierField);
+        if (Uid.NAME.equals(field)) {
+            List<Element> entries = entriesByUid(objClass, uid.getUidValue());
+            return entries.isEmpty() ? null : entries.get(0);
+        }
+        return entryIndex.first(objClass.getObjectClassValue(), field, uid.getUidValue());
+    }
+
+    /**
+     * The entries of {@code objClass} whose uid is {@code uid}, in document order: those with a __UID__ of that value
+     * or, only if there are none, those with the name {@code uid} that {@link ConnectorObjectCreator#uidOf} gives
+     * that uid, which are the entries without a __UID__ value whose last name it is. An entry with two __UID__ values
+     * is found by either.
+     */
+    private List<Element> entriesByUid(ObjectClass objClass, String uid) {
+        getDocument(); // throws if there is no document, as the XQuery search did
+        String objectClass = objClass.getObjectClassValue();
+        List<Element> entries = entryIndex.find(objectClass, Uid.NAME, uid);
+        if (!entries.isEmpty() || !isSupportUid(objClass)) {
+            return entries;
+        }
+        List<Element> byName = new ArrayList<Element>();
+        for (Element entry : entryIndex.find(objectClass, Name.NAME, uid)) {
+            if (uid.equals(ConnectorObjectCreator.uidOf(entry))) {
+                byName.add(entry);
+            }
+        }
+        return byName;
     }
 
     /** The identifier element to match, by the rule that XMLFilterTranslator applies to a search. */
