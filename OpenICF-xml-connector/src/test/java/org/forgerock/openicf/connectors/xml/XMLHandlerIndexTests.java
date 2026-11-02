@@ -182,11 +182,14 @@ public class XMLHandlerIndexTests {
             optional.init();
 
             // create() requires a name whatever the XSD says, and an object without one cannot be built:
-            // a cleared entry would fail every search of the class.
-            for (String blank : Arrays.asList("", "   ")) {
-                IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
-                        ObjectClass.ACCOUNT, new Uid("uid-alice"), Collections.singleton(AttributeBuilder.build(Name.NAME, blank))));
-                assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+            // a cleared entry would fail every search of the class. __name__ is the name in another case (#212).
+            for (String nameAttribute : Arrays.asList(Name.NAME, "__name__")) {
+                for (String blank : Arrays.asList("", "   ")) {
+                    IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () -> optional.update(
+                            ObjectClass.ACCOUNT, new Uid("uid-alice"),
+                            Collections.singleton(AttributeBuilder.build(nameAttribute, blank))));
+                    assertEquals(e.getMessage(), "Parameter '__NAME__' must not be blank.");
+                }
             }
             assertEquals(describe(optional.search((Query) null, ObjectClass.ACCOUNT)),
                     Arrays.asList("uid-alice|alice", "uid-bob|bob"));
