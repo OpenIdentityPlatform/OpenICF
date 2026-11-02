@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -155,6 +154,9 @@ public class XMLHandlerReloadTests {
                 {attributes(changedFirstName, AttributeBuilder.build(Name.NAME, "  ")), "Parameter '__NAME__' must not be blank."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_IS_DELETED, Boolean.TRUE)),
                         "is-deleted is not updatable."},
+                // The message names the attribute as the schema spells it, not as it was given (#212).
+                {attributes(changedFirstName, AttributeBuilder.build("IS-DELETED", Boolean.TRUE)),
+                        "is-deleted is not updatable."},
                 {attributes(changedFirstName, AttributeBuilder.build(ATTR_ACCOUNT_AGE, "12")),
                         "age contains invalid type. Value(s) should be of type java.lang.Integer"},
                 {attributes(changedFirstName, AttributeBuilder.build("no-such-attribute", "x")),
@@ -210,6 +212,12 @@ public class XMLHandlerReloadTests {
                 {AttributeBuilder.build(ATTR_ACCOUNT_EMAIL, "a@example.com", null), "email contains a null value"},
                 {AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "A", "B"),
                         "Data field: lastname is not multivalued  can not have more than one value"},
+                // An attribute named in another case is checked, and named in the message, as the schema spells it (#212).
+                {AttributeBuilder.build("LastName"), "No values provided for required attribute: lastname"},
+                {AttributeBuilder.build("LASTNAME", "  "), "Parameter 'lastname' must not be blank."},
+                {AttributeBuilder.build("LastName", "A", "B"),
+                        "Data field: lastname is not multivalued  can not have more than one value"},
+                {AttributeBuilder.build("__name__", "  "), "Parameter '__NAME__' must not be blank."},
         };
     }
 
@@ -220,15 +228,12 @@ public class XMLHandlerReloadTests {
         FileTime past = FileTime.fromMillis(now() - HOUR);
         Files.setLastModifiedTime(file.toPath(), past);
         byte[] before = Files.readAllBytes(file.toPath());
-        Map<String, Attribute> carol = new LinkedHashMap<String, Attribute>();
-        for (Attribute a : attributes(AttributeBuilder.build(Name.NAME, "carol"),
+        Set<Attribute> carol = withAttributes(attributes(AttributeBuilder.build(Name.NAME, "carol"),
                 AttributeBuilder.buildPassword("secret-carol".toCharArray()),
-                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol"), refused)) {
-            carol.put(a.getName(), a); // the row's attribute replaces carol's attribute of the same name
-        }
+                AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "Last-carol")), refused);
 
         IllegalArgumentException onCreate = expectThrows(IllegalArgumentException.class,
-                () -> call(h -> h.create(ObjectClass.ACCOUNT, new LinkedHashSet<Attribute>(carol.values()))));
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, carol)));
         IllegalArgumentException onUpdate = expectThrows(IllegalArgumentException.class,
                 () -> call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(refused))));
 
@@ -267,10 +272,6 @@ public class XMLHandlerReloadTests {
     public Object[][] attributesWithoutLastName() {
         return new Object[][] {
                 {attributes(AttributeBuilder.build(Name.NAME, "alice"), AttributeBuilder.buildPassword("secret-x".toCharArray()))},
-                // A required attribute is looked up by the schema's spelling, so another case does not stand in for it
-                // (unchanged, see #212).
-                {attributes(AttributeBuilder.build(Name.NAME, "alice"), AttributeBuilder.buildPassword("secret-x".toCharArray()),
-                        AttributeBuilder.build("LASTNAME", "X"))},
         };
     }
 
@@ -293,6 +294,66 @@ public class XMLHandlerReloadTests {
         assertEquals(Files.readAllBytes(file.toPath()), before);
     }
 
+    @DataProvider
+    public Object[][] attributesWithoutAName() {
+        return new Object[][] {
+                {null},
+                // __name__ is __NAME__ in another case; with no values its value is null, not an empty list (#212).
+                {attributes(AttributeBuilder.build("__name__"), AttributeBuilder.buildPassword("secret-x".toCharArray()),
+                        AttributeBuilder.build(ATTR_ACCOUNT_LAST_NAME, "X"))},
+        };
+    }
+
+    /** create looks for a name before it checks any attribute, so attributes without a name are refused for the name. */
+    @Test(dataProvider = "attributesWithoutAName")
+    public void createRefusesAttributesWithoutAName(Set<Attribute> attributes) throws Exception {
+        writeAccounts(file, "alice");
+
+        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
+                () -> call(h -> h.create(ObjectClass.ACCOUNT, attributes)));
+
+        assertEquals(e.getMessage(), Name.NAME + " must be defined.");
+    }
+
+    /** An attribute named in another case than the schema's; the schema's name; the value it carries. */
+    @DataProvider
+    public Object[][] otherCaseSpellings() {
+        return new Object[][] {
+                {AttributeBuilder.build("LastName", "L2"), ATTR_ACCOUNT_LAST_NAME, "L2"},
+                {AttributeBuilder.build("FirstName", "F1"), ATTR_ACCOUNT_FIRST_NAME, "F1"},
+                {AttributeBuilder.build("__name__", "carol"), Name.NAME, "carol"},
+                {AttributeBuilder.build("__password__", new GuardedString("p1".toCharArray())), ATTR_PASSWORD, "p1"},
+        };
+    }
+
+    /**
+     * The schema and the file name an attribute exactly, the framework in any case: create writes an attribute named in
+     * another case under the schema's name (#212). Reads skip empty elements, so the file is checked, not a search.
+     */
+    @Test(dataProvider = "otherCaseSpellings")
+    public void createWritesAnAttributeUnderTheSchemaName(Attribute given, String schemaName, String value)
+            throws Exception {
+        writeAccounts(file, "alice");
+
+        call(h -> h.create(ObjectClass.ACCOUNT, withAttributes(account("carol"), given)));
+
+        List<String> written = valuesInFile(file, schemaName);
+        assertEquals(written.get(written.size() - 1), value); // carol comes after alice
+        assertEquals(valuesInFile(file, given.getName()), List.of());
+    }
+
+    /** update replaces the schema's element with an attribute named in another case, as create writes it (#212). */
+    @Test(dataProvider = "otherCaseSpellings")
+    public void updateWritesAnAttributeUnderTheSchemaName(Attribute given, String schemaName, String value)
+            throws Exception {
+        writeAccounts(file, "alice");
+
+        call(h -> h.update(ObjectClass.ACCOUNT, new Uid("uid-alice"), attributes(given)));
+
+        assertEquals(valuesInFile(file, schemaName), List.of(value));
+        assertEquals(valuesInFile(file, given.getName()), List.of());
+    }
+
     /**
      * Of two attributes with exactly one name, create keeps the last, as AttributeUtil.toMap does, and writes only that
      * one. The framework's CreateImpl refuses such a pair before it reaches the connector; this calls the handler.
@@ -309,8 +370,14 @@ public class XMLHandlerReloadTests {
         assertEquals(valuesInFile(file, ATTR_ACCOUNT_EMAIL), List.of("b"));
     }
 
-    @Test
-    public void renameIntoATakenNameLeavesTheEntryAndTheFileAlone() throws Exception {
+    @DataProvider
+    public Object[][] nameSpellings() {
+        return new Object[][] {{Name.NAME}, {"__name__"}};
+    }
+
+    /** The name is checked for a clash in any case, as it is written under the schema's name in any case (#212). */
+    @Test(dataProvider = "nameSpellings")
+    public void renameIntoATakenNameLeavesTheEntryAndTheFileAlone(String nameAttribute) throws Exception {
         writeAccounts(file, "alice", "bob");
         FileTime past = FileTime.fromMillis(now() - HOUR);
         Files.setLastModifiedTime(file.toPath(), past);
@@ -319,7 +386,7 @@ public class XMLHandlerReloadTests {
         // The name comes after an attribute that would be applied first.
         AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> call(h -> h.update(ObjectClass.ACCOUNT,
                 new Uid("uid-alice"), attributes(AttributeBuilder.build(ATTR_ACCOUNT_FIRST_NAME, "CHANGED"),
-                        AttributeBuilder.build(Name.NAME, "bob")))));
+                        AttributeBuilder.build(nameAttribute, "bob")))));
 
         assertEquals(e.getMessage(), "Could not update entry. An entry with the __NAME__ of bob already exists.");
         assertEquals(Files.getLastModifiedTime(file.toPath()), past);
@@ -363,6 +430,22 @@ public class XMLHandlerReloadTests {
     /** The attributes in the order given, which is the order update() goes through them. */
     private static Set<Attribute> attributes(Attribute... attributes) {
         return new LinkedHashSet<Attribute>(Arrays.asList(attributes));
+    }
+
+    /** base without its attributes named like a replacement, in any case, then the replacements in order. */
+    private static Set<Attribute> withAttributes(Set<Attribute> base, Attribute... replacements) {
+        Set<Attribute> result = new LinkedHashSet<Attribute>();
+        for (Attribute a : base) {
+            boolean replaced = false;
+            for (Attribute r : replacements) {
+                replaced |= a.is(r.getName());
+            }
+            if (!replaced) {
+                result.add(a);
+            }
+        }
+        result.addAll(Arrays.asList(replacements));
+        return result;
     }
 
     @Test

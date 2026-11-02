@@ -191,24 +191,21 @@ public class XMLHandlerImpl implements XMLHandler {
 
         ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
         Map<String, AttributeInfo> objAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
-        Map<String, Attribute> providedAttributesMap = null;
         String uidValue = null;
 
-        if (attributes != null) {
-            providedAttributesMap = new HashMap<String, Attribute>(AttributeUtil.toMap(attributes));
-        }
-
-        // Check if __NAME__ is defined
-        if (providedAttributesMap == null || !providedAttributesMap.containsKey(Name.NAME) || providedAttributesMap.get(Name.NAME).getValue().isEmpty()) {
+        // Check if __NAME__ is defined. The framework names attributes in any case, so __name__ defines it too (#212).
+        Attribute givenName = AttributeUtil.find(Name.NAME, attributes);
+        if (givenName == null || givenName.getValue() == null || givenName.getValue().isEmpty()) {
             throw new IllegalArgumentException(Name.NAME + " must be defined.");
         }
 
         // Every given attribute is checked as update checks it, so one the schema does not have is refused rather than
-        // dropped (#192). AttributeUtil.toMap is case-insensitive: of two names that differ only in case it keeps the
-        // first spelling as the key and the last attribute as the value (#212).
+        // dropped (#192). It is kept under the schema's name, which the checks below and the file use, whatever case it
+        // was given in (#212).
         Map<String, List<String>> checked = new HashMap<String, List<String>>();
-        for (Map.Entry<String, Attribute> provided : providedAttributesMap.entrySet()) {
-            checked.put(provided.getKey(), checkAttribute(provided.getValue(), objAttributes, Change.CREATE));
+        for (Attribute attribute : attributes) {
+            CheckedAttribute c = checkAttribute(attribute, objAttributes, Change.CREATE);
+            checked.put(c.name, c.values);
         }
         for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
             if (attributeInfo.isRequired() && !checked.containsKey(attributeInfo.getName())) {
@@ -216,12 +213,13 @@ public class XMLHandlerImpl implements XMLHandler {
             }
         }
 
-        Name name = AttributeUtil.getNameFromAttributes(attributes);
+        // Not AttributeUtil.getNameFromAttributes: it casts the attribute to Name, which only an exact __NAME__ is.
+        String name = checked.get(Name.NAME).get(0);
 
         // Check if entry already exists
-        if (entryExists(objClass, new Uid(name.getNameValue()), ElementIdentifierFieldType.BY_NAME)) {
+        if (entryExists(objClass, new Uid(name), ElementIdentifierFieldType.BY_NAME)) {
             throw new AlreadyExistsException("Could not create entry. An entry with the " + Uid.NAME + " of "
-                    + name.getNameValue() + " already exists.");
+                    + name + " already exists.");
         }
 
         // Create or get UID. The lookup is case-insensitive, but the loop below writes the uid only into __UID__.
@@ -229,7 +227,7 @@ public class XMLHandlerImpl implements XMLHandler {
         if (uidInfo != null && uidInfo.getName().equals(Uid.NAME)) {
             uidValue = UUID.randomUUID().toString();
         } else {
-            uidValue = name.getNameValue();
+            uidValue = name;
         }
 
         // Create object type element
@@ -291,11 +289,10 @@ public class XMLHandlerImpl implements XMLHandler {
         Uid newUid = null;
         for (Attribute attribute : replaceAttributes) {
 
-            String attributeName = attribute.getName();
-            List<String> values = checkAttribute(attribute, objAttributes, Change.UPDATE);
+            CheckedAttribute checked = checkAttribute(attribute, objAttributes, Change.UPDATE);
 
-            if (Name.NAME.equals(attributeName)) {
-                for (String value : values) {
+            if (Name.NAME.equals(checked.name)) {
+                for (String value : checked.values) {
                     if (nameTakenByAnother(objClass, entry, value)) {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
@@ -307,7 +304,7 @@ public class XMLHandlerImpl implements XMLHandler {
                 }
             }
 
-            checkedAttributes.add(new CheckedAttribute(attributeName, values));
+            checkedAttributes.add(checked);
         }
 
         try {
@@ -832,17 +829,20 @@ public class XMLHandlerImpl implements XMLHandler {
     }
 
     /**
-     * Checks one attribute given to create or update and returns its values as text. Both operations check an attribute
-     * with this method; only the operation's own schema rule differs (#192). The values are read once, so a guarded
-     * value is decrypted once.
+     * Checks one attribute given to create or update and returns its values as text, under the schema's name. Both
+     * operations check an attribute with this method; only the operation's own schema rule differs (#192). The values
+     * are read once, so a guarded value is decrypted once.
+     * <p>
+     * The schema lookup is case-insensitive, as the framework names attributes, while the file and the XSD name them
+     * exactly: so from here on the attribute is named, written and reported as the schema spells it (#212).
      */
-    private static List<String> checkAttribute(Attribute attribute, Map<String, AttributeInfo> objAttributes,
+    private static CheckedAttribute checkAttribute(Attribute attribute, Map<String, AttributeInfo> objAttributes,
             Change change) {
-        String attributeName = attribute.getName();
-        AttributeInfo attributeInfo = objAttributes.get(attributeName);
+        AttributeInfo attributeInfo = objAttributes.get(attribute.getName());
         if (attributeInfo == null) {
-            throw new IllegalArgumentException("Data field: " + attributeName + " is not supported.");
+            throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
         }
+        String attributeName = attributeInfo.getName();
         if (!change.allows(attributeInfo)) {
             throw new IllegalArgumentException(change.refusal(attributeName));
         }
@@ -864,12 +864,12 @@ public class XMLHandlerImpl implements XMLHandler {
         if (!attributeInfo.isMultiValued() && values.size() > 1) {
             throw new IllegalArgumentException("Data field: " + attributeName + " is not multivalued  can not have more than one value");
         }
-        return values;
+        return new CheckedAttribute(attributeName, values);
     }
 
     /**
-     * An attribute of an update that passed every check, with the values to write. Kept in a list, not a map, so a
-     * name given twice is applied twice, in order.
+     * An attribute that passed every check, under the schema's name, with the values to write. update keeps them in a
+     * list, not a map, so a name given twice is applied twice, in order.
      */
     private static final class CheckedAttribute {
         final String name;
