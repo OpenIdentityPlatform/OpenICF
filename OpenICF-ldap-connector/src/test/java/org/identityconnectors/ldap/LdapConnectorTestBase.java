@@ -45,7 +45,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.forgerock.opendj.ldap.tools.MakeLDIF;
 import org.forgerock.opendj.ldap.Connection;
@@ -134,6 +137,12 @@ public abstract class LdapConnectorTestBase {
     private static final int JMX_PORT = findFreePort();
     /** Replication carries the change log the sync tests read, even with nothing to replicate to. */
     private static final int REPLICATION_PORT = findFreePort();
+    /** Every port the server binds, by name, since starting again fails on whichever is not free yet. */
+    private static final Map<String, Integer> SERVER_PORTS = serverPorts();
+
+    /** How long waitUntilStopped() waits: a loaded CI runner can be very slow (#111). */
+    private static final int STOP_WAIT = 200; // ms
+    private static final int STOP_ITERATIONS = 150;
 
     private static final String ROOT_DN = "cn=Directory Manager";
     private static final String ROOT_PASSWORD = "password";
@@ -284,7 +293,7 @@ public abstract class LdapConnectorTestBase {
             server = null;
         }
         if (!waitUntilStopped()) {
-            Assert.fail("OpenDJ failed to stop");
+            Assert.fail("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS + " ms: " + stillUp());
         }
     }
 
@@ -295,23 +304,52 @@ public abstract class LdapConnectorTestBase {
      * test without a server.
      */
     private static boolean waitUntilStopped() {
-        final int WAIT = 200; // ms
-        final int ITERATIONS = 150; // 30 s: a loaded CI runner can be very slow (#111)
         for (int i = 1; EmbeddedUtils.isRunning() || isAnyPortStillBound(); i++) {
-            if (i >= ITERATIONS) {
+            if (i >= STOP_ITERATIONS) {
                 return false;
             }
             try {
-                Thread.sleep(WAIT);
+                Thread.sleep(STOP_WAIT);
             } catch (InterruptedException e) {}
         }
         return true;
     }
 
-    /** Every port the server binds, since starting again fails on whichever is not free yet. */
+    /** What waitUntilStopped() is waiting for, for the message when it gives up. */
+    private static String stillUp() {
+        return "EmbeddedUtils.isRunning() is " + EmbeddedUtils.isRunning()
+                + ", ports still accepting connections: [" + listening(SERVER_PORTS) + "]; logs in "
+                + new File(SERVER_ROOT, "logs");
+    }
+
     private static boolean isAnyPortStillBound() {
-        return isListening(PORT) || isListening(SSL_PORT) || isListening(ADMIN_PORT)
-                || isListening(REPLICATION_PORT);
+        return !listening(SERVER_PORTS).isEmpty();
+    }
+
+    private static Map<String, Integer> serverPorts() {
+        Map<String, Integer> ports = new LinkedHashMap<>();
+        ports.put("LDAP", PORT);
+        ports.put("LDAPS", SSL_PORT);
+        ports.put("admin", ADMIN_PORT);
+        ports.put("replication", REPLICATION_PORT);
+        return Collections.unmodifiableMap(ports);
+    }
+
+    /**
+     * The given ports that accept a connection, as {@code "admin 40125, replication 40127"};
+     * empty if none does.
+     */
+    static String listening(Map<String, Integer> ports) {
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<String, Integer> port : ports.entrySet()) {
+            if (isListening(port.getValue())) {
+                if (result.length() > 0) {
+                    result.append(", ");
+                }
+                result.append(port.getKey()).append(' ').append(port.getValue());
+            }
+        }
+        return result.toString();
     }
 
     private static boolean isListening(int port) {
@@ -458,7 +496,8 @@ public abstract class LdapConnectorTestBase {
             target.stop(LdapConnectorTestBase.class.getName(), null);
         }
         if (!waitUntilStopped()) {
-            throw new IOException("OpenDJ failed to stop after applying " + resource);
+            throw new IOException("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS
+                    + " ms after applying " + resource + ": " + stillUp());
         }
     }
 
