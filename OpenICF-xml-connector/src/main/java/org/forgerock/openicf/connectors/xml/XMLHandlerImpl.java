@@ -287,6 +287,9 @@ public class XMLHandlerImpl implements XMLHandler {
         // Every attribute is checked before the entry changes, so a rejected update leaves the document as it was (#158).
         // The name is checked for a clash once every attribute has passed, as create() checks it.
         List<CheckedAttribute> checkedAttributes = checkAttributes(replaceAttributes, objInfo, Change.UPDATE);
+        // Without a __UID__ element, as create() makes it, or without a __UID__ value, the uid is the name, as the
+        // search reads it, so a new name is the new uid.
+        boolean uidIsName = !isSupportUid(objClass) || ConnectorObjectCreator.ownValues(entry, Uid.NAME).isEmpty();
         Uid newUid = null;
         for (CheckedAttribute checked : checkedAttributes) {
             if (Name.NAME.equals(checked.name)) {
@@ -295,8 +298,13 @@ public class XMLHandlerImpl implements XMLHandler {
                         throw new AlreadyExistsException("Could not update entry. An entry with the " + Name.NAME + " of "
                                 + value + " already exists.");
                     }
-                    // Without a __UID__ element the uid is the name, as create() makes it.
-                    if (!isSupportUid(objClass)) {
+                    if (uidIsName) {
+                        // Another entry's __UID__ would be this entry's uid too, and a uid lookup finds that entry.
+                        if (isSupportUid(objClass)
+                                && !entryIndex.find(objClass.getObjectClassValue(), Uid.NAME, value).isEmpty()) {
+                            throw new AlreadyExistsException("Could not update entry. An entry with the " + Uid.NAME
+                                    + " of " + value + " already exists.");
+                        }
                         newUid = new Uid(value);
                     }
                 }

@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.expectThrows;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ import java.util.List;
 import org.forgerock.openicf.connectors.xml.query.QueryBuilder;
 import org.forgerock.openicf.connectors.xml.xsdparser.SchemaParser;
 import org.identityconnectors.common.security.GuardedString;
+import org.identityconnectors.framework.common.exceptions.AlreadyExistsException;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.Name;
 import org.identityconnectors.framework.common.objects.ObjectClass;
@@ -129,6 +131,13 @@ public class XMLHandlerOwnElementsTests {
             "<ri:__ACCOUNT__><icf:__UID__>u90</icf:__UID__><icf:__UID__>u91</icf:__UID__>"
                     + "<icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
             "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>shared</icf:__NAME__></ri:__ACCOUNT__>",
+    };
+
+    /** An entry without a __UID__ value between two entries with one. */
+    private static final String[] RENAME_INTO_UID = {
+            "<ri:__ACCOUNT__><icf:__UID__>taken</icf:__UID__><icf:__NAME__>holder</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__/><icf:__NAME__>old</icf:__NAME__></ri:__ACCOUNT__>",
+            "<ri:__ACCOUNT__><icf:__UID__>u3</icf:__UID__><icf:__NAME__>third</icf:__NAME__></ri:__ACCOUNT__>",
     };
 
     /** An entry with an own __UID__, __NAME__ and __PASSWORD__ each. */
@@ -343,6 +352,28 @@ public class XMLHandlerOwnElementsTests {
         handler.delete(ObjectClass.ACCOUNT, new Uid("u41"));
         handler.dispose();
         assertEquals(namesInFile(file), List.of());
+    }
+
+    @Test
+    public void renamingAnEntryWithoutAUidReturnsTheNewName() throws Exception {
+        open("icf", EMPTY_UID);
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("emptyuid"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "renamed"))), new Uid("renamed"));
+        assertEquals(describe(handler.search(equalsQuery(Uid.NAME, "renamed"), ObjectClass.ACCOUNT)),
+                List.of("renamed|renamed"));
+    }
+
+    @Test
+    public void renamingAnEntryWithoutAUidToAnotherEntrysUidIsRefused() throws Exception {
+        open("icf", RENAME_INTO_UID);
+        AlreadyExistsException e = expectThrows(AlreadyExistsException.class, () -> handler.update(ObjectClass.ACCOUNT,
+                new Uid("old"), Collections.singleton(AttributeBuilder.build(Name.NAME, "taken"))));
+        assertTrue(e.getMessage().contains(Uid.NAME + " of taken"), e.getMessage());
+        assertEquals(describe(handler.search(allAccounts(), ObjectClass.ACCOUNT)),
+                List.of("taken|holder", "old|old", "u3|third"));
+        // An entry with a __UID__ value keeps it, so a new name that is another entry's uid takes no uid from it.
+        assertEquals(handler.update(ObjectClass.ACCOUNT, new Uid("taken"),
+                Collections.singleton(AttributeBuilder.build(Name.NAME, "u3"))), new Uid("taken"));
     }
 
     private Uid authenticate(String username, String password) {
