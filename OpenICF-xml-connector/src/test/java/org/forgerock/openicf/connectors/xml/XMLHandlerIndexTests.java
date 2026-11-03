@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.expectThrows;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -244,13 +245,7 @@ public class XMLHandlerIndexTests {
      */
     @Test
     public void attributesWhoseNamesDifferOnlyInCaseAreWrittenApart() throws Exception {
-        File casePairXsd = getTestFile("case-pair.xsd");
-        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
-        String lastName = "<xsd:element name=\"lastname\" type=\"xsd:string\" >";
-        // __ACCOUNT__'s required lastname gets an optional sibling LastName.
-        Files.write(casePairXsd.toPath(), xsd.replace(lastName,
-                "<xsd:element name=\"LastName\" type=\"xsd:string\" minOccurs=\"0\"/>" + lastName)
-                .getBytes(StandardCharsets.UTF_8));
+        File casePairXsd = writeCasePairXsd();
         try {
             File file = getRandomXMLFile();
             writeAccounts(file, "alice");
@@ -274,6 +269,59 @@ public class XMLHandlerIndexTests {
         } finally {
             Files.delete(casePairXsd.toPath());
         }
+    }
+
+    /**
+     * The handler names an attribute as the schema spells it, by the lookup create and update use, so a filter in
+     * another case compares the element the entry is stored in (#218).
+     */
+    @Test
+    public void schemaAttributeNameIsTheSchemasSpelling() {
+        assertEquals(handler.schemaAttributeName(ObjectClass.ACCOUNT, "LastName"), ATTR_ACCOUNT_LAST_NAME);
+        assertEquals(handler.schemaAttributeName(ObjectClass.ACCOUNT, "LASTNAME"), ATTR_ACCOUNT_LAST_NAME);
+        assertEquals(handler.schemaAttributeName(ObjectClass.ACCOUNT, ATTR_ACCOUNT_LAST_NAME), ATTR_ACCOUNT_LAST_NAME);
+        assertEquals(handler.schemaAttributeName(ObjectClass.ACCOUNT, "__name__"), Name.NAME);
+        // A name or a class the schema does not have is left as given; __GROUP__ has no __UID__.
+        assertEquals(handler.schemaAttributeName(ObjectClass.ACCOUNT, "no-such-attribute"), "no-such-attribute");
+        assertEquals(handler.schemaAttributeName(ObjectClass.GROUP, "__uid__"), "__uid__");
+        assertEquals(handler.schemaAttributeName(new ObjectClass("NoSuchClass"), "LastName"), "LastName");
+        // The connector's handler is a ConcurrentXMLHandler, which must not fall back to the interface's default.
+        assertEquals(new ConcurrentXMLHandler(handler).schemaAttributeName(ObjectClass.ACCOUNT, "LastName"),
+                ATTR_ACCOUNT_LAST_NAME);
+    }
+
+    /**
+     * On an XSD with two attributes whose names differ only in case, each spelling names its own attribute, as in
+     * create and update: the case-insensitive map alone would give one of the two for both names.
+     */
+    @Test
+    public void schemaAttributeNameTakesTheExactSpellingFirst() throws Exception {
+        File casePairXsd = writeCasePairXsd();
+        try {
+            XMLConfiguration config = new XMLConfiguration();
+            config.setXmlFilePath(getRandomXMLFile());
+            SchemaParser parser = new SchemaParser(XMLConnector.class, casePairXsd);
+            XMLHandlerImpl pair = new XMLHandlerImpl(config, parser.parseSchema(), parser.getXsdSchema());
+
+            assertEquals(pair.schemaAttributeName(ObjectClass.ACCOUNT, "LastName"), "LastName");
+            assertEquals(pair.schemaAttributeName(ObjectClass.ACCOUNT, ATTR_ACCOUNT_LAST_NAME), ATTR_ACCOUNT_LAST_NAME);
+        } finally {
+            Files.delete(casePairXsd.toPath());
+        }
+    }
+
+    /**
+     * A copy of the test XSD in which __ACCOUNT__'s required lastname gets an optional sibling LastName: two
+     * attributes whose names differ only in case. The caller deletes the file.
+     */
+    private static File writeCasePairXsd() throws IOException {
+        File casePairXsd = getTestFile("case-pair.xsd");
+        String xsd = new String(Files.readAllBytes(XSD_SCHEMA_FILEPATH.toPath()), StandardCharsets.UTF_8);
+        String lastName = "<xsd:element name=\"lastname\" type=\"xsd:string\" >";
+        Files.write(casePairXsd.toPath(), xsd.replace(lastName,
+                "<xsd:element name=\"LastName\" type=\"xsd:string\" minOccurs=\"0\"/>" + lastName)
+                .getBytes(StandardCharsets.UTF_8));
+        return casePairXsd;
     }
 
     /**
