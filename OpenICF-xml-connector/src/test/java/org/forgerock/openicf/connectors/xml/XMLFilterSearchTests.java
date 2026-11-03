@@ -248,6 +248,12 @@ public class XMLFilterSearchTests {
         assertEquals(names(ObjectClass.GROUP, equalTo(new Uid("g1"))), asList("g1"));
     }
 
+    /** A filter takes the spelling from the schema of the class searched: __ACCOUNT__ has no __SHORT_NAME__. */
+    @Test
+    public void filterInAnotherCaseNamesTheAttributeByTheSearchedClass() {
+        assertEquals(names(ObjectClass.GROUP, equalTo(attribute("__short_name__", "g1"))), asList("g1"));
+    }
+
     /** The sorted __NAME__ values the connector returns for the filter. */
     private List<String> names(Filter filter) {
         return names(ObjectClass.ACCOUNT, filter);
