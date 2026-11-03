@@ -32,17 +32,19 @@ public class LdapConnectorTestBaseServerTests extends LdapConnectorTestBase {
      * start, and the JDK never closes an anonymous RMI port. That port is random, so it can be one
      * the server is about to bind for LDAP: the bind fails, and the RMI socket accepts what was
      * meant for the server (#219). The JDK serves each anonymous RMI port from a thread named
-     * "RMI TCP Accept-0".
+     * "RMI TCP Accept-0", and nothing else in these tests exports anything over RMI.
      */
     @Test
     public void aRestartLeavesNoRmiPortListening() throws Exception {
         stopServer();
-        long before = anonymousRmiListeners();
+        // Setting the instance up and before() have started the server in this JVM already, so
+        // a count taken now as the baseline would not see a handler switched off too late.
+        assertEquals(anonymousRmiListeners(), 0L);
 
         startServer();
         stopServer();
 
-        assertEquals(anonymousRmiListeners(), before);
+        assertEquals(anonymousRmiListeners(), 0L);
     }
 
     private static long anonymousRmiListeners() {

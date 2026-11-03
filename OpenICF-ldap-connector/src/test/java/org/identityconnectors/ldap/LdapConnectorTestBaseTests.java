@@ -59,7 +59,8 @@ public class LdapConnectorTestBaseTests {
         assertTrue(stillUp.startsWith(
                 "EmbeddedUtils.isRunning() is false, ports still accepting connections: [LDAPS 36323]; logs in "),
                 stillUp);
-        assertTrue(stillUp.endsWith(File.separator + "logs"), stillUp);
+        assertTrue(stillUp.endsWith(File.separator + new File(new File("instance", "opendj"), "logs").getPath()),
+                stillUp);
     }
 
     /** A port left out of the map would let the next start find it still bound. */
@@ -79,13 +80,30 @@ public class LdapConnectorTestBaseTests {
      */
     @Test
     public void slf4jLogsThroughOpenDJ() {
-        if (System.getProperty("opendj.workDirParent") == null) {
-            throw new SkipException("Not run by the build, which adds OpenDJ's SLF4J binding to the classpath");
-        }
+        skipUnlessRunByTheBuild();
         assertEquals(LoggerFactory.getILoggerFactory().getClass().getName(),
                 "org.opends.server.loggers.slf4j.OpenDJLoggerFactory",
                 "Without OpenDJ's SLF4J binding its logs/errors stays empty: is "
                         + "target/opendj-slf4j-adapter/opendj/lib/opendj-slf4j-adapter.jar there?");
+    }
+
+    /** Anywhere else, the CI failure artifact would not carry the server's logs. */
+    @Test
+    public void theBuildKeepsTheInstanceUnderTarget() {
+        skipUnlessRunByTheBuild();
+        String parent = System.getProperty("opendj.workDirParent");
+        assertTrue(parent != null, "opendj.workDirParent is not set");
+        assertEquals(new File(parent), new File(System.getProperty("basedir"), "target"));
+    }
+
+    /**
+     * Keyed on a property Surefire sets by itself rather than on one from the pom, so that losing
+     * the pom's settings fails these pins instead of skipping them.
+     */
+    private static void skipUnlessRunByTheBuild() {
+        if (System.getProperty("surefire.test.class.path") == null) {
+            throw new SkipException("Not run by the build, which sets up the classpath and properties pinned here");
+        }
     }
 
     /** The work directory is deleted recursively, so it must never be the directory given. */
