@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -49,6 +50,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.forgerock.opendj.ldap.tools.MakeLDIF;
 import org.forgerock.opendj.config.client.ManagementContext;
@@ -146,6 +148,8 @@ public abstract class LdapConnectorTestBase {
     /** How long waitUntilStopped() waits: a loaded CI runner can be very slow (#111). */
     private static final int STOP_WAIT = 200; // ms
     private static final int STOP_ITERATIONS = 150;
+    /** A listening loopback port accepts in well under this. */
+    private static final int CONNECT_TIMEOUT = 200; // ms
 
     private static final String ROOT_DN = "cn=Directory Manager";
     private static final String ROOT_PASSWORD = "password";
@@ -295,10 +299,18 @@ public abstract class LdapConnectorTestBase {
             server.stop(LdapConnectorTestBase.class.getName(), null);
             server = null;
         }
+        // Not necessarily after a stop request: afterClass() also gets here for a server that
+        // createInstance() left running.
+        long waitStarted = System.nanoTime();
         String stillUp = waitUntilStopped();
         if (stillUp != null) {
-            Assert.fail("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS + " ms: " + stillUp);
+            Assert.fail("OpenDJ still up " + millisSince(waitStarted) + " ms into the stop wait: " + stillUp);
         }
+    }
+
+    /** Measured rather than worked out from the loop's constants: the checks take time of their own. */
+    private static long millisSince(long nanoTime) {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - nanoTime);
     }
 
     /**
@@ -363,9 +375,14 @@ public abstract class LdapConnectorTestBase {
         return result.toString();
     }
 
+    /**
+     * Bounded, because the wait loops count checks rather than time: without a timeout a refused
+     * connect can take a second or more where the system retries it, as Windows does, and every
+     * check would pay that for each closed port.
+     */
     private static boolean isListening(int port) {
-        try {
-            new Socket(InetAddress.getLocalHost(), port).close();
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(InetAddress.getLocalHost(), port), CONNECT_TIMEOUT);
             return true;
         } catch (IOException e) {
             return false;
@@ -528,10 +545,11 @@ public abstract class LdapConnectorTestBase {
         } finally {
             target.stop(LdapConnectorTestBase.class.getName(), null);
         }
+        long waitStarted = System.nanoTime();
         String stillUp = waitUntilStopped();
         if (stillUp != null) {
-            throw new IOException("OpenDJ failed to stop within " + STOP_WAIT * STOP_ITERATIONS
-                    + " ms after applying " + resource + ": " + stillUp);
+            throw new IOException("OpenDJ still up " + millisSince(waitStarted)
+                    + " ms into the stop wait after applying " + resource + ": " + stillUp);
         }
     }
 
