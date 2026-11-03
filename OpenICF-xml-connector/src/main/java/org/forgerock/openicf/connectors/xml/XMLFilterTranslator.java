@@ -34,6 +34,7 @@ import org.forgerock.openicf.connectors.xml.util.NamespaceLookupUtil;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.UnaryOperator;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.AttributeUtil;
 import org.identityconnectors.framework.common.objects.filter.*;
@@ -58,13 +59,30 @@ import org.identityconnectors.framework.common.objects.Uid;
 public class XMLFilterTranslator extends AbstractFilterTranslator<Query> {
 
     private boolean preferUidOverName = false;
+    private final UnaryOperator<String> schemaName;
 
     public XMLFilterTranslator(boolean preferUidOverName) {
-        this.preferUidOverName = preferUidOverName;
+        this(preferUidOverName, UnaryOperator.identity());
     }
 
+    /**
+     * @param schemaName the name of an attribute as the schema spells it, see {@link XMLHandler#schemaAttributeName}
+     */
+    public XMLFilterTranslator(boolean preferUidOverName, UnaryOperator<String> schemaName) {
+        this.preferUidOverName = preferUidOverName;
+        this.schemaName = schemaName;
+    }
+
+    /**
+     * The element the attribute is compared in. The framework names attributes in any case and the file names them as
+     * the schema spells them, so the filter takes the schema's spelling, as create and update do (#218). A uid in any
+     * case is {@code __UID__} whatever the schema spells it: the handler looks entries up by exactly that name, and
+     * the framework's getObject filters by it.
+     */
     private String getAttributeName(Attribute attribute) {
-        return elementName(attribute.getName(), preferUidOverName);
+        String name = attribute.getName();
+        name = Uid.NAME.equalsIgnoreCase(name) ? Uid.NAME : schemaName.apply(name);
+        return elementName(name, preferUidOverName);
     }
 
     /**

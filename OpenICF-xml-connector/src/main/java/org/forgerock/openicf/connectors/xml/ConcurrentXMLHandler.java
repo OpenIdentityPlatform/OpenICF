@@ -175,5 +175,11 @@ public class ConcurrentXMLHandler implements XMLHandler {
         return proxy.isSupportUid(objectClass);
     }
 
+    /** Unlocked, as {@link #isSupportUid}: the schema is set when the handler is made and never changes. */
+    @Override
+    public String schemaAttributeName(ObjectClass objClass, String attributeName) {
+        return proxy.schemaAttributeName(objClass, attributeName);
+    }
+
 
 }

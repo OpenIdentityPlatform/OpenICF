@@ -54,4 +54,14 @@ public interface XMLHandler {
     void dispose();
 
     boolean isSupportUid(ObjectClass objectClass);
+
+    /**
+     * The name of the class's attribute as the schema spells it, found by the rule create and update name attributes
+     * by: the exact spelling first, then any case (#212). A filter names the element it compares by this (#218).
+     *
+     * @return the schema's spelling, or the name as given if the schema has no such class or attribute
+     */
+    default String schemaAttributeName(ObjectClass objClass, String attributeName) {
+        return attributeName;
+    }
 }

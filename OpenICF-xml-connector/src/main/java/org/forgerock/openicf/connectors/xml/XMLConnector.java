@@ -199,7 +199,9 @@ public class XMLConnector implements Connector, AuthenticateOp, CreateOp, Delete
      */
     @Override
     public FilterTranslator<Query> createFilterTranslator(ObjectClass objClass, OperationOptions options) {
-        return new XMLFilterTranslator(xmlInstanceHandler.isSupportUid(objClass));
+        XMLHandler handler = xmlInstanceHandler;
+        return new XMLFilterTranslator(handler.isSupportUid(objClass),
+                name -> handler.schemaAttributeName(objClass, name));
     }
 
     /*

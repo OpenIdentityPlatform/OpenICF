@@ -590,6 +590,17 @@ public class XMLHandlerImpl implements XMLHandler {
         return false;
     }
 
+    @Override
+    public String schemaAttributeName(ObjectClass objClass, String attributeName) {
+        ObjectClassInfo objInfo = connSchema.findObjectClassInfo(objClass.getObjectClassValue());
+        if (objInfo == null) {
+            return attributeName;
+        }
+        AttributeInfo attributeInfo = schemaAttribute(attributeName, exactAttributes(objInfo),
+                AttributeInfoUtil.toMap(objInfo.getAttributeInfo()));
+        return attributeInfo != null ? attributeInfo.getName() : attributeName;
+    }
+
 
     private void createDocument() {
         final String method = "createDocument";
@@ -888,10 +899,7 @@ public class XMLHandlerImpl implements XMLHandler {
      */
     private static CheckedAttribute checkAttribute(Attribute attribute, Map<String, AttributeInfo> exactAttributes,
             Map<String, AttributeInfo> anyCaseAttributes, Change change) {
-        AttributeInfo attributeInfo = exactAttributes.get(attribute.getName());
-        if (attributeInfo == null) {
-            attributeInfo = anyCaseAttributes.get(attribute.getName());
-        }
+        AttributeInfo attributeInfo = schemaAttribute(attribute.getName(), exactAttributes, anyCaseAttributes);
         if (attributeInfo == null) {
             throw new IllegalArgumentException("Data field: " + attribute.getName() + " is not supported.");
         }
@@ -929,10 +937,7 @@ public class XMLHandlerImpl implements XMLHandler {
      */
     private static List<CheckedAttribute> checkAttributes(Set<Attribute> attributes, ObjectClassInfo objInfo,
             Change change) {
-        Map<String, AttributeInfo> exactAttributes = new HashMap<String, AttributeInfo>();
-        for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
-            exactAttributes.put(attributeInfo.getName(), attributeInfo);
-        }
+        Map<String, AttributeInfo> exactAttributes = exactAttributes(objInfo);
         Map<String, AttributeInfo> anyCaseAttributes = AttributeInfoUtil.toMap(objInfo.getAttributeInfo());
 
         List<CheckedAttribute> checkedAttributes = new ArrayList<CheckedAttribute>();
@@ -947,6 +952,22 @@ public class XMLHandlerImpl implements XMLHandler {
             checkedAttributes.add(checked);
         }
         return checkedAttributes;
+    }
+
+    /** The schema's attribute of that name, by the rule {@link #checkAttribute} describes, or null if it has none. */
+    private static AttributeInfo schemaAttribute(String name, Map<String, AttributeInfo> exactAttributes,
+            Map<String, AttributeInfo> anyCaseAttributes) {
+        AttributeInfo attributeInfo = exactAttributes.get(name);
+        return attributeInfo != null ? attributeInfo : anyCaseAttributes.get(name);
+    }
+
+    /** The class's attributes by the names the schema spells them with. */
+    private static Map<String, AttributeInfo> exactAttributes(ObjectClassInfo objInfo) {
+        Map<String, AttributeInfo> exactAttributes = new HashMap<String, AttributeInfo>();
+        for (AttributeInfo attributeInfo : objInfo.getAttributeInfo()) {
+            exactAttributes.put(attributeInfo.getName(), attributeInfo);
+        }
+        return exactAttributes;
     }
 
     /** An attribute that passed every check, under the schema's name, with the values to write. */
