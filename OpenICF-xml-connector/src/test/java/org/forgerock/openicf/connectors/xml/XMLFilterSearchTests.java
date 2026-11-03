@@ -45,6 +45,7 @@ import org.identityconnectors.framework.api.ConnectorFacadeFactory;
 import org.identityconnectors.framework.common.objects.Attribute;
 import org.identityconnectors.framework.common.objects.AttributeBuilder;
 import org.identityconnectors.framework.common.objects.ObjectClass;
+import org.identityconnectors.framework.common.objects.Uid;
 import org.identityconnectors.framework.common.objects.filter.Filter;
 import org.identityconnectors.framework.common.objects.filter.FilteredResultsHandlerVisitor;
 import org.identityconnectors.test.common.TestHelpers;
@@ -110,6 +111,9 @@ public class XMLFilterSearchTests {
                         element(ATTR_ACCOUNT_MS_EMPLOYED, "-9223372036854775807"),
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "0.0"),
                         element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.099999999")))
+                // __GROUP__ has no __UID__.
+                .append(group("g1"))
+                .append(group("g2"))
                 .append("</icf:OpenICFContainer>\n");
         Files.write(file.toPath(), xml.toString().getBytes(StandardCharsets.UTF_8));
 
@@ -205,6 +209,16 @@ public class XMLFilterSearchTests {
                         asList("a1", "a2", "a3", "a4", "a5")},
                 {equalTo(AttributeBuilder.build(ATTR_ACCOUNT_EMAIL)), asList("a1", "a2", "a3", "a4", "a5")},
                 {equalTo(attribute(ATTR_ACCOUNT_EMAIL, null)), asList("a1", "a2", "a3", "a4", "a5")},
+                // A name in another case than the schema's compares the element the schema names (#218), so these
+                // find what the same filters find in the schema's case. A uid in any case is __UID__.
+                {equalTo(attribute("LastName", "M")), asList("a2")},
+                {startsWith(attribute("EMAIL", "y")), asList("a2", "a3")},
+                {endsWith(attribute("Email", "3")), asList("a3")},
+                {contains(attribute("FirstName", "'")), asList("a3")},
+                {greaterThan(attribute("AGE", 9)), asList("a1")},
+                {containsAllValues(attribute("Age", 9)), asList("a2")},
+                {equalTo(attribute("__name__", "a1")), asList("a1")},
+                {equalTo(attribute("__uid__", "uid-a1")), asList("a1")},
         };
     }
 
@@ -224,10 +238,24 @@ public class XMLFilterSearchTests {
         assertEquals(returned, expected);
     }
 
+    /**
+     * A class without __UID__ in the schema finds its entries by __NAME__ for a __UID__ filter, and so for one in
+     * another case (#218).
+     */
+    @Test
+    public void uidFilterInAnotherCaseFindsTheNameOnAClassWithoutUid() {
+        assertEquals(names(ObjectClass.GROUP, equalTo(attribute("__uid__", "g1"))), asList("g1"));
+        assertEquals(names(ObjectClass.GROUP, equalTo(new Uid("g1"))), asList("g1"));
+    }
+
     /** The sorted __NAME__ values the connector returns for the filter. */
     private List<String> names(Filter filter) {
+        return names(ObjectClass.ACCOUNT, filter);
+    }
+
+    private List<String> names(ObjectClass objectClass, Filter filter) {
         List<String> names = new ArrayList<String>();
-        facade.search(ObjectClass.ACCOUNT, filter, o -> names.add(o.getName().getNameValue()), null);
+        facade.search(objectClass, filter, o -> names.add(o.getName().getNameValue()), null);
         Collections.sort(names);
         return names;
     }
@@ -245,6 +273,14 @@ public class XMLFilterSearchTests {
             xml.append("    ").append(element).append('\n');
         }
         return xml.append("  </ri:__ACCOUNT__>\n").toString();
+    }
+
+    private static String group(String name) {
+        return "  <ri:__GROUP__>\n"
+                + "    <icf:__NAME__>" + name + "</icf:__NAME__>\n"
+                + "    <icf:__DESCRIPTION__>Group " + name + "</icf:__DESCRIPTION__>\n"
+                + "    <icf:__SHORT_NAME__>" + name + "</icf:__SHORT_NAME__>\n"
+                + "  </ri:__GROUP__>\n";
     }
 
     private static String element(String name, String text) {

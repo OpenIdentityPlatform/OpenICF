@@ -554,6 +554,31 @@ public class XMLHandlerIndexTests {
                 new GreaterThanOrEqualFilter(AttributeBuilder.build(Name.NAME, "x")), false)));
     }
 
+    /**
+     * The connector's translator names an identifier given in another case as the schema spells it, prefix included,
+     * so the filter goes to the index (#218); named as given, __name__ is ri:__name__.
+     */
+    @Test
+    public void anotherCaseIdentifierGoesToTheIndexUnderTheSchemasName() {
+        XMLFilterTranslator translator = new XMLFilterTranslator(true,
+                name -> handler.schemaAttributeName(ObjectClass.ACCOUNT, name));
+        assertEquals(XMLHandlerImpl.identifierField(translator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build("__name__", "x")), false)), Name.NAME);
+        assertEquals(XMLHandlerImpl.identifierField(translator.createEqualsExpression(
+                new EqualsFilter(AttributeBuilder.build("__uid__", "x")), false)), Uid.NAME);
+    }
+
+    /**
+     * A uid filter compares __UID__ whatever the schema spells the uid: the handler looks entries up by exactly that
+     * name, and the framework's getObject filters by it. String::toLowerCase stands for an XSD that declares __uid__.
+     */
+    @Test
+    public void uidFilterKeepsTheUidWhateverTheSchemaSpellsIt() {
+        XMLFilterTranslator translator = new XMLFilterTranslator(true, String::toLowerCase);
+        assertEquals(XMLHandlerImpl.identifierField(
+                translator.createEqualsExpression(new EqualsFilter(new Uid("x")), false)), Uid.NAME);
+    }
+
     @Test
     public void lookupsAndSavesNeverUseNodeLists() throws Exception {
         File file = getRandomXMLFile();
