@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -45,12 +46,18 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import com.forgerock.opendj.ldap.tools.MakeLDIF;
+import org.forgerock.opendj.config.client.ManagementContext;
 import org.forgerock.opendj.ldap.Connection;
 import org.forgerock.opendj.ldif.ConnectionChangeRecordWriter;
 import org.forgerock.opendj.ldif.LDIFChangeRecordReader;
+import org.forgerock.opendj.server.config.client.ConnectionHandlerCfgClient;
 import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServer;
 import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServerException;
 import org.identityconnectors.common.IOUtil;
@@ -131,9 +138,18 @@ public abstract class LdapConnectorTestBase {
     public static final String USER_0_GIVEN_NAME = "Aaccf";
 
     private static final int ADMIN_PORT = findFreePort();
+    /** Setup will not do without one, although the handler is switched off before the first start. */
     private static final int JMX_PORT = findFreePort();
     /** Replication carries the change log the sync tests read, even with nothing to replicate to. */
     private static final int REPLICATION_PORT = findFreePort();
+    /** Every port the server binds, by name, since starting again fails on whichever is not free yet. */
+    private static final Map<String, Integer> SERVER_PORTS = serverPorts();
+
+    /** How long waitUntilStopped() waits: a loaded CI runner can be very slow (#111). */
+    private static final int STOP_WAIT = 200; // ms
+    private static final int STOP_ITERATIONS = 150;
+    /** A listening loopback port accepts in well under this. */
+    private static final int CONNECT_TIMEOUT = 200; // ms
 
     private static final String ROOT_DN = "cn=Directory Manager";
     private static final String ROOT_PASSWORD = "password";
@@ -141,7 +157,11 @@ public abstract class LdapConnectorTestBase {
     /** EmbeddedDirectoryServer.extractArchiveForSetup() insists on this server root name. */
     private static final String SERVER_ROOT_NAME = "opendj";
 
-    private static final File WORK_DIR = new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+    /**
+     * Where the instance lives. The build puts this under target/, so that the CI failure
+     * artifact carries the server's logs; runs from an IDE fall back to the temporary directory.
+     */
+    private static final File WORK_DIR = workDir(System.getProperty("opendj.workDirParent"));
     private static final File SERVER_ROOT = new File(new File(WORK_DIR, "instance"), SERVER_ROOT_NAME);
     /** Pristine copy of the directories below, taken once the instance is fully populated. */
     private static final File PRISTINE_DIR = new File(WORK_DIR, "pristine");
@@ -279,9 +299,18 @@ public abstract class LdapConnectorTestBase {
             server.stop(LdapConnectorTestBase.class.getName(), null);
             server = null;
         }
-        if (!waitUntilStopped()) {
-            Assert.fail("OpenDJ failed to stop");
+        // Not necessarily after a stop request: afterClass() also gets here for a server that
+        // createInstance() left running.
+        long waitStarted = System.nanoTime();
+        String stillUp = waitUntilStopped();
+        if (stillUp != null) {
+            Assert.fail("OpenDJ still up " + millisSince(waitStarted) + " ms into the stop wait: " + stillUp);
         }
+    }
+
+    /** Measured rather than worked out from the loop's constants: the checks take time of their own. */
+    private static long millisSince(long nanoTime) {
+        return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - nanoTime);
     }
 
     /**
@@ -289,30 +318,71 @@ public abstract class LdapConnectorTestBase {
      * has to be free before the next start can bind it again, and isRunning() has to agree the
      * server is down, or before() would decide there is nothing to restart and leave the next
      * test without a server.
+     *
+     * @return null once the server is down, else what the last check saw, for the failure message
      */
-    private static boolean waitUntilStopped() {
-        final int WAIT = 200; // ms
-        final int ITERATIONS = 150; // 30 s: a loaded CI runner can be very slow (#111)
-        for (int i = 1; EmbeddedUtils.isRunning() || isAnyPortStillBound(); i++) {
-            if (i >= ITERATIONS) {
-                return false;
+    private static String waitUntilStopped() {
+        for (int i = 1; ; i++) {
+            boolean running = EmbeddedUtils.isRunning();
+            String ports = running ? "" : listening(SERVER_PORTS);
+            if (!running && ports.isEmpty()) {
+                return null;
+            }
+            if (i >= STOP_ITERATIONS) {
+                // While isRunning() is true the ports were not probed; probing them now cannot
+                // contradict the reason the loop gave up.
+                return stillUp(running, running ? listening(SERVER_PORTS) : ports);
             }
             try {
-                Thread.sleep(WAIT);
+                Thread.sleep(STOP_WAIT);
             } catch (InterruptedException e) {}
         }
-        return true;
     }
 
-    /** Every port the server binds, since starting again fails on whichever is not free yet. */
-    private static boolean isAnyPortStillBound() {
-        return isListening(PORT) || isListening(SSL_PORT) || isListening(ADMIN_PORT)
-                || isListening(REPLICATION_PORT);
+    /**
+     * What waitUntilStopped() saw at its last check, for the message when it gives up. Probing
+     * again here could describe a server that has finished stopping in the meantime.
+     */
+    static String stillUp(boolean running, String ports) {
+        return "EmbeddedUtils.isRunning() is " + running
+                + ", ports still accepting connections: [" + ports + "]; logs in "
+                + new File(SERVER_ROOT, "logs");
     }
 
+    static Map<String, Integer> serverPorts() {
+        Map<String, Integer> ports = new LinkedHashMap<>();
+        ports.put("LDAP", PORT);
+        ports.put("LDAPS", SSL_PORT);
+        ports.put("admin", ADMIN_PORT);
+        ports.put("replication", REPLICATION_PORT);
+        return Collections.unmodifiableMap(ports);
+    }
+
+    /**
+     * The given ports that accept a connection, as {@code "admin 40125, replication 40127"};
+     * empty if none does.
+     */
+    static String listening(Map<String, Integer> ports) {
+        StringBuilder result = new StringBuilder();
+        for (Map.Entry<String, Integer> port : ports.entrySet()) {
+            if (isListening(port.getValue())) {
+                if (result.length() > 0) {
+                    result.append(", ");
+                }
+                result.append(port.getKey()).append(' ').append(port.getValue());
+            }
+        }
+        return result.toString();
+    }
+
+    /**
+     * Bounded, because the wait loops count checks rather than time: without a timeout a refused
+     * connect can take a second or more where the system retries it, as Windows does, and every
+     * check would pay that for each closed port.
+     */
     private static boolean isListening(int port) {
-        try {
-            new Socket(InetAddress.getLocalHost(), port).close();
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress(InetAddress.getLocalHost(), port), CONNECT_TIMEOUT);
             return true;
         } catch (IOException e) {
             return false;
@@ -352,6 +422,7 @@ public abstract class LdapConnectorTestBase {
                 .baseDn(EXAMPLE_COM_DN)
                 .backendType("je")
                 .jmxPort(JMX_PORT));
+        disableJmx(setupServer);
 
         // Configuration goes in over a connection, so the server has to be up for it.
         startAndApply(setupServer, "test-config.ldif");
@@ -377,6 +448,37 @@ public abstract class LdapConnectorTestBase {
             IOUtil.delete(target);
             copyDirectory(new File(PRISTINE_DIR, dir).toPath(), target.toPath());
         }
+    }
+
+    /**
+     * Switches off the JMX connection handler, which setup always enables, while the server is
+     * down: nothing here uses JMX, and OpenDJ 5.2.0 exports its RMI connector on a new anonymous
+     * port at every start, which the JDK never closes. That port is random, so it can be one the
+     * server is about to bind for LDAP, LDAPS or admin; the bind then fails, and the RMI socket
+     * accepts what was meant for the server, closing every LDAP connection it is given (#219).
+     */
+    private static void disableJmx(EmbeddedDirectoryServer target)
+            throws IOException, EmbeddedDirectoryServerException {
+        try (ManagementContext config = target.getConfiguration()) {
+            ConnectionHandlerCfgClient jmx = config.getRootConfiguration()
+                    .getConnectionHandler("JMX Connection Handler");
+            jmx.setEnabled(false);
+            jmx.commit();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Cannot switch off the JMX connection handler in " + SERVER_ROOT, e);
+        }
+    }
+
+    /**
+     * A directory of its own below the given one, or below the temporary directory if none is
+     * given: createInstance() deletes it recursively, so it must never be the directory given.
+     * Whitespace around the given directory is a typing slip, not part of its name.
+     */
+    static File workDir(String parent) {
+        String given = parent == null ? "" : parent.trim();
+        return new File(given.isEmpty() ? System.getProperty("java.io.tmpdir") : given, "openicf-ldap-opendj");
     }
 
     /** The OpenDJ distribution archive, handed over by the build; cf. the pom. */
@@ -444,8 +546,11 @@ public abstract class LdapConnectorTestBase {
         } finally {
             target.stop(LdapConnectorTestBase.class.getName(), null);
         }
-        if (!waitUntilStopped()) {
-            throw new IOException("OpenDJ failed to stop after applying " + resource);
+        long waitStarted = System.nanoTime();
+        String stillUp = waitUntilStopped();
+        if (stillUp != null) {
+            throw new IOException("OpenDJ still up " + millisSince(waitStarted)
+                    + " ms into the stop wait after applying " + resource + ": " + stillUp);
         }
     }
 
