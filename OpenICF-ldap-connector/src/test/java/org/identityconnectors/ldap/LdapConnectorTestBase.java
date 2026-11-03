@@ -474,10 +474,11 @@ public abstract class LdapConnectorTestBase {
     /**
      * A directory of its own below the given one, or below the temporary directory if none is
      * given: createInstance() deletes it recursively, so it must never be the directory given.
+     * Whitespace around the given directory is a typing slip, not part of its name.
      */
     static File workDir(String parent) {
-        boolean given = parent != null && !parent.trim().isEmpty();
-        return new File(given ? parent : System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
+        String given = parent == null ? "" : parent.trim();
+        return new File(given.isEmpty() ? System.getProperty("java.io.tmpdir") : given, "openicf-ldap-opendj");
     }
 
     /** The OpenDJ distribution archive, handed over by the build; cf. the pom. */

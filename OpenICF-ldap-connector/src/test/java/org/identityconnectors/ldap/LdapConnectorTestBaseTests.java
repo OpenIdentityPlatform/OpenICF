@@ -95,6 +95,11 @@ public class LdapConnectorTestBaseTests {
     }
 
     @Test
+    public void workDirIgnoresWhitespaceAroundTheGivenDirectory() {
+        assertEquals(LdapConnectorTestBase.workDir(" /some/dir "), new File("/some/dir", "openicf-ldap-opendj"));
+    }
+
+    @Test
     public void workDirFallsBackToTheTemporaryDirectory() {
         File expected = new File(System.getProperty("java.io.tmpdir"), "openicf-ldap-opendj");
         assertEquals(LdapConnectorTestBase.workDir(null), expected);
