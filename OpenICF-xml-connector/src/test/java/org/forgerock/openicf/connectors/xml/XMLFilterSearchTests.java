@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.identityconnectors.common.security.GuardedString;
 import org.identityconnectors.framework.api.APIConfiguration;
 import org.identityconnectors.framework.api.ConnectorFacade;
 import org.identityconnectors.framework.api.ConnectorFacadeFactory;
@@ -82,8 +83,10 @@ public class XMLFilterSearchTests {
                         element(ATTR_ACCOUNT_HOURLY_WAGE, "10.0"),
                         element(ATTR_ACCOUNT_OFFICE_SQUARE_FEET, "0.1"),
                         element(ATTR_ACCOUNT_MAX_STORAGE, "1E+3")))
+                // a2's LastName is spelled outside the schema, as update wrote such elements before #212.
                 .append(account("a2", element(ATTR_ACCOUNT_FIRST_NAME, "AT&amp;amp;T"),
-                        element(ATTR_ACCOUNT_LAST_NAME, "M"), element(ATTR_ACCOUNT_EMAIL, "x2"),
+                        element(ATTR_ACCOUNT_LAST_NAME, "M"), element("LastName", "S"),
+                        element(ATTR_ACCOUNT_EMAIL, "x2"),
                         element(ATTR_ACCOUNT_EMAIL, "y2"),
                         element(ATTR_ACCOUNT_AGE, "9"),
                         element(ATTR_ACCOUNT_YEARS_EMPLOYED, "9"),
@@ -219,6 +222,8 @@ public class XMLFilterSearchTests {
                 {containsAllValues(attribute("Age", 9)), asList("a2")},
                 {equalTo(attribute("__name__", "a1")), asList("a1")},
                 {equalTo(attribute("__uid__", "uid-a1")), asList("a1")},
+                // An element spelled outside the schema, as update wrote it before #212, is not compared (#218).
+                {equalTo(attribute("LastName", "S")), asList()},
         };
     }
 
@@ -252,6 +257,15 @@ public class XMLFilterSearchTests {
     @Test
     public void filterInAnotherCaseNamesTheAttributeByTheSearchedClass() {
         assertEquals(names(ObjectClass.GROUP, equalTo(attribute("__short_name__", "g1"))), asList("g1"));
+    }
+
+    /**
+     * containsAllValues on the password in another case throws, as on __PASSWORD__: the value is rebuilt as a String
+     * under the schema's name, and the framework takes only a GuardedString for a password (#218).
+     */
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void containsAllValuesOnThePasswordInAnotherCaseThrows() {
+        names(containsAllValues(attribute("__password__", new GuardedString("x".toCharArray()))));
     }
 
     /** The sorted __NAME__ values the connector returns for the filter. */
