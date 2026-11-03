@@ -51,9 +51,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.forgerock.opendj.ldap.tools.MakeLDIF;
+import org.forgerock.opendj.config.client.ManagementContext;
 import org.forgerock.opendj.ldap.Connection;
 import org.forgerock.opendj.ldif.ConnectionChangeRecordWriter;
 import org.forgerock.opendj.ldif.LDIFChangeRecordReader;
+import org.forgerock.opendj.server.config.client.ConnectionHandlerCfgClient;
 import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServer;
 import org.forgerock.opendj.server.embedded.EmbeddedDirectoryServerException;
 import org.identityconnectors.common.IOUtil;
@@ -134,6 +136,7 @@ public abstract class LdapConnectorTestBase {
     public static final String USER_0_GIVEN_NAME = "Aaccf";
 
     private static final int ADMIN_PORT = findFreePort();
+    /** Setup will not do without one, although the handler is switched off before the first start. */
     private static final int JMX_PORT = findFreePort();
     /** Replication carries the change log the sync tests read, even with nothing to replicate to. */
     private static final int REPLICATION_PORT = findFreePort();
@@ -402,6 +405,7 @@ public abstract class LdapConnectorTestBase {
                 .baseDn(EXAMPLE_COM_DN)
                 .backendType("je")
                 .jmxPort(JMX_PORT));
+        disableJmx(setupServer);
 
         // Configuration goes in over a connection, so the server has to be up for it.
         startAndApply(setupServer, "test-config.ldif");
@@ -426,6 +430,27 @@ public abstract class LdapConnectorTestBase {
             File target = new File(SERVER_ROOT, dir);
             IOUtil.delete(target);
             copyDirectory(new File(PRISTINE_DIR, dir).toPath(), target.toPath());
+        }
+    }
+
+    /**
+     * Switches off the JMX connection handler, which setup always enables, while the server is
+     * down: nothing here uses JMX, and OpenDJ 5.2.0 exports its RMI connector on a new anonymous
+     * port at every start, which the JDK never closes. That port is random, so it can be one the
+     * server is about to bind for LDAP, LDAPS or admin; the bind then fails, and the RMI socket
+     * accepts what was meant for the server, closing every LDAP connection it is given (#219).
+     */
+    private static void disableJmx(EmbeddedDirectoryServer target)
+            throws IOException, EmbeddedDirectoryServerException {
+        try (ManagementContext config = target.getConfiguration()) {
+            ConnectionHandlerCfgClient jmx = config.getRootConfiguration()
+                    .getConnectionHandler("JMX Connection Handler");
+            jmx.setEnabled(false);
+            jmx.commit();
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Cannot switch off the JMX connection handler in " + SERVER_ROOT, e);
         }
     }
 
