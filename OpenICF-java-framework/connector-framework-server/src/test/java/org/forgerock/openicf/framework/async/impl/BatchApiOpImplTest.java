@@ -18,7 +18,9 @@ package org.forgerock.openicf.framework.async.impl;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -60,6 +62,7 @@ public class BatchApiOpImplTest {
     private static class RecordingObserver implements Observer<BatchResult> {
         final AtomicBoolean completed = new AtomicBoolean(false);
         final AtomicReference<Throwable> error = new AtomicReference<Throwable>();
+        final CountDownLatch errorReceived = new CountDownLatch(1);
 
         public void onCompleted() {
             completed.set(true);
@@ -67,6 +70,7 @@ public class BatchApiOpImplTest {
 
         public void onError(Throwable e) {
             error.set(e);
+            errorReceived.countDown();
         }
 
         public void onNext(BatchResult batchResult) {
@@ -138,7 +142,7 @@ public class BatchApiOpImplTest {
     }
 
     @Test(timeOut = 30000)
-    public void testExecuteBatchFailsWhenNoTokenArrives() {
+    public void testExecuteBatchFailsWhenNoTokenArrives() throws InterruptedException {
         BatchApiOpImpl operation =
                 new BatchApiOpImpl(new NoTokenRequestDistributor(), CONNECTOR_KEY,
                         new Function<RemoteOperationContext, ByteString, RuntimeException>() {
@@ -164,6 +168,9 @@ public class BatchApiOpImplTest {
 
         // CompletionListener gives up ~5s after the request was created.
         Assert.assertTrue(elapsed < 20000, "Failure took too long: " + elapsed + "ms");
+        // The promise can wake executeBatch's caller before invoking the error handler.
+        Assert.assertTrue(observer.errorReceived.await(5, TimeUnit.SECONDS),
+                "observer.onError must be called");
         Assert.assertNotNull(observer.error.get(), "observer.onError must be called");
         Assert.assertTrue(observer.error.get() instanceof ConnectorException);
         Assert.assertFalse(observer.completed.get(),
